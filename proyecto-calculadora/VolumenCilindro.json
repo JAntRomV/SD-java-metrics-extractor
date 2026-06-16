@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/VolumenCilindro.java",
+  "clase": "VolumenCilindro",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 10,
+        "longitud": 13,
+        "volumen": 43.19,
+        "dificultad": 1.13,
+        "esfuerzo de implementacion": 48.58,
+        "tiempo estimado de desarrollo": 2.7,
+        "estimacion de bug": 0.0144,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

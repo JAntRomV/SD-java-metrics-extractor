@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/DesviacionEstandar.java",
+  "clase": "DesviacionEstandar",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 21,
+        "longitud": 34,
+        "volumen": 149.34,
+        "dificultad": 3.29,
+        "esfuerzo de implementacion": 491.94,
+        "tiempo estimado de desarrollo": 27.33,
+        "estimacion de bug": 0.0498,
+        "numero ciclomatico": 4
+      },
+      "grafo de flujo de control": {
+        "loc": 15,
+        "nodes": 4,
+        "edges": 6,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

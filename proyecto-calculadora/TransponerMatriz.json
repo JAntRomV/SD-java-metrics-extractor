@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/TransponerMatriz.java",
+  "clase": "TransponerMatriz",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 19,
+        "longitud": 52,
+        "volumen": 220.89,
+        "dificultad": 6.79,
+        "esfuerzo de implementacion": 1498.91,
+        "tiempo estimado de desarrollo": 83.27,
+        "estimacion de bug": 0.0736,
+        "numero ciclomatico": 6
+      },
+      "grafo de flujo de control": {
+        "loc": 16,
+        "nodes": 6,
+        "edges": 10,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

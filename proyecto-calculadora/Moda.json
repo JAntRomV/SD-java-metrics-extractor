@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/Moda.java",
+  "clase": "Moda",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 22,
+        "longitud": 49,
+        "volumen": 218.51,
+        "dificultad": 10.0,
+        "esfuerzo de implementacion": 2185.12,
+        "tiempo estimado de desarrollo": 121.4,
+        "estimacion de bug": 0.0728,
+        "numero ciclomatico": 6
+      },
+      "grafo de flujo de control": {
+        "loc": 16,
+        "nodes": 6,
+        "edges": 10,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

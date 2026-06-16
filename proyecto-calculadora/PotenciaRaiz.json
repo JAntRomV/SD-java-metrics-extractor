@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/PotenciaRaiz.java",
+  "clase": "PotenciaRaiz",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 13,
+        "longitud": 21,
+        "volumen": 77.71,
+        "dificultad": 0.67,
+        "esfuerzo de implementacion": 51.81,
+        "tiempo estimado de desarrollo": 2.88,
+        "estimacion de bug": 0.0259,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

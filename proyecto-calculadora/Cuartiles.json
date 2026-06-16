@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/Cuartiles.java",
+  "clase": "Cuartiles",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 22,
+        "longitud": 38,
+        "volumen": 169.46,
+        "dificultad": 2.45,
+        "esfuerzo de implementacion": 414.73,
+        "tiempo estimado de desarrollo": 23.04,
+        "estimacion de bug": 0.0565,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 10,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

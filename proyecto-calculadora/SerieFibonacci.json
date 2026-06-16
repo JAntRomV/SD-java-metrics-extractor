@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/SerieFibonacci.java",
+  "clase": "SerieFibonacci",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 17,
+        "longitud": 31,
+        "volumen": 126.71,
+        "dificultad": 4.38,
+        "esfuerzo de implementacion": 554.36,
+        "tiempo estimado de desarrollo": 30.8,
+        "estimacion de bug": 0.0422,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 11,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

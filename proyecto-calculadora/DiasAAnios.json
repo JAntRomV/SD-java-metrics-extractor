@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/DiasAAnios.java",
+  "clase": "DiasAAnios",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 12,
+        "longitud": 19,
+        "volumen": 68.11,
+        "dificultad": 2.0,
+        "esfuerzo de implementacion": 136.23,
+        "tiempo estimado de desarrollo": 7.57,
+        "estimacion de bug": 0.0227,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

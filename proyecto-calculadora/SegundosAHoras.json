@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/SegundosAHoras.java",
+  "clase": "SegundosAHoras",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 15,
+        "longitud": 28,
+        "volumen": 109.39,
+        "dificultad": 2.13,
+        "esfuerzo de implementacion": 232.46,
+        "tiempo estimado de desarrollo": 12.91,
+        "estimacion de bug": 0.0365,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

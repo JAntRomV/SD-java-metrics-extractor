@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/InvertirArray.java",
+  "clase": "InvertirArray",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 16,
+        "longitud": 21,
+        "volumen": 84.0,
+        "dificultad": 3.64,
+        "esfuerzo de implementacion": 305.45,
+        "tiempo estimado de desarrollo": 16.97,
+        "estimacion de bug": 0.028,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

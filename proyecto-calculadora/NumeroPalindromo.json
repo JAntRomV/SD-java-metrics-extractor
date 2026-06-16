@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/NumeroPalindromo.java",
+  "clase": "NumeroPalindromo",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 17,
+        "longitud": 27,
+        "volumen": 110.36,
+        "dificultad": 8.0,
+        "esfuerzo de implementacion": 882.89,
+        "tiempo estimado de desarrollo": 49.05,
+        "estimacion de bug": 0.0368,
+        "numero ciclomatico": 4
+      },
+      "grafo de flujo de control": {
+        "loc": 10,
+        "nodes": 4,
+        "edges": 6,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

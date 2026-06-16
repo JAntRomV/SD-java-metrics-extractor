@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/NumeroParImpar.java",
+  "clase": "NumeroParImpar",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 11,
+        "longitud": 15,
+        "volumen": 51.89,
+        "dificultad": 2.86,
+        "esfuerzo de implementacion": 148.26,
+        "tiempo estimado de desarrollo": 8.24,
+        "estimacion de bug": 0.0173,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

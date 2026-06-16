@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/MCDEuclides.java",
+  "clase": "MCDEuclides",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 13,
+        "longitud": 19,
+        "volumen": 70.31,
+        "dificultad": 4.06,
+        "esfuerzo de implementacion": 285.63,
+        "tiempo estimado de desarrollo": 15.87,
+        "estimacion de bug": 0.0234,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 9,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

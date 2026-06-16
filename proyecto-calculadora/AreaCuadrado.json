@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/AreaCuadrado.java",
+  "clase": "AreaCuadrado",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 7,
+        "longitud": 8,
+        "volumen": 22.46,
+        "dificultad": 1.2,
+        "esfuerzo de implementacion": 26.95,
+        "tiempo estimado de desarrollo": 1.5,
+        "estimacion de bug": 0.0075,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 5,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

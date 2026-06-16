@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/CalculosCirculo.java",
+  "clase": "CalculosCirculo",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 10,
+        "longitud": 18,
+        "volumen": 59.79,
+        "dificultad": 1.5,
+        "esfuerzo de implementacion": 89.69,
+        "tiempo estimado de desarrollo": 4.98,
+        "estimacion de bug": 0.0199,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

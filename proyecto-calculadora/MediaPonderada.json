@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/MediaPonderada.java",
+  "clase": "MediaPonderada",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 16,
+        "longitud": 22,
+        "volumen": 88.0,
+        "dificultad": 4.8,
+        "esfuerzo de implementacion": 422.4,
+        "tiempo estimado de desarrollo": 23.47,
+        "estimacion de bug": 0.0293,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 9,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/ConversionCelsiusFahrenheit.java",
+  "clase": "ConversionCelsiusFahrenheit",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 12,
+        "longitud": 16,
+        "volumen": 57.36,
+        "dificultad": 1.67,
+        "esfuerzo de implementacion": 95.6,
+        "tiempo estimado de desarrollo": 5.31,
+        "estimacion de bug": 0.0191,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 5,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}
