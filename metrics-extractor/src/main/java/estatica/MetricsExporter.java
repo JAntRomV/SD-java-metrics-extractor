@@ -1,149 +1,137 @@
 package estatica;
-
+//Genera un archivo por cada clase y decide si json csv 20 metodos
 import java.io.File;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-//--------------------------------------------Exportador de métricas — genera UN archivo por cada clase analizada-------------------------
-
-//--------------Métodos en la clase < 20  →  JSON-----
-//--------------Métodos en la clase >= 20 →  CSV------
-
 public class MetricsExporter {
 
-//-----------------------------clases con menos de 20 métodos se exportan como JSON-----------------------------------
     private static final int JSON_THRESHOLD = 20;
 
     public static void export(List<ProjectMetrics> reports, String outputFolder) {
+//--------------------------crea la carpeta y todas las carpetas padre-------------------------       
         File baseFolder = new File(outputFolder);
         if (!baseFolder.exists()) baseFolder.mkdirs();
 
         int totalArchivos = 0;
-
+//------------------------------recorre proyectos--------------------------------------------
         for (ProjectMetrics project : reports) {
 
-//----------------------------- Crear subcarpeta para este proyecto------------------------------------
-            File projectFolder = new File(baseFolder, sanitizeName(project.getProjectName()));
+//-------------------------- Subcarpeta por proyecto: outputFolder/nombre-proyecto/-------------------------
+            File projectFolder = new File(baseFolder, sanitize(project.getProjectName()));
             if (!projectFolder.exists()) projectFolder.mkdirs();
 
-            for (ClassMetrics classMetrics : project.getClasses()) {
+//-----------------------Iterar sobre cada clase del proyecto-----------------------------------------
+            for (String className : project.getClassNames()) {
+                List<MethodMetrics> methods = project.getMethodsOf(className);
+                String fileName = project.getFileNameOf(className);
 
-//--------------------Si la clase no tiene metodos no genera archivo----------------------------
-                if (classMetrics.getMethods().isEmpty()) continue;
+                if (methods.isEmpty()) continue;
 
-//------------------- Decidir formato según número de métodos-----------------------------------
-                if (classMetrics.getMethods().size() < JSON_THRESHOLD) {
-                    exportClassToJSON(classMetrics, projectFolder);
+                if (methods.size() < JSON_THRESHOLD) {
+                    writeJson(className, fileName, methods, projectFolder);
                 } else {
-                    exportClassToCSV(classMetrics, projectFolder);
+                    writeCsv(className, fileName, methods, projectFolder);
                 }
                 totalArchivos++;
             }
         }
 
         System.out.println("Exportación finalizada: " + totalArchivos
-                + " archivo(s) generado(s) en: " + baseFolder.getAbsolutePath());
+                + " archivo(s) en: " + baseFolder.getAbsolutePath());
     }
 
-//----------------------Exportar una clase a JSON-----------------------------------------
-    private static void exportClassToJSON(ClassMetrics classMetrics, File projectFolder) {
-//-----------------------El nombre del archivo va a hacer el nombre de la clase
-        File outputFile = new File(projectFolder, sanitizeName(classMetrics.getClassName()) + ".json");
+//----------------------------------- JSON--------------------------------------------------------------
 
-        try (PrintWriter w = new PrintWriter(outputFile, StandardCharsets.UTF_8)) {
+    private static void writeJson(String className, String fileName,
+                                  List<MethodMetrics> methods, File folder) {
+        File out = new File(folder, sanitize(className) + ".json");
+        try (PrintWriter w = new PrintWriter(out, StandardCharsets.UTF_8)) {
 
             w.println("{");
-            w.println("  \"Nombre del archivo\": \"" + esc(classMetrics.getFileName()) + "\",");
-            w.println("  \"clase\": \""               + esc(classMetrics.getClassName()) + "\",");
+            w.println("  \"Nombre del archivo\": \"" + esc(fileName)  + "\",");
+            w.println("  \"clase\": \""               + esc(className) + "\",");
             w.println("  \"metodos\": [");
 
-            List<MethodMetrics> methods = classMetrics.getMethods();
             for (int i = 0; i < methods.size(); i++) {
-                MethodMetrics m = methods.get(i);
-                boolean isLast = (i == methods.size() - 1);
+                MethodMetrics m   = methods.get(i);
+                boolean       last = (i == methods.size() - 1);
 
                 w.println("    {");
-                w.println("      \"metodo\": \""                      + esc(m.getMethodName()) + "\",");
+                w.println("      \"metodo\": \""                          + esc(m.getMethodName()) + "\",");
                 w.println("      \"halstead\": {");
-                w.println("        \"vocabulario\": "                 + m.getVocabulary()              + ",");
-                w.println("        \"longitud\": "                    + m.getLength()                  + ",");
-                w.println("        \"volumen\": "                     + round(m.getVolume())            + ",");
-                w.println("        \"dificultad\": "                  + round(m.getDifficulty())        + ",");
-                w.println("        \"esfuerzo de implementacion\": "  + round(m.getEffort())            + ",");
-                w.println("        \"tiempo estimado de desarrollo\": "+ round(m.getTime())             + ",");
-                w.println("        \"estimacion de bug\": "           + round4(m.getBugs())            + ",");
-                w.println("        \"numero ciclomatico\": "          + m.getCyclomaticComplexity());
+                w.println("        \"vocabulario\": "                     + m.getVocabulary()             + ",");
+                w.println("        \"longitud\": "                        + m.getLength()                 + ",");
+                w.println("        \"volumen\": "                         + r2(m.getVolume())             + ",");
+                w.println("        \"dificultad\": "                      + r2(m.getDifficulty())         + ",");
+                w.println("        \"esfuerzo de implementacion\": "      + r2(m.getEffort())             + ",");
+                w.println("        \"tiempo estimado de desarrollo\": "   + r2(m.getTime())               + ",");
+                w.println("        \"estimacion de bug\": "               + r4(m.getBugs())               + ",");
+                w.println("        \"numero ciclomatico\": "              + m.getCyclomaticComplexity());
                 w.println("      },");
                 w.println("      \"grafo de flujo de control\": {");
-                w.println("        \"loc\": "                         + m.getLoc()                     + ",");
-                w.println("        \"nodes\": "                       + m.getCfgNodes()                + ",");
-                w.println("        \"edges\": "                       + m.getCfgEdges()                + ",");
-                w.println("        \"unconnected nodos\": "           + m.getCfgUnconnectedNodes());
+                w.println("        \"loc\": "                             + m.getLoc()                    + ",");
+                w.println("        \"nodes\": "                           + m.getCfgNodes()               + ",");
+                w.println("        \"edges\": "                           + m.getCfgEdges()               + ",");
+                w.println("        \"unconnected nodos\": "               + m.getCfgUnconnectedNodes());
                 w.println("      }");
-                w.println("    }" + (isLast ? "" : ","));
+                w.println("    }" + (last ? "" : ","));
             }
 
             w.println("  ]");
             w.println("}");
 
-            System.out.println("  [JSON] " + outputFile.getName()
-                    + "  (" + methods.size() + " método(s))");
+            System.out.println("  [JSON] " + out.getName() + " (" + methods.size() + " método(s))");
 
         } catch (Exception e) {
-            System.err.println("Error exportando JSON para "
-                    + classMetrics.getClassName() + ": " + e.getMessage());
+            System.err.println("Error JSON " + className + ": " + e.getMessage());
         }
     }
 
-//----------------------------------Exportar una clase a CSV------------------------------------------
-    private static void exportClassToCSV(ClassMetrics classMetrics, File projectFolder) {
-//---------------------------El nombre del archivo  es el nombre de la clase-------------------------- 
-        File outputFile = new File(projectFolder, sanitizeName(classMetrics.getClassName()) + ".csv");
+//--------------------------------------CSV--------------------------------
 
-        try (PrintWriter w = new PrintWriter(outputFile, StandardCharsets.UTF_8)) {
+    private static void writeCsv(String className, String fileName,
+                                 List<MethodMetrics> methods, File folder) {
+        File out = new File(folder, sanitize(className) + ".csv");
+        try (PrintWriter w = new PrintWriter(out, StandardCharsets.UTF_8)) {
 
-//----------------------------------- campos requeridos-----------------------------------------------
             w.println("Nombre del archivo,clase,metodo,"
                     + "vocabulario,longitud,volumen,dificultad,"
                     + "esfuerzo de implementacion,tiempo estimado de desarrollo,"
                     + "estimacion de bug,numero ciclomatico,"
                     + "loc,nodes,edges,unconnected nodos");
 
-           
-            for (MethodMetrics m : classMetrics.getMethods()) {
+            for (MethodMetrics m : methods) {
                 w.println(
-                    csv(m.getFileName())        + "," +
-                    csv(m.getClassName())        + "," +
-                    csv(m.getMethodName())       + "," +
-                    m.getVocabulary()            + "," +
-                    m.getLength()                + "," +
-                    round(m.getVolume())         + "," +
-                    round(m.getDifficulty())     + "," +
-                    round(m.getEffort())         + "," +
-                    round(m.getTime())           + "," +
-                    round4(m.getBugs())          + "," +
-                    m.getCyclomaticComplexity()  + "," +
-                    m.getLoc()                   + "," +
-                    m.getCfgNodes()              + "," +
-                    m.getCfgEdges()              + "," +
+                    csv(fileName)               + "," +
+                    csv(className)              + "," +
+                    csv(m.getMethodName())      + "," +
+                    m.getVocabulary()           + "," +
+                    m.getLength()               + "," +
+                    r2(m.getVolume())           + "," +
+                    r2(m.getDifficulty())       + "," +
+                    r2(m.getEffort())           + "," +
+                    r2(m.getTime())             + "," +
+                    r4(m.getBugs())             + "," +
+                    m.getCyclomaticComplexity() + "," +
+                    m.getLoc()                  + "," +
+                    m.getCfgNodes()             + "," +
+                    m.getCfgEdges()             + "," +
                     m.getCfgUnconnectedNodes()
                 );
             }
 
-            System.out.println("  [CSV]  " + outputFile.getName()
-                    + "  (" + classMetrics.getMethods().size() + " método(s))");
+            System.out.println("  [CSV]  " + out.getName() + " (" + methods.size() + " método(s))");
 
         } catch (Exception e) {
-            System.err.println("Error exportando CSV para "
-                    + classMetrics.getClassName() + ": " + e.getMessage());
+            System.err.println("Error CSV " + className + ": " + e.getMessage());
         }
     }
 
-    
-    private static String sanitizeName(String name) {
-        if (name == null || name.isEmpty()) return "sin_nombre";
-        return name.replaceAll("[^a-zA-Z0-9_\\-]", "_");
+    private static String sanitize(String s) {
+        return (s == null || s.isEmpty()) ? "sin_nombre"
+                : s.replaceAll("[^a-zA-Z0-9_\\-]", "_");
     }
 
     private static String esc(String s) {
@@ -158,6 +146,6 @@ public class MetricsExporter {
         return s;
     }
 
-    private static double round(double v)  { return Math.round(v * 100.0)   / 100.0; }
-    private static double round4(double v) { return Math.round(v * 10000.0) / 10000.0; }
+    private static double r2(double v) { return Math.round(v * 100.0)   / 100.0; }
+    private static double r4(double v) { return Math.round(v * 10000.0) / 10000.0; }
 }
