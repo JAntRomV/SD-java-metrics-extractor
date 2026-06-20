@@ -1,0 +1,26 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "Porcentaje",
+  "metodos": [
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    double cantidad = 200;\n    double porcentaje = 15;\n    double resultado = (cantidad * porcentaje) / 100;\n    System.out.println(\"El \" + porcentaje + \"% de \" + cantidad + \" es: \" + resultado);\n}",
+      "halstead": {
+        "vocabulario": 13,
+        "longitud": 19,
+        "volumen": 70.31,
+        "dificultad": 1.8,
+        "esfuerzo de implementacion": 126.56,
+        "tiempo estimado de desarrollo": 7.03,
+        "estimacion de bug": 0.0234,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "CalculoIVA",
+  "metodos": [
+    {
+      "metodo": "calcularPrecioConIVA",
+      "codigo": "\n/**\n * Calcula el precio con IVA incluido.\n * @param precioBase Precio base sin IVA\n * @param tasaIVA Tasa de IVA (decimal, ej: 0.16 para 16%)\n * @return Precio con IVA\n */\npublic static double calcularPrecioConIVA(double precioBase, double tasaIVA) {\n    if (precioBase < 0 || tasaIVA < 0) {\n        throw new IllegalArgumentException(\"Los valores no pueden ser negativos\");\n    }\n    return precioBase * (1 + tasaIVA);\n}",
+      "halstead": {
+        "vocabulario": 12,
+        "longitud": 16,
+        "volumen": 57.36,
+        "dificultad": 5.6,
+        "esfuerzo de implementacion": 321.21,
+        "tiempo estimado de desarrollo": 17.85,
+        "estimacion de bug": 0.0191,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "calcularMontoIVA",
+      "codigo": "\n/**\n * Calcula solo el monto del IVA.\n * @param precioBase Precio base sin IVA\n * @param tasaIVA Tasa de IVA\n * @return Monto del IVA\n */\npublic static double calcularMontoIVA(double precioBase, double tasaIVA) {\n    return precioBase * tasaIVA;\n}",
+      "halstead": {
+        "vocabulario": 4,
+        "longitud": 4,
+        "volumen": 8.0,
+        "dificultad": 1.0,
+        "esfuerzo de implementacion": 8.0,
+        "tiempo estimado de desarrollo": 0.44,
+        "estimacion de bug": 0.0027,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 3,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    double precio = 1000;\n    double precioConIVA = calcularPrecioConIVA(precio, IVA_MEXICO);\n    double montoIVA = calcularMontoIVA(precio, IVA_MEXICO);\n    System.out.println(String.format(\"Precio base: $%.2f\", precio));\n    System.out.println(String.format(\"IVA (16%%): $%.2f\", montoIVA));\n    System.out.println(String.format(\"Precio con IVA: $%.2f\", precioConIVA));\n}",
+      "halstead": {
+        "vocabulario": 10,
+        "longitud": 17,
+        "volumen": 56.47,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.0188,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 9,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

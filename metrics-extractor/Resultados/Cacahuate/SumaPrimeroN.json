@@ -1,0 +1,26 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "SumaPrimeroN",
+  "metodos": [
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    int n = 100;\n    int suma = 0;\n    for (int i = 1; i <= n; i++) {\n        suma += i;\n    }\n    System.out.println(\"La suma de los primeros \" + n + \" números es: \" + suma);\n}",
+      "halstead": {
+        "vocabulario": 14,
+        "longitud": 20,
+        "volumen": 76.15,
+        "dificultad": 3.61,
+        "esfuerzo de implementacion": 274.98,
+        "tiempo estimado de desarrollo": 15.28,
+        "estimacion de bug": 0.0254,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

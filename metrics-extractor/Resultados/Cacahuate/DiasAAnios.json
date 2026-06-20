@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "DiasAAnios",
+  "metodos": [
+    {
+      "metodo": "convertir",
+      "codigo": "\n/**\n * Convierte días a años y días restantes.\n * @param diasTotales Total de días\n * @return Objeto Periodo con la conversión\n */\npublic static Periodo convertir(int diasTotales) {\n    if (diasTotales < 0) {\n        throw new IllegalArgumentException(\"Los días no pueden ser negativos\");\n    }\n    int anios = diasTotales / DIAS_POR_ANIO;\n    int dias = diasTotales % DIAS_POR_ANIO;\n    return new Periodo(anios, dias);\n}",
+      "halstead": {
+        "vocabulario": 12,
+        "longitud": 15,
+        "volumen": 53.77,
+        "dificultad": 4.5,
+        "esfuerzo de implementacion": 241.98,
+        "tiempo estimado de desarrollo": 13.44,
+        "estimacion de bug": 0.0179,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 10,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    int dias = 730;\n    Periodo periodo = convertir(dias);\n    System.out.println(String.format(\"%d días = %s\", dias, periodo));\n}",
+      "halstead": {
+        "vocabulario": 6,
+        "longitud": 7,
+        "volumen": 18.09,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.006,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

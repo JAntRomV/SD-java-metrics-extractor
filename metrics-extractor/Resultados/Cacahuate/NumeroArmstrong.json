@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "NumeroArmstrong",
+  "metodos": [
+    {
+      "metodo": "esArmstrong",
+      "codigo": "\n/**\n * Verifica si un número es Armstrong.\n * Un número Armstrong es igual a la suma de sus dígitos elevados al número de dígitos.\n * @param numero Número a verificar\n * @return true si es Armstrong, false en caso contrario\n */\npublic static boolean esArmstrong(int numero) {\n    if (numero < 0) {\n        return false;\n    }\n    int original = numero;\n    int suma = 0;\n    int digitos = String.valueOf(numero).length();\n    while (numero != 0) {\n        int digito = numero % 10;\n        suma += Math.pow(digito, digitos);\n        numero /= 10;\n    }\n    return suma == original;\n}",
+      "halstead": {
+        "vocabulario": 19,
+        "longitud": 29,
+        "volumen": 123.19,
+        "dificultad": 8.55,
+        "esfuerzo de implementacion": 1053.27,
+        "tiempo estimado de desarrollo": 58.52,
+        "estimacion de bug": 0.0411,
+        "numero ciclomatico": 4
+      },
+      "grafo de flujo de control": {
+        "loc": 17,
+        "nodes": 4,
+        "edges": 6,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    int numero = 153;\n    boolean resultado = esArmstrong(numero);\n    System.out.println(String.format(\"%d %s Armstrong\", numero, resultado ? \"es\" : \"no es\"));\n}",
+      "halstead": {
+        "vocabulario": 8,
+        "longitud": 9,
+        "volumen": 27.0,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.009,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

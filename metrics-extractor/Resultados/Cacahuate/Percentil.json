@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "Percentil",
+  "metodos": [
+    {
+      "metodo": "calcular",
+      "codigo": "\n/**\n * Calcula un percentil específico.\n * @param datos Arreglo de datos\n * @param percentil Percentil a calcular (0-100)\n * @return El valor del percentil\n */\npublic static double calcular(double[] datos, int percentil) {\n    if (datos == null || datos.length == 0) {\n        throw new IllegalArgumentException(\"El arreglo no puede estar vacío\");\n    }\n    if (percentil < 0 || percentil > 100) {\n        throw new IllegalArgumentException(\"El percentil debe estar entre 0 y 100\");\n    }\n    double[] copia = Arrays.copyOf(datos, datos.length);\n    Arrays.sort(copia);\n    double indice = percentil / 100.0 * (copia.length - 1);\n    int indiceInferior = (int) Math.floor(indice);\n    int indiceSuperior = (int) Math.ceil(indice);\n    if (indiceInferior == indiceSuperior) {\n        return copia[indiceInferior];\n    }\n    double peso = indice - indiceInferior;\n    return copia[indiceInferior] * (1 - peso) + copia[indiceSuperior] * peso;\n}",
+      "halstead": {
+        "vocabulario": 27,
+        "longitud": 58,
+        "volumen": 275.78,
+        "dificultad": 12.38,
+        "esfuerzo de implementacion": 3412.82,
+        "tiempo estimado de desarrollo": 189.6,
+        "estimacion de bug": 0.0919,
+        "numero ciclomatico": 5
+      },
+      "grafo de flujo de control": {
+        "loc": 23,
+        "nodes": 5,
+        "edges": 8,
+        "unconnected nodos": 3
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    double[] datos = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };\n    int percentil = 75;\n    double resultado = calcular(datos, percentil);\n    System.out.println(String.format(\"Percentil %d: %.2f\", percentil, resultado));\n}",
+      "halstead": {
+        "vocabulario": 17,
+        "longitud": 18,
+        "volumen": 73.57,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.0245,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

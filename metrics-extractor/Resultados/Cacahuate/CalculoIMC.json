@@ -1,0 +1,26 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "CalculoIMC",
+  "metodos": [
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    // kg\n    double peso = 70;\n    // metros\n    double altura = 1.75;\n    double imc = peso / (altura * altura);\n    System.out.println(\"Tu IMC es: \" + imc);\n}",
+      "halstead": {
+        "vocabulario": 10,
+        "longitud": 11,
+        "volumen": 36.54,
+        "dificultad": 1.71,
+        "esfuerzo de implementacion": 62.64,
+        "tiempo estimado de desarrollo": 3.48,
+        "estimacion de bug": 0.0122,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

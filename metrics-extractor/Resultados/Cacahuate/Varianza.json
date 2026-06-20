@@ -1,0 +1,66 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "Varianza",
+  "metodos": [
+    {
+      "metodo": "calcularMedia",
+      "codigo": "\n/**\n * Calcula la media de un conjunto de datos.\n * @param datos Arreglo de datos\n * @return La media\n */\nprivate static double calcularMedia(double[] datos) {\n    double suma = 0;\n    for (double dato : datos) {\n        suma += dato;\n    }\n    return suma / datos.length;\n}",
+      "halstead": {
+        "vocabulario": 8,
+        "longitud": 10,
+        "volumen": 30.0,
+        "dificultad": 3.0,
+        "esfuerzo de implementacion": 90.0,
+        "tiempo estimado de desarrollo": 5.0,
+        "estimacion de bug": 0.01,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    },
+    {
+      "metodo": "calcular",
+      "codigo": "\n/**\n * Calcula la varianza de un conjunto de datos.\n * @param datos Arreglo de datos\n * @return La varianza\n */\npublic static double calcular(double[] datos) {\n    if (datos == null || datos.length == 0) {\n        throw new IllegalArgumentException(\"El arreglo no puede estar vacío\");\n    }\n    double media = calcularMedia(datos);\n    double sumaCuadrados = 0;\n    for (double dato : datos) {\n        sumaCuadrados += Math.pow(dato - media, 2);\n    }\n    return sumaCuadrados / datos.length;\n}",
+      "halstead": {
+        "vocabulario": 18,
+        "longitud": 25,
+        "volumen": 104.25,
+        "dificultad": 7.5,
+        "esfuerzo de implementacion": 781.86,
+        "tiempo estimado de desarrollo": 43.44,
+        "estimacion de bug": 0.0347,
+        "numero ciclomatico": 4
+      },
+      "grafo de flujo de control": {
+        "loc": 14,
+        "nodes": 4,
+        "edges": 6,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    double[] datos = { 10, 12, 23, 23, 16, 23, 21, 16 };\n    double varianza = calcular(datos);\n    System.out.println(String.format(\"Varianza: %.2f\", varianza));\n}",
+      "halstead": {
+        "vocabulario": 10,
+        "longitud": 13,
+        "volumen": 43.19,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.0144,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

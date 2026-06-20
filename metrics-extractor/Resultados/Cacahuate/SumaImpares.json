@@ -1,0 +1,26 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "SumaImpares",
+  "metodos": [
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    int n = 50;\n    int suma = 0;\n    for (int i = 1; i <= n; i += 2) {\n        suma += i;\n    }\n    System.out.println(\"La suma de números impares hasta \" + n + \" es: \" + suma);\n}",
+      "halstead": {
+        "vocabulario": 14,
+        "longitud": 21,
+        "volumen": 79.95,
+        "dificultad": 2.8,
+        "esfuerzo de implementacion": 223.87,
+        "tiempo estimado de desarrollo": 12.44,
+        "estimacion de bug": 0.0267,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "MediaPonderada",
+  "metodos": [
+    {
+      "metodo": "calcular",
+      "codigo": "\n/**\n * Calcula la media ponderada.\n * @param valores Arreglo de valores\n * @param pesos Arreglo de pesos\n * @return La media ponderada\n */\npublic static double calcular(double[] valores, double[] pesos) {\n    if (valores == null || pesos == null || valores.length != pesos.length) {\n        throw new IllegalArgumentException(\"Los arreglos deben tener la misma longitud\");\n    }\n    if (valores.length == 0) {\n        throw new IllegalArgumentException(\"Los arreglos no pueden estar vacíos\");\n    }\n    double suma = 0;\n    double sumaPesos = 0;\n    for (int i = 0; i < valores.length; i++) {\n        suma += valores[i] * pesos[i];\n        sumaPesos += pesos[i];\n    }\n    if (sumaPesos == 0) {\n        throw new ArithmeticException(\"La suma de pesos no puede ser cero\");\n    }\n    return suma / sumaPesos;\n}",
+      "halstead": {
+        "vocabulario": 22,
+        "longitud": 50,
+        "volumen": 222.97,
+        "dificultad": 17.4,
+        "esfuerzo de implementacion": 3879.71,
+        "tiempo estimado de desarrollo": 215.54,
+        "estimacion de bug": 0.0743,
+        "numero ciclomatico": 6
+      },
+      "grafo de flujo de control": {
+        "loc": 23,
+        "nodes": 6,
+        "edges": 10,
+        "unconnected nodos": 3
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    double[] valores = { 8, 9, 7 };\n    double[] pesos = { 0.3, 0.5, 0.2 };\n    double mediaPonderada = calcular(valores, pesos);\n    System.out.println(String.format(\"Media ponderada: %.2f\", mediaPonderada));\n}",
+      "halstead": {
+        "vocabulario": 12,
+        "longitud": 12,
+        "volumen": 43.02,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.0143,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

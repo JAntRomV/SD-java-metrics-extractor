@@ -1,0 +1,26 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "EnergiaKinetica",
+  "metodos": [
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    // kg\n    double masa = 10;\n    // m/s\n    double velocidad = 5;\n    double energia = 0.5 * masa * velocidad * velocidad;\n    System.out.println(\"Energía cinética: \" + energia + \" J\");\n}",
+      "halstead": {
+        "vocabulario": 11,
+        "longitud": 15,
+        "volumen": 51.89,
+        "dificultad": 1.11,
+        "esfuerzo de implementacion": 57.66,
+        "tiempo estimado de desarrollo": 3.2,
+        "estimacion de bug": 0.0173,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

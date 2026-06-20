@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "ContarImpares",
+  "metodos": [
+    {
+      "metodo": "contar",
+      "codigo": "\n/**\n * Cuenta la cantidad de números impares en un array.\n * @param numeros Arreglo de números\n * @return Cantidad de números impares\n */\npublic static int contar(int[] numeros) {\n    if (numeros == null) {\n        throw new IllegalArgumentException(\"El arreglo no puede ser nulo\");\n    }\n    int contador = 0;\n    for (int num : numeros) {\n        if (num % 2 != 0) {\n            contador++;\n        }\n    }\n    return contador;\n}",
+      "halstead": {
+        "vocabulario": 15,
+        "longitud": 19,
+        "volumen": 74.23,
+        "dificultad": 5.71,
+        "esfuerzo de implementacion": 424.18,
+        "tiempo estimado de desarrollo": 23.57,
+        "estimacion de bug": 0.0247,
+        "numero ciclomatico": 5
+      },
+      "grafo de flujo de control": {
+        "loc": 13,
+        "nodes": 5,
+        "edges": 8,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    int[] numeros = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };\n    int impares = contar(numeros);\n    System.out.println(\"Números impares: \" + impares);\n}",
+      "halstead": {
+        "vocabulario": 15,
+        "longitud": 15,
+        "volumen": 58.6,
+        "dificultad": 0.5,
+        "esfuerzo de implementacion": 29.3,
+        "tiempo estimado de desarrollo": 1.63,
+        "estimacion de bug": 0.0195,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

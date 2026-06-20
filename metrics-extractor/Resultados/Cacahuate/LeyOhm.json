@@ -1,0 +1,26 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "LeyOhm",
+  "metodos": [
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    // V\n    double voltaje = 12;\n    // Ω\n    double resistencia = 4;\n    double corriente = voltaje / resistencia;\n    System.out.println(\"Corriente: \" + corriente + \" A\");\n}",
+      "halstead": {
+        "vocabulario": 10,
+        "longitud": 11,
+        "volumen": 36.54,
+        "dificultad": 1.0,
+        "esfuerzo de implementacion": 36.54,
+        "tiempo estimado de desarrollo": 2.03,
+        "estimacion de bug": 0.0122,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

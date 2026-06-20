@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "RestaNumeros",
+  "metodos": [
+    {
+      "metodo": "restar",
+      "codigo": "\n/**\n * Método que resta dos números.\n * @param a Minuendo\n * @param b Sustraendo\n * @return La diferencia entre a y b\n */\npublic static double restar(double a, double b) {\n    return a - b;\n}",
+      "halstead": {
+        "vocabulario": 4,
+        "longitud": 4,
+        "volumen": 8.0,
+        "dificultad": 1.0,
+        "esfuerzo de implementacion": 8.0,
+        "tiempo estimado de desarrollo": 0.44,
+        "estimacion de bug": 0.0027,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 3,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    double numero1 = 50.5;\n    double numero2 = 20.3;\n    double resultado = restar(numero1, numero2);\n    System.out.println(String.format(\"La resta de %.2f - %.2f = %.2f\", numero1, numero2, resultado));\n}",
+      "halstead": {
+        "vocabulario": 8,
+        "longitud": 10,
+        "volumen": 30.0,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.01,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

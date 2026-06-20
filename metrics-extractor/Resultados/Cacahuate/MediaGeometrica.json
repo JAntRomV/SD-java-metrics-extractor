@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "MediaGeometrica",
+  "metodos": [
+    {
+      "metodo": "calcular",
+      "codigo": "\n/**\n * Calcula la media geométrica.\n * @param datos Arreglo de datos (deben ser positivos)\n * @return La media geométrica\n */\npublic static double calcular(double[] datos) {\n    if (datos == null || datos.length == 0) {\n        throw new IllegalArgumentException(\"El arreglo no puede estar vacío\");\n    }\n    double producto = 1;\n    for (double dato : datos) {\n        if (dato <= 0) {\n            throw new IllegalArgumentException(\"Todos los valores deben ser positivos\");\n        }\n        producto *= dato;\n    }\n    return Math.pow(producto, 1.0 / datos.length);\n}",
+      "halstead": {
+        "vocabulario": 19,
+        "longitud": 28,
+        "volumen": 118.94,
+        "dificultad": 7.2,
+        "esfuerzo de implementacion": 856.38,
+        "tiempo estimado de desarrollo": 47.58,
+        "estimacion de bug": 0.0396,
+        "numero ciclomatico": 5
+      },
+      "grafo de flujo de control": {
+        "loc": 15,
+        "nodes": 5,
+        "edges": 8,
+        "unconnected nodos": 2
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    double[] datos = { 2, 8, 4 };\n    double mediaGeometrica = calcular(datos);\n    System.out.println(String.format(\"Media geométrica: %.2f\", mediaGeometrica));\n}",
+      "halstead": {
+        "vocabulario": 8,
+        "longitud": 8,
+        "volumen": 24.0,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.008,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

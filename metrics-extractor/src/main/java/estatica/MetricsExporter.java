@@ -17,10 +17,12 @@ public class MetricsExporter {
         int totalArchivos = 0;
 //------------------------------recorre proyectos--------------------------------------------
         for (ProjectMetrics project : reports) {
+            String sanitizedProjectName = sanitize(project.getProjectName());
 
 //-------------------------- Subcarpeta por proyecto: outputFolder/nombre-proyecto/-------------------------
             File projectFolder = new File(baseFolder, sanitize(project.getProjectName()));
             if (!projectFolder.exists()) projectFolder.mkdirs();
+            java.util.List<String> generatedJsonFiles = new java.util.ArrayList<>();
 
 //-----------------------Iterar sobre cada clase del proyecto-----------------------------------------
             for (String className : project.getClassNames()) {
@@ -31,10 +33,28 @@ public class MetricsExporter {
 
                 if (methods.size() < JSON_THRESHOLD) {
                     writeJson(className, fileName, methods, projectFolder);
+                    generatedJsonFiles.add(sanitizedProjectName + "/" + sanitize(className) + ".json");
                 } else {
                     writeCsv(className, fileName, methods, projectFolder);
                 }
                 totalArchivos++;
+            }
+            if (!generatedJsonFiles.isEmpty()) {
+                File manifestFile = new File(baseFolder, sanitizedProjectName + "_manifest.json");
+                try (PrintWriter mw = new PrintWriter(manifestFile, StandardCharsets.UTF_8)) {
+                    mw.println("{");
+                    mw.println("  \"proyecto\": \"" + esc(project.getProjectName()) + "\",");
+                    mw.println("  \"archivos\": [");
+                    for (int i = 0; i < generatedJsonFiles.size(); i++) {
+                        boolean last = (i == generatedJsonFiles.size() - 1);
+                        mw.println("    \"" + esc(generatedJsonFiles.get(i)) + "\"" + (last ? "" : ","));
+                    }
+                    mw.println("  ]");
+                    mw.println("}");
+                    System.out.println("  [MANIFIESTO] Creado exitosamente: " + manifestFile.getName());
+                } catch (Exception e) {
+                    System.err.println("Error al crear manifiesto para " + project.getProjectName() + ": " + e.getMessage());
+                }
             }
         }
 
@@ -60,6 +80,7 @@ public class MetricsExporter {
 
                 w.println("    {");
                 w.println("      \"metodo\": \""                          + esc(m.getMethodName()) + "\",");
+                w.println("      \"codigo\": \"\\n"                       + escCode(m.getSourceCode()) + "\",");
                 w.println("      \"halstead\": {");
                 w.println("        \"vocabulario\": "                     + m.getVocabulary()             + ",");
                 w.println("        \"longitud\": "                        + m.getLength()                 + ",");
@@ -87,6 +108,13 @@ public class MetricsExporter {
         } catch (Exception e) {
             System.err.println("Error JSON " + className + ": " + e.getMessage());
         }
+    }
+    private static String escCode(String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\r", "")
+                .replace("\n", "\\n");
     }
 
 //--------------------------------------CSV--------------------------------

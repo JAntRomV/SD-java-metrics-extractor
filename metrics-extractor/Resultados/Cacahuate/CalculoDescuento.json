@@ -1,0 +1,26 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "CalculoDescuento",
+  "metodos": [
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    double precioOriginal = 500;\n    // porcentaje\n    double descuento = 20;\n    double precioFinal = precioOriginal - (precioOriginal * descuento / 100);\n    System.out.println(\"Precio con descuento: \" + precioFinal);\n}",
+      "halstead": {
+        "vocabulario": 12,
+        "longitud": 13,
+        "volumen": 46.6,
+        "dificultad": 2.25,
+        "esfuerzo de implementacion": 104.86,
+        "tiempo estimado de desarrollo": 5.83,
+        "estimacion de bug": 0.0155,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

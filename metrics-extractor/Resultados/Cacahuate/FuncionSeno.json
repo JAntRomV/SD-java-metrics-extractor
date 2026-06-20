@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "FuncionSeno",
+  "metodos": [
+    {
+      "metodo": "calcular",
+      "codigo": "\n/**\n * Calcula el seno de un ángulo.\n * @param anguloGrados Ángulo en grados\n * @return El seno del ángulo\n */\npublic static double calcular(double anguloGrados) {\n    double radianes = Math.toRadians(anguloGrados);\n    return Math.sin(radianes);\n}",
+      "halstead": {
+        "vocabulario": 4,
+        "longitud": 5,
+        "volumen": 10.0,
+        "dificultad": 0.67,
+        "esfuerzo de implementacion": 6.67,
+        "tiempo estimado de desarrollo": 0.37,
+        "estimacion de bug": 0.0033,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 4,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    // grados\n    double angulo = 30;\n    double seno = calcular(angulo);\n    System.out.println(String.format(\"Seno de %.0f° = %.4f\", angulo, seno));\n}",
+      "halstead": {
+        "vocabulario": 6,
+        "longitud": 7,
+        "volumen": 18.09,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.006,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

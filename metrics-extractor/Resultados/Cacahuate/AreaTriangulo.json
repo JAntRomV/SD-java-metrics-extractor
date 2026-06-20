@@ -1,0 +1,26 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "AreaTriangulo",
+  "metodos": [
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    double base = 8;\n    double altura = 6;\n    double area = (base * altura) / 2;\n    System.out.println(\"El área del triángulo es: \" + area);\n}",
+      "halstead": {
+        "vocabulario": 11,
+        "longitud": 11,
+        "volumen": 38.05,
+        "dificultad": 1.5,
+        "esfuerzo de implementacion": 57.08,
+        "tiempo estimado de desarrollo": 3.17,
+        "estimacion de bug": 0.0127,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

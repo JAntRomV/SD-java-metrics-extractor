@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "AreaCuadrado",
+  "metodos": [
+    {
+      "metodo": "calcular",
+      "codigo": "\n/**\n * Calcula el área de un cuadrado.\n * @param lado Longitud del lado\n * @return El área del cuadrado\n */\npublic static double calcular(double lado) {\n    if (lado <= 0) {\n        throw new IllegalArgumentException(\"El lado debe ser positivo\");\n    }\n    return lado * lado;\n}",
+      "halstead": {
+        "vocabulario": 8,
+        "longitud": 10,
+        "volumen": 30.0,
+        "dificultad": 4.17,
+        "esfuerzo de implementacion": 125.0,
+        "tiempo estimado de desarrollo": 6.94,
+        "estimacion de bug": 0.01,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    double lado = 5;\n    double area = calcular(lado);\n    System.out.println(String.format(\"Área del cuadrado: %.2f\", area));\n}",
+      "halstead": {
+        "vocabulario": 6,
+        "longitud": 6,
+        "volumen": 15.51,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.0052,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

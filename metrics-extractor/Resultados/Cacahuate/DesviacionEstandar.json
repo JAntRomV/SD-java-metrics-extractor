@@ -1,0 +1,26 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "DesviacionEstandar",
+  "metodos": [
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    double[] datos = { 10, 12, 23, 23, 16, 23, 21, 16 };\n    double suma = 0;\n    for (double dato : datos) {\n        suma += dato;\n    }\n    double media = suma / datos.length;\n    double sumaCuadrados = 0;\n    for (double dato : datos) {\n        sumaCuadrados += Math.pow(dato - media, 2);\n    }\n    double varianza = sumaCuadrados / datos.length;\n    double desviacion = Math.sqrt(varianza);\n    System.out.println(\"Desviación estándar: \" + desviacion);\n}",
+      "halstead": {
+        "vocabulario": 22,
+        "longitud": 36,
+        "volumen": 160.54,
+        "dificultad": 4.12,
+        "esfuerzo de implementacion": 661.05,
+        "tiempo estimado de desarrollo": 36.72,
+        "estimacion de bug": 0.0535,
+        "numero ciclomatico": 4
+      },
+      "grafo de flujo de control": {
+        "loc": 15,
+        "nodes": 4,
+        "edges": 6,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

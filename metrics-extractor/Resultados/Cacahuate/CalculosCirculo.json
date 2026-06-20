@@ -1,0 +1,26 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "CalculosCirculo",
+  "metodos": [
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    double radio = 5.0;\n    double pi = 3.14159;\n    double area = pi * radio * radio;\n    double perimetro = 2 * pi * radio;\n    System.out.println(\"Área del círculo: \" + area);\n    System.out.println(\"Perímetro del círculo: \" + perimetro);\n}",
+      "halstead": {
+        "vocabulario": 12,
+        "longitud": 20,
+        "volumen": 71.7,
+        "dificultad": 1.4,
+        "esfuerzo de implementacion": 100.38,
+        "tiempo estimado de desarrollo": 5.58,
+        "estimacion de bug": 0.0239,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

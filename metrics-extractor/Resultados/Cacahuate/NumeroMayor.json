@@ -1,0 +1,26 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "NumeroMayor",
+  "metodos": [
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    int a = 25, b = 40, c = 15;\n    int mayor = a;\n    if (b > mayor)\n        mayor = b;\n    if (c > mayor)\n        mayor = c;\n    System.out.println(\"El número mayor es: \" + mayor);\n}",
+      "halstead": {
+        "vocabulario": 13,
+        "longitud": 22,
+        "volumen": 81.41,
+        "dificultad": 3.33,
+        "esfuerzo de implementacion": 271.37,
+        "tiempo estimado de desarrollo": 15.08,
+        "estimacion de bug": 0.0271,
+        "numero ciclomatico": 4
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 4,
+        "edges": 6,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

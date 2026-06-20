@@ -1,0 +1,26 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "AppTest",
+  "metodos": [
+    {
+      "metodo": "shouldAnswerWithTrue",
+      "codigo": "\n/**\n * Rigorous Test :-)\n */\n@Test\npublic void shouldAnswerWithTrue() {\n    assertTrue(true);\n}",
+      "halstead": {
+        "vocabulario": 1,
+        "longitud": 1,
+        "volumen": 0.0,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.0,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 5,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 package estatica;
-//------------------------ ENcuentra proyectos, recorre archivos------------------------------s
+
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import java.io.File;
@@ -8,17 +8,29 @@ import java.util.List;
 
 public class App {
 
-    
-    private static final String RUTA_RAIZ_PROYECTOS = "."; 
-    private static final String RUTA_SALIDA_REPORTES = ".";
-
     public static void main(String[] args) {
         System.out.println("=== Iniciando Extractor de Métricas Estáticas ===");
 
-//------------------------Verifica que el archivo exista----------------------------        
-        File rootDir = new File(RUTA_RAIZ_PROYECTOS);
+        
+        String rutaRaiz;
+        String rutaSalida;
+
+        if (args.length >= 2) {
+
+            rutaRaiz = args[0];
+            rutaSalida = args[1];
+        } else {
+//---------------- Rutas por defecto-----------------
+            rutaRaiz = "/home/tania/Documentos/ejemplo java/Cacahuate";
+            rutaSalida = "/home/tania/Escritorio/Resultados";
+        }
+
+        System.out.println("Ruta de búsqueda: " + rutaRaiz);
+        System.out.println("Ruta de destino: " + rutaSalida);
+
+        File rootDir = new File(rutaRaiz);
         if (!rootDir.exists() || !rootDir.isDirectory()) {
-            System.err.println("Error: La ruta raíz de proyectos no existe o no es válida: " + RUTA_RAIZ_PROYECTOS);
+            System.err.println("Error: La ruta raíz de proyectos no existe o no es válida: " + rutaRaiz);
             return;
         }
 
@@ -26,21 +38,22 @@ public class App {
         List<File> targetProjects = findProjectsWithSrc(rootDir);
 
         System.out.println("Proyectos encontrados para análisis: " + targetProjects.size());
-//---------------------------recorre cada proyecto encontrado---------------------------------
+
+//------------------ recorre cada proyecto encontrado------------
         for (File projectDir : targetProjects) {
             String projectName = projectDir.getName();
             System.out.println("Analizando microservicio: [" + projectName + "]");
 
-//-----------------------------crea un contenedor vacio------------------------------------------
+//------------------- crea un contenedor vacio---------------------
             ProjectMetrics projectAccumulator = new ProjectMetrics(projectName);
             List<File> javaFiles = new ArrayList<>();
 
-//------------------Entra a la carpeta src del proyecto y busca los archivo .java de forma recursiva-------------------------------         
+//-------------------- Entra a la carpeta src del proyecto y busca los archivos .java-------------------
             findJavaFilesRecursively(new File(projectDir, "src"), javaFiles);
 
             for (File javaFile : javaFiles) {
                 try {
-//---------------------------Lee el archivo y lo convierte en arbol------------------------------------------                     
+//-------------------------- Lee el archivo y lo convierte en arbol---------------------------------
                     CompilationUnit cu = StaticJavaParser.parse(javaFile);
                     MetricsAnalyzer analyzer = new MetricsAnalyzer(projectAccumulator);
                     cu.accept(analyzer, null);
@@ -52,13 +65,21 @@ public class App {
             totalReports.add(projectAccumulator);
         }
 
-// --------------------------------Crea una subcarpeta por proyecto---------------------------------------
-        MetricsExporter.export(totalReports, RUTA_SALIDA_REPORTES);
+//------------------------ Crea una subcarpeta por proyecto usando la ruta dinámica-------------------------
+        MetricsExporter.export(totalReports, rutaSalida);
         System.out.println("=== Proceso finalizado con éxito ===");
     }
-//--------------------------------Recorre las subcarpetas----------------------------------------------
+
+    
     private static List<File> findProjectsWithSrc(File root) {
         List<File> projects = new ArrayList<>();
+        
+        File directSrc = new File(root, "src");
+        if (directSrc.exists() && directSrc.isDirectory()) {
+            projects.add(root);
+            return projects;
+        }
+
         File[] files = root.listFiles();
         if (files != null) {
             for (File f : files) {
@@ -67,7 +88,6 @@ public class App {
                     if (srcFolder.exists() && srcFolder.isDirectory()) {
                         projects.add(f);
                     } else {
-                        // Búsqueda en un segundo nivel de profundidad si es necesario
                         List<File> subProjects = findProjectsWithSrc(f);
                         projects.addAll(subProjects);
                     }
@@ -76,7 +96,7 @@ public class App {
         }
         return projects;
     }
-//-------------------------recorre la carpeta dada y si escuentra una carpeta .java lo agrega a una lista-------------------------------
+
     private static void findJavaFilesRecursively(File folder, List<File> res) {
         File[] files = folder.listFiles();
         if (files != null) {

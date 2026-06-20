@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "DiagonalMatriz",
+  "metodos": [
+    {
+      "metodo": "extraerDiagonal",
+      "codigo": "\n/**\n * Extrae la diagonal principal de una matriz cuadrada.\n * @param matriz Matriz cuadrada\n * @return Arreglo con los elementos de la diagonal\n */\npublic static int[] extraerDiagonal(int[][] matriz) {\n    if (matriz == null || matriz.length == 0) {\n        throw new IllegalArgumentException(\"La matriz no puede estar vacía\");\n    }\n    if (matriz.length != matriz[0].length) {\n        throw new IllegalArgumentException(\"La matriz debe ser cuadrada\");\n    }\n    int n = matriz.length;\n    int[] diagonal = new int[n];\n    for (int i = 0; i < n; i++) {\n        diagonal[i] = matriz[i][i];\n    }\n    return diagonal;\n}",
+      "halstead": {
+        "vocabulario": 18,
+        "longitud": 34,
+        "volumen": 141.78,
+        "dificultad": 13.13,
+        "esfuerzo de implementacion": 1860.83,
+        "tiempo estimado de desarrollo": 103.38,
+        "estimacion de bug": 0.0473,
+        "numero ciclomatico": 5
+      },
+      "grafo de flujo de control": {
+        "loc": 18,
+        "nodes": 5,
+        "edges": 8,
+        "unconnected nodos": 2
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    int[][] matriz = { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } };\n    int[] diagonal = extraerDiagonal(matriz);\n    System.out.print(\"Diagonal principal: \");\n    System.out.println(Arrays.toString(diagonal));\n}",
+      "halstead": {
+        "vocabulario": 14,
+        "longitud": 15,
+        "volumen": 57.11,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.019,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "PendienteRecta",
+  "metodos": [
+    {
+      "metodo": "calcular",
+      "codigo": "\n/**\n * Calcula la pendiente de una recta que pasa por dos puntos.\n * @param p1 Primer punto\n * @param p2 Segundo punto\n * @return La pendiente\n * @throws ArithmeticException si la recta es vertical\n */\npublic static double calcular(Punto p1, Punto p2) {\n    if (p1 == null || p2 == null) {\n        throw new IllegalArgumentException(\"Los puntos no pueden ser nulos\");\n    }\n    double dx = p2.x - p1.x;\n    if (dx == 0) {\n        throw new ArithmeticException(\"La recta es vertical (pendiente indefinida)\");\n    }\n    double dy = p2.y - p1.y;\n    return dy / dx;\n}",
+      "halstead": {
+        "vocabulario": 15,
+        "longitud": 26,
+        "volumen": 101.58,
+        "dificultad": 6.13,
+        "esfuerzo de implementacion": 622.17,
+        "tiempo estimado de desarrollo": 34.57,
+        "estimacion de bug": 0.0339,
+        "numero ciclomatico": 4
+      },
+      "grafo de flujo de control": {
+        "loc": 14,
+        "nodes": 4,
+        "edges": 6,
+        "unconnected nodos": 2
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    Punto p1 = new Punto(1, 2);\n    Punto p2 = new Punto(3, 6);\n    try {\n        double pendiente = calcular(p1, p2);\n        System.out.println(String.format(\"Pendiente de la recta: %.2f\", pendiente));\n    } catch (ArithmeticException e) {\n        System.err.println(\"Error: \" + e.getMessage());\n    }\n}",
+      "halstead": {
+        "vocabulario": 13,
+        "longitud": 14,
+        "volumen": 51.81,
+        "dificultad": 0.54,
+        "esfuerzo de implementacion": 28.06,
+        "tiempo estimado de desarrollo": 1.56,
+        "estimacion de bug": 0.0173,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 11,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

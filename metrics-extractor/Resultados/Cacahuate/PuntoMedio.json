@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "PuntoMedio",
+  "metodos": [
+    {
+      "metodo": "calcular",
+      "codigo": "\n/**\n * Calcula el punto medio entre dos puntos.\n * @param p1 Primer punto\n * @param p2 Segundo punto\n * @return El punto medio\n */\npublic static Punto calcular(Punto p1, Punto p2) {\n    if (p1 == null || p2 == null) {\n        throw new IllegalArgumentException(\"Los puntos no pueden ser nulos\");\n    }\n    double xMedio = (p1.x + p2.x) / 2;\n    double yMedio = (p1.y + p2.y) / 2;\n    return new Punto(xMedio, yMedio);\n}",
+      "halstead": {
+        "vocabulario": 14,
+        "longitud": 23,
+        "volumen": 87.57,
+        "dificultad": 6.5,
+        "esfuerzo de implementacion": 569.2,
+        "tiempo estimado de desarrollo": 31.62,
+        "estimacion de bug": 0.0292,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 10,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    Punto p1 = new Punto(2, 3);\n    Punto p2 = new Punto(8, 7);\n    Punto medio = calcular(p1, p2);\n    System.out.println(\"Punto medio: \" + medio);\n}",
+      "halstead": {
+        "vocabulario": 10,
+        "longitud": 10,
+        "volumen": 33.22,
+        "dificultad": 0.5,
+        "esfuerzo de implementacion": 16.61,
+        "tiempo estimado de desarrollo": 0.92,
+        "estimacion de bug": 0.0111,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

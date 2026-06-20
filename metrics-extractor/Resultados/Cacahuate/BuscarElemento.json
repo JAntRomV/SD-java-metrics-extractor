@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "BuscarElemento",
+  "metodos": [
+    {
+      "metodo": "buscar",
+      "codigo": "\n/**\n * Busca un elemento en un array.\n * @param numeros Arreglo de números\n * @param objetivo Elemento a buscar\n * @return El índice del elemento, o -1 si no se encuentra\n */\npublic static int buscar(int[] numeros, int objetivo) {\n    if (numeros == null) {\n        throw new IllegalArgumentException(\"El arreglo no puede ser nulo\");\n    }\n    for (int i = 0; i < numeros.length; i++) {\n        if (numeros[i] == objetivo) {\n            return i;\n        }\n    }\n    return -1;\n}",
+      "halstead": {
+        "vocabulario": 15,
+        "longitud": 23,
+        "volumen": 89.86,
+        "dificultad": 6.86,
+        "esfuerzo de implementacion": 616.17,
+        "tiempo estimado de desarrollo": 34.23,
+        "estimacion de bug": 0.03,
+        "numero ciclomatico": 5
+      },
+      "grafo de flujo de control": {
+        "loc": 12,
+        "nodes": 5,
+        "edges": 8,
+        "unconnected nodos": 2
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    int[] numeros = { 5, 10, 15, 20, 25 };\n    int buscar = 15;\n    int indice = buscar(numeros, buscar);\n    if (indice != -1) {\n        System.out.println(buscar + \" encontrado en el índice \" + indice);\n    } else {\n        System.out.println(buscar + \" no encontrado\");\n    }\n}",
+      "halstead": {
+        "vocabulario": 16,
+        "longitud": 23,
+        "volumen": 92.0,
+        "dificultad": 2.83,
+        "esfuerzo de implementacion": 260.67,
+        "tiempo estimado de desarrollo": 14.48,
+        "estimacion de bug": 0.0307,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 12,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

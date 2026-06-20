@@ -68,10 +68,13 @@ public class MetricsAnalyzer extends VoidVisitorAdapter<Void> {
 //-------------------------CFG--------------------------------------------
         int[] cfg = buildCfg(md, decisions);
         // cfg[0]=nodes, cfg[1]=edges, cfg[2]=CC, cfg[3]=unconnectedNodes
+//extrae el texto fuente completo  de cada metodo        
+        String sourceCode = md.toString();
 
 //-------reune todos los valores en un objeto y lo registra en el proyecto------
         MethodMetrics method = new MethodMetrics(
                 currentFileName, currentClassName, md.getNameAsString(),
+                sourceCode,
                 loc,
                 halstead[0], halstead[1], halstead[2], halstead[3],
                 cfg[2],         // CC

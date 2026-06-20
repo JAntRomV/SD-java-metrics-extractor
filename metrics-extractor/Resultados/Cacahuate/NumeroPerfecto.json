@@ -1,0 +1,26 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "NumeroPerfecto",
+  "metodos": [
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    int numero = 28;\n    int suma = 0;\n    for (int i = 1; i < numero; i++) {\n        if (numero % i == 0)\n            suma += i;\n    }\n    System.out.println(numero + (suma == numero ? \" es perfecto\" : \" no es perfecto\"));\n}",
+      "halstead": {
+        "vocabulario": 17,
+        "longitud": 26,
+        "volumen": 106.27,
+        "dificultad": 7.56,
+        "esfuerzo de implementacion": 802.96,
+        "tiempo estimado de desarrollo": 44.61,
+        "estimacion de bug": 0.0354,
+        "numero ciclomatico": 5
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 5,
+        "edges": 8,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

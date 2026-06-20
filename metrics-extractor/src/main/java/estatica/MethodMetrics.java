@@ -8,6 +8,9 @@ public class MethodMetrics {
     private final String className;
     private final String methodName;
 
+//------------ Se usa solamente para exportar para que lo lea python--------
+    private final String sourceCode;
+
 //-------------------LOC-------------------------------
     private final int loc;
 
@@ -35,6 +38,7 @@ public class MethodMetrics {
 //----------------------Calculos-----------------------------------------
     public MethodMetrics(
             String fileName, String className, String methodName,
+            String sourceCode,
             int loc,
             int n1, int n2, int N1, int N2,
             int cyclomaticComplexity,
@@ -43,6 +47,7 @@ public class MethodMetrics {
         this.fileName   = fileName;
         this.className  = className;
         this.methodName = methodName;
+        this.sourceCode = sourceCode;
         this.loc        = loc;
         this.n1 = n1; this.n2 = n2; this.N1 = N1; this.N2 = N2;
 
@@ -65,6 +70,7 @@ public class MethodMetrics {
     public String getFileName()             { return fileName; }
     public String getClassName()            { return className; }
     public String getMethodName()           { return methodName; }
+    public String getSourceCode()           { return sourceCode; }
     public int    getLoc()                  { return loc; }
     public int    getVocabulary()           { return vocabulary; }
     public int    getLength()               { return length; }

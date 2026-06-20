@@ -1,0 +1,26 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "ConversionFahrenheitCelsius",
+  "metodos": [
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    double fahrenheit = 77;\n    double celsius = (fahrenheit - 32) * 5 / 9;\n    System.out.println(fahrenheit + \"°F = \" + celsius + \"°C\");\n}",
+      "halstead": {
+        "vocabulario": 13,
+        "longitud": 16,
+        "volumen": 59.21,
+        "dificultad": 2.22,
+        "esfuerzo de implementacion": 131.57,
+        "tiempo estimado de desarrollo": 7.31,
+        "estimacion de bug": 0.0197,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 5,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

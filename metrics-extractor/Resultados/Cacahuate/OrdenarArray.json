@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "OrdenarArray",
+  "metodos": [
+    {
+      "metodo": "ordenar",
+      "codigo": "\n/**\n * Ordena un array de forma ascendente (crea una copia).\n * @param numeros Arreglo original\n * @return Arreglo ordenado\n */\npublic static int[] ordenar(int[] numeros) {\n    if (numeros == null) {\n        throw new IllegalArgumentException(\"El arreglo no puede ser nulo\");\n    }\n    int[] copia = Arrays.copyOf(numeros, numeros.length);\n    Arrays.sort(copia);\n    return copia;\n}",
+      "halstead": {
+        "vocabulario": 9,
+        "longitud": 13,
+        "volumen": 41.21,
+        "dificultad": 3.6,
+        "esfuerzo de implementacion": 148.35,
+        "tiempo estimado de desarrollo": 8.24,
+        "estimacion de bug": 0.0137,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 9,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    int[] numeros = { 5, 2, 8, 1, 9 };\n    int[] ordenado = ordenar(numeros);\n    System.out.print(\"Array ordenado: \");\n    System.out.println(Arrays.toString(ordenado));\n}",
+      "halstead": {
+        "vocabulario": 10,
+        "longitud": 11,
+        "volumen": 36.54,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.0122,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

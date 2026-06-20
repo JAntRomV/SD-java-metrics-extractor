@@ -1,0 +1,66 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "NumeroAleatorio",
+  "metodos": [
+    {
+      "metodo": "generar",
+      "codigo": "\n/**\n * Genera un número aleatorio en un rango específico.\n * @param min Valor mínimo (inclusivo)\n * @param max Valor máximo (inclusivo)\n * @return Número aleatorio en el rango [min, max]\n */\npublic static int generar(int min, int max) {\n    if (min > max) {\n        throw new IllegalArgumentException(\"El mínimo no puede ser mayor que el máximo\");\n    }\n    return random.nextInt(max - min + 1) + min;\n}",
+      "halstead": {
+        "vocabulario": 11,
+        "longitud": 15,
+        "volumen": 51.89,
+        "dificultad": 4.8,
+        "esfuerzo de implementacion": 249.08,
+        "tiempo estimado de desarrollo": 13.84,
+        "estimacion de bug": 0.0173,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "generarDecimal",
+      "codigo": "\n/**\n * Genera un número aleatorio decimal en un rango.\n * @param min Valor mínimo\n * @param max Valor máximo\n * @return Número aleatorio decimal en el rango [min, max)\n */\npublic static double generarDecimal(double min, double max) {\n    if (min > max) {\n        throw new IllegalArgumentException(\"El mínimo no puede ser mayor que el máximo\");\n    }\n    return min + (max - min) * random.nextDouble();\n}",
+      "halstead": {
+        "vocabulario": 11,
+        "longitud": 14,
+        "volumen": 48.43,
+        "dificultad": 6.13,
+        "esfuerzo de implementacion": 296.65,
+        "tiempo estimado de desarrollo": 16.48,
+        "estimacion de bug": 0.0161,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    int min = 1, max = 100;\n    int aleatorio = generar(min, max);\n    System.out.println(String.format(\"Número aleatorio entre %d y %d: %d\", min, max, aleatorio));\n}",
+      "halstead": {
+        "vocabulario": 8,
+        "longitud": 10,
+        "volumen": 30.0,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.01,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

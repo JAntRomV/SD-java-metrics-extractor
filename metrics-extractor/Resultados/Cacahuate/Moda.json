@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "Moda",
+  "metodos": [
+    {
+      "metodo": "calcular",
+      "codigo": "\n/**\n * Calcula la moda de un conjunto de datos.\n * @param datos Arreglo de datos\n * @return La moda (valor más frecuente)\n */\npublic static int calcular(int[] datos) {\n    if (datos == null || datos.length == 0) {\n        throw new IllegalArgumentException(\"El arreglo no puede estar vacío\");\n    }\n    Map<Integer, Integer> frecuencias = new HashMap<>();\n    for (int dato : datos) {\n        frecuencias.put(dato, frecuencias.getOrDefault(dato, 0) + 1);\n    }\n    int moda = datos[0];\n    int maxFrecuencia = 0;\n    for (Map.Entry<Integer, Integer> entry : frecuencias.entrySet()) {\n        if (entry.getValue() > maxFrecuencia) {\n            maxFrecuencia = entry.getValue();\n            moda = entry.getKey();\n        }\n    }\n    return moda;\n}",
+      "halstead": {
+        "vocabulario": 19,
+        "longitud": 36,
+        "volumen": 152.93,
+        "dificultad": 10.35,
+        "esfuerzo de implementacion": 1582.78,
+        "tiempo estimado de desarrollo": 87.93,
+        "estimacion de bug": 0.051,
+        "numero ciclomatico": 6
+      },
+      "grafo de flujo de control": {
+        "loc": 22,
+        "nodes": 6,
+        "edges": 10,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    int[] datos = { 1, 2, 2, 3, 3, 3, 4, 5 };\n    int moda = calcular(datos);\n    System.out.println(\"Moda: \" + moda);\n}",
+      "halstead": {
+        "vocabulario": 10,
+        "longitud": 13,
+        "volumen": 43.19,
+        "dificultad": 0.67,
+        "esfuerzo de implementacion": 28.79,
+        "tiempo estimado de desarrollo": 1.6,
+        "estimacion de bug": 0.0144,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

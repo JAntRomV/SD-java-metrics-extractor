@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "InvertirArray",
+  "metodos": [
+    {
+      "metodo": "invertir",
+      "codigo": "\n/**\n * Invierte un array (crea una copia invertida).\n * @param numeros Arreglo original\n * @return Arreglo invertido\n */\npublic static int[] invertir(int[] numeros) {\n    if (numeros == null) {\n        throw new IllegalArgumentException(\"El arreglo no puede ser nulo\");\n    }\n    int[] invertido = new int[numeros.length];\n    for (int i = 0; i < numeros.length; i++) {\n        invertido[i] = numeros[numeros.length - 1 - i];\n    }\n    return invertido;\n}",
+      "halstead": {
+        "vocabulario": 16,
+        "longitud": 25,
+        "volumen": 100.0,
+        "dificultad": 9.64,
+        "esfuerzo de implementacion": 964.29,
+        "tiempo estimado de desarrollo": 53.57,
+        "estimacion de bug": 0.0333,
+        "numero ciclomatico": 4
+      },
+      "grafo de flujo de control": {
+        "loc": 11,
+        "nodes": 4,
+        "edges": 6,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    int[] numeros = { 1, 2, 3, 4, 5 };\n    int[] invertido = invertir(numeros);\n    System.out.print(\"Array invertido: \");\n    System.out.println(Arrays.toString(invertido));\n}",
+      "halstead": {
+        "vocabulario": 10,
+        "longitud": 11,
+        "volumen": 36.54,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.0122,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

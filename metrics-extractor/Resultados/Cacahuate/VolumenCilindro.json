@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "VolumenCilindro",
+  "metodos": [
+    {
+      "metodo": "calcular",
+      "codigo": "\n/**\n * Calcula el volumen de un cilindro.\n * Fórmula: V = π * r² * h\n * @param radio Radio de la base\n * @param altura Altura del cilindro\n * @return El volumen del cilindro\n */\npublic static double calcular(double radio, double altura) {\n    if (radio <= 0 || altura <= 0) {\n        throw new IllegalArgumentException(\"Radio y altura deben ser positivos\");\n    }\n    return Math.PI * radio * radio * altura;\n}",
+      "halstead": {
+        "vocabulario": 11,
+        "longitud": 18,
+        "volumen": 62.27,
+        "dificultad": 5.4,
+        "esfuerzo de implementacion": 336.26,
+        "tiempo estimado de desarrollo": 18.68,
+        "estimacion de bug": 0.0208,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    double radio = 3;\n    double altura = 5;\n    double volumen = calcular(radio, altura);\n    System.out.println(String.format(\"Volumen del cilindro: %.2f\", volumen));\n}",
+      "halstead": {
+        "vocabulario": 8,
+        "longitud": 8,
+        "volumen": 24.0,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.008,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

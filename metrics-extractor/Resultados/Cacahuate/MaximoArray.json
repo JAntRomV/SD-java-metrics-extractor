@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "MaximoArray",
+  "metodos": [
+    {
+      "metodo": "encontrar",
+      "codigo": "\n/**\n * Encuentra el valor máximo en un array.\n * @param numeros Arreglo de números\n * @return El valor máximo\n */\npublic static int encontrar(int[] numeros) {\n    if (numeros == null || numeros.length == 0) {\n        throw new IllegalArgumentException(\"El arreglo no puede estar vacío\");\n    }\n    int max = numeros[0];\n    for (int i = 1; i < numeros.length; i++) {\n        if (numeros[i] > max) {\n            max = numeros[i];\n        }\n    }\n    return max;\n}",
+      "halstead": {
+        "vocabulario": 17,
+        "longitud": 30,
+        "volumen": 122.62,
+        "dificultad": 12.86,
+        "esfuerzo de implementacion": 1576.59,
+        "tiempo estimado de desarrollo": 87.59,
+        "estimacion de bug": 0.0409,
+        "numero ciclomatico": 5
+      },
+      "grafo de flujo de control": {
+        "loc": 13,
+        "nodes": 5,
+        "edges": 8,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    int[] numeros = { 5, 10, 3, 20, 15 };\n    int max = encontrar(numeros);\n    System.out.println(\"Máximo: \" + max);\n}",
+      "halstead": {
+        "vocabulario": 10,
+        "longitud": 10,
+        "volumen": 33.22,
+        "dificultad": 0.5,
+        "esfuerzo de implementacion": 16.61,
+        "tiempo estimado de desarrollo": 0.92,
+        "estimacion de bug": 0.0111,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

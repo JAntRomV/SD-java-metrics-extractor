@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "MediaArmonica",
+  "metodos": [
+    {
+      "metodo": "calcular",
+      "codigo": "\n/**\n * Calcula la media armónica.\n * @param datos Arreglo de datos (deben ser positivos)\n * @return La media armónica\n */\npublic static double calcular(double[] datos) {\n    if (datos == null || datos.length == 0) {\n        throw new IllegalArgumentException(\"El arreglo no puede estar vacío\");\n    }\n    double sumaRecíprocos = 0;\n    for (double dato : datos) {\n        if (dato <= 0) {\n            throw new IllegalArgumentException(\"Todos los valores deben ser positivos\");\n        }\n        sumaRecíprocos += 1.0 / dato;\n    }\n    return datos.length / sumaRecíprocos;\n}",
+      "halstead": {
+        "vocabulario": 17,
+        "longitud": 28,
+        "volumen": 114.45,
+        "dificultad": 8.44,
+        "esfuerzo de implementacion": 965.66,
+        "tiempo estimado de desarrollo": 53.65,
+        "estimacion de bug": 0.0381,
+        "numero ciclomatico": 5
+      },
+      "grafo de flujo de control": {
+        "loc": 15,
+        "nodes": 5,
+        "edges": 8,
+        "unconnected nodos": 2
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    double[] datos = { 2, 4, 8 };\n    double mediaArmonica = calcular(datos);\n    System.out.println(String.format(\"Media armónica: %.2f\", mediaArmonica));\n}",
+      "halstead": {
+        "vocabulario": 8,
+        "longitud": 8,
+        "volumen": 24.0,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.008,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

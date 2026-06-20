@@ -1,0 +1,26 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "ConversionKgLibras",
+  "metodos": [
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    double kilogramos = 70;\n    double libras = kilogramos * 2.20462;\n    System.out.println(kilogramos + \" kg = \" + libras + \" libras\");\n}",
+      "halstead": {
+        "vocabulario": 9,
+        "longitud": 12,
+        "volumen": 38.04,
+        "dificultad": 1.14,
+        "esfuerzo de implementacion": 43.47,
+        "tiempo estimado de desarrollo": 2.42,
+        "estimacion de bug": 0.0127,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 5,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

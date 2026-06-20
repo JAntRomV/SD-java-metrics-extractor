@@ -1,0 +1,26 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "CalculoPropina",
+  "metodos": [
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    double cuenta = 150;\n    double porcentajePropina = 10;\n    double propina = cuenta * porcentajePropina / 100;\n    double total = cuenta + propina;\n    System.out.println(\"Total a pagar: \" + total);\n}",
+      "halstead": {
+        "vocabulario": 12,
+        "longitud": 14,
+        "volumen": 50.19,
+        "dificultad": 1.67,
+        "esfuerzo de implementacion": 83.65,
+        "tiempo estimado de desarrollo": 4.65,
+        "estimacion de bug": 0.0167,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

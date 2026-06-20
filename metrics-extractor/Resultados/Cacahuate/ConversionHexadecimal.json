@@ -1,0 +1,46 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "ConversionHexadecimal",
+  "metodos": [
+    {
+      "metodo": "convertir",
+      "codigo": "\n/**\n * Convierte un número decimal a hexadecimal.\n * @param decimal Número decimal\n * @return Representación hexadecimal como String\n */\npublic static String convertir(int decimal) {\n    if (decimal == 0) {\n        return \"0\";\n    }\n    return Integer.toHexString(decimal).toUpperCase();\n}",
+      "halstead": {
+        "vocabulario": 6,
+        "longitud": 9,
+        "volumen": 23.26,
+        "dificultad": 2.5,
+        "esfuerzo de implementacion": 58.16,
+        "tiempo estimado de desarrollo": 3.23,
+        "estimacion de bug": 0.0078,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    int numero = 255;\n    String hexadecimal = convertir(numero);\n    System.out.println(String.format(\"%d en hexadecimal es: %s\", numero, hexadecimal));\n}",
+      "halstead": {
+        "vocabulario": 6,
+        "longitud": 7,
+        "volumen": 18.09,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.006,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

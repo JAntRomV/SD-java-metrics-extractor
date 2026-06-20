@@ -1,0 +1,26 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "AreaRectangulo",
+  "metodos": [
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    double base = 10;\n    double altura = 5;\n    double area = base * altura;\n    System.out.println(\"El área del rectángulo es: \" + area);\n}",
+      "halstead": {
+        "vocabulario": 9,
+        "longitud": 9,
+        "volumen": 28.53,
+        "dificultad": 1.0,
+        "esfuerzo de implementacion": 28.53,
+        "tiempo estimado de desarrollo": 1.58,
+        "estimacion de bug": 0.0095,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

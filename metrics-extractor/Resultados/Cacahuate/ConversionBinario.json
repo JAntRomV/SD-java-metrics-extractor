@@ -1,0 +1,66 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "ConversionBinario",
+  "metodos": [
+    {
+      "metodo": "convertir",
+      "codigo": "\n/**\n * Convierte un número decimal a binario.\n * @param decimal Número decimal\n * @return Representación binaria como String\n */\npublic static String convertir(int decimal) {\n    if (decimal == 0) {\n        return \"0\";\n    }\n    return Integer.toBinaryString(decimal);\n}",
+      "halstead": {
+        "vocabulario": 6,
+        "longitud": 9,
+        "volumen": 23.26,
+        "dificultad": 2.5,
+        "esfuerzo de implementacion": 58.16,
+        "tiempo estimado de desarrollo": 3.23,
+        "estimacion de bug": 0.0078,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "convertirManual",
+      "codigo": "\n/**\n * Convierte manualmente (sin usar métodos de Java).\n * @param decimal Número decimal\n * @return Representación binaria como String\n */\npublic static String convertirManual(int decimal) {\n    if (decimal == 0) {\n        return \"0\";\n    }\n    StringBuilder binario = new StringBuilder();\n    int temp = Math.abs(decimal);\n    while (temp > 0) {\n        binario.insert(0, temp % 2);\n        temp /= 2;\n    }\n    return decimal < 0 ? \"-\" + binario.toString() : binario.toString();\n}",
+      "halstead": {
+        "vocabulario": 16,
+        "longitud": 28,
+        "volumen": 112.0,
+        "dificultad": 11.57,
+        "esfuerzo de implementacion": 1296.0,
+        "tiempo estimado de desarrollo": 72.0,
+        "estimacion de bug": 0.0373,
+        "numero ciclomatico": 5
+      },
+      "grafo de flujo de control": {
+        "loc": 15,
+        "nodes": 5,
+        "edges": 8,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    int numero = 10;\n    String binario = convertir(numero);\n    System.out.println(String.format(\"%d en binario es: %s\", numero, binario));\n}",
+      "halstead": {
+        "vocabulario": 6,
+        "longitud": 7,
+        "volumen": 18.09,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.006,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "Nombre del archivo": "Unknown",
+  "clase": "MCM",
+  "metodos": [
+    {
+      "metodo": "calcularMCD",
+      "codigo": "\n/**\n * Calcula el MCD de dos números.\n * @param a Primer número\n * @param b Segundo número\n * @return El MCD\n */\nprivate static int calcularMCD(int a, int b) {\n    while (b != 0) {\n        int temp = b;\n        b = a % b;\n        a = temp;\n    }\n    return a;\n}",
+      "halstead": {
+        "vocabulario": 9,
+        "longitud": 15,
+        "volumen": 47.55,
+        "dificultad": 5.63,
+        "esfuerzo de implementacion": 267.46,
+        "tiempo estimado de desarrollo": 14.86,
+        "estimacion de bug": 0.0158,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    },
+    {
+      "metodo": "calcular",
+      "codigo": "\n/**\n * Calcula el MCM de dos números.\n * @param a Primer número\n * @param b Segundo número\n * @return El MCM de a y b\n */\npublic static int calcular(int a, int b) {\n    if (a == 0 || b == 0) {\n        return 0;\n    }\n    a = Math.abs(a);\n    b = Math.abs(b);\n    return (a * b) / calcularMCD(a, b);\n}",
+      "halstead": {
+        "vocabulario": 11,
+        "longitud": 25,
+        "volumen": 86.49,
+        "dificultad": 13.13,
+        "esfuerzo de implementacion": 1135.13,
+        "tiempo estimado de desarrollo": 63.06,
+        "estimacion de bug": 0.0288,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 10,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "codigo": "\npublic static void main(String[] args) {\n    int a = 12, b = 18;\n    int mcm = calcular(a, b);\n    System.out.println(String.format(\"MCM de %d y %d: %d\", a, b, mcm));\n}",
+      "halstead": {
+        "vocabulario": 8,
+        "longitud": 10,
+        "volumen": 30.0,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.01,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}
