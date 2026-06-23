@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "InvertirNumero.java",
+  "clase": "InvertirNumero",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 14,
+        "longitud": 22,
+        "volumen": 83.76,
+        "dificultad": 7.0,
+        "esfuerzo de implementacion": 586.33,
+        "tiempo estimado de desarrollo": 32.57,
+        "estimacion de bug": 0.0279,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 9,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

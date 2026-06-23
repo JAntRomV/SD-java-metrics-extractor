@@ -1,5 +1,8 @@
-estatica/MethodMetrics.class
-estatica/MetricsExporter.class
 estatica/MetricsAnalyzer.class
 estatica/App.class
 estatica/ProjectMetrics.class
+estatica/CfgCalculator$CfgResult.class
+estatica/HalsteadCalculator.class
+estatica/MethodMetrics.class
+estatica/MetricsExporter.class
+estatica/CfgCalculator.class

@@ -7,65 +7,53 @@ import java.util.List;
 
 public class MetricsExporter {
 
+//------>Si tiene menos de 20 metodos se hace JSON 
     private static final int JSON_THRESHOLD = 20;
-
+//____________________________________________________________
     public static void export(List<ProjectMetrics> reports, String outputFolder) {
-//--------------------------crea la carpeta y todas las carpetas padre-------------------------       
+
+//------>Crea la carpeta principal  de resultados si es que no existe        
         File baseFolder = new File(outputFolder);
         if (!baseFolder.exists()) baseFolder.mkdirs();
 
+//------>Contador para saber cuantos archivos creamos en total
         int totalArchivos = 0;
-//------------------------------recorre proyectos--------------------------------------------
-        for (ProjectMetrics project : reports) {
-            String sanitizedProjectName = sanitize(project.getProjectName());
 
-//-------------------------- Subcarpeta por proyecto: outputFolder/nombre-proyecto/-------------------------
+//------>Empieza a recorrer cada proyecto que se analizo 
+        for (ProjectMetrics project : reports) {
+
+//------>Crea una subcarpeta exclusiva para el proyecto actual
             File projectFolder = new File(baseFolder, sanitize(project.getProjectName()));
             if (!projectFolder.exists()) projectFolder.mkdirs();
-            java.util.List<String> generatedJsonFiles = new java.util.ArrayList<>();
 
-//-----------------------Iterar sobre cada clase del proyecto-----------------------------------------
+
+//------>Recorre cada una de las clases que tiene el proyecto
             for (String className : project.getClassNames()) {
                 List<MethodMetrics> methods = project.getMethodsOf(className);
                 String fileName = project.getFileNameOf(className);
 
+//------>Si la clase no tiene ningun metodo se salta y continua 
                 if (methods.isEmpty()) continue;
 
+//------>Se revisa si tiene menos de 20 metodos para crear un json o un csv
                 if (methods.size() < JSON_THRESHOLD) {
                     writeJson(className, fileName, methods, projectFolder);
-                    generatedJsonFiles.add(sanitizedProjectName + "/" + sanitize(className) + ".json");
                 } else {
                     writeCsv(className, fileName, methods, projectFolder);
                 }
                 totalArchivos++;
             }
-            if (!generatedJsonFiles.isEmpty()) {
-                File manifestFile = new File(baseFolder, sanitizedProjectName + "_manifest.json");
-                try (PrintWriter mw = new PrintWriter(manifestFile, StandardCharsets.UTF_8)) {
-                    mw.println("{");
-                    mw.println("  \"proyecto\": \"" + esc(project.getProjectName()) + "\",");
-                    mw.println("  \"archivos\": [");
-                    for (int i = 0; i < generatedJsonFiles.size(); i++) {
-                        boolean last = (i == generatedJsonFiles.size() - 1);
-                        mw.println("    \"" + esc(generatedJsonFiles.get(i)) + "\"" + (last ? "" : ","));
-                    }
-                    mw.println("  ]");
-                    mw.println("}");
-                    System.out.println("  [MANIFIESTO] Creado exitosamente: " + manifestFile.getName());
-                } catch (Exception e) {
-                    System.err.println("Error al crear manifiesto para " + project.getProjectName() + ": " + e.getMessage());
-                }
-            }
-        }
+        }    
 
-        System.out.println("Exportación finalizada: " + totalArchivos
-                + " archivo(s) en: " + baseFolder.getAbsolutePath());
+
+//------>Avisa que  termino el proceso con exito 
+        System.out.println("Se genero: " + totalArchivos
+                + " archivo(s) con exito en: " + baseFolder.getAbsolutePath());
     }
 
-//----------------------------------- JSON--------------------------------------------------------------
+//_____________________________________________________________________________________
 
-    private static void writeJson(String className, String fileName,
-                                  List<MethodMetrics> methods, File folder) {
+    private static void writeJson(String className, String fileName,List<MethodMetrics> methods, File folder) {
         File out = new File(folder, sanitize(className) + ".json");
         try (PrintWriter w = new PrintWriter(out, StandardCharsets.UTF_8)) {
 
@@ -80,7 +68,6 @@ public class MetricsExporter {
 
                 w.println("    {");
                 w.println("      \"metodo\": \""                          + esc(m.getMethodName()) + "\",");
-                w.println("      \"codigo\": \"\\n"                       + escCode(m.getSourceCode()) + "\",");
                 w.println("      \"halstead\": {");
                 w.println("        \"vocabulario\": "                     + m.getVocabulary()             + ",");
                 w.println("        \"longitud\": "                        + m.getLength()                 + ",");
@@ -117,14 +104,15 @@ public class MetricsExporter {
                 .replace("\n", "\\n");
     }
 
-//--------------------------------------CSV--------------------------------
-
-    private static void writeCsv(String className, String fileName,
-                                 List<MethodMetrics> methods, File folder) {
+//___________________________________________________________________________________
+    private static void writeCsv(String className, String fileName,List<MethodMetrics> methods, File folder) {
+//------>DEfine el nombre del archivo.csv        
         File out = new File(folder, sanitize(className) + ".csv");
         try (PrintWriter w = new PrintWriter(out, StandardCharsets.UTF_8)) {
 
+//Se escribe  la primera linea del archivo 
             w.println("Nombre del archivo,clase,metodo,"
+                    + "n1_operadores_distintos,n2_operandos_distintos,N1_total_operadores,N2_total_operandos,"
                     + "vocabulario,longitud,volumen,dificultad,"
                     + "esfuerzo de implementacion,tiempo estimado de desarrollo,"
                     + "estimacion de bug,numero ciclomatico,"
@@ -135,6 +123,10 @@ public class MetricsExporter {
                     csv(fileName)               + "," +
                     csv(className)              + "," +
                     csv(m.getMethodName())      + "," +
+                    m.getN1()                   + "," + 
+                    m.getN2()                   + "," + 
+                    m.getN1Total()              + "," + 
+                    m.getN2Total()              + "," + 
                     m.getVocabulary()           + "," +
                     m.getLength()               + "," +
                     r2(m.getVolume())           + "," +
@@ -149,14 +141,14 @@ public class MetricsExporter {
                     m.getCfgUnconnectedNodes()
                 );
             }
-
+//------>Muestra un mensaje de que se finalizo 
             System.out.println("  [CSV]  " + out.getName() + " (" + methods.size() + " método(s))");
 
         } catch (Exception e) {
             System.err.println("Error CSV " + className + ": " + e.getMessage());
         }
     }
-
+   //------>LImpia los nombres de archivos, carpetas, comillas, barras  
     private static String sanitize(String s) {
         return (s == null || s.isEmpty()) ? "sin_nombre"
                 : s.replaceAll("[^a-zA-Z0-9_\\-]", "_");
@@ -173,7 +165,7 @@ public class MetricsExporter {
             return "\"" + s.replace("\"", "\"\"") + "\"";
         return s;
     }
-
+// redondea numeros  decimales
     private static double r2(double v) { return Math.round(v * 100.0)   / 100.0; }
     private static double r4(double v) { return Math.round(v * 10000.0) / 10000.0; }
 }

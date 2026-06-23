@@ -1,0 +1,44 @@
+{
+  "Nombre del archivo": "ContarPares.java",
+  "clase": "ContarPares",
+  "metodos": [
+    {
+      "metodo": "contar",
+      "halstead": {
+        "vocabulario": 14,
+        "longitud": 19,
+        "volumen": 72.34,
+        "dificultad": 5.0,
+        "esfuerzo de implementacion": 361.7,
+        "tiempo estimado de desarrollo": 20.09,
+        "estimacion de bug": 0.0241,
+        "numero ciclomatico": 5
+      },
+      "grafo de flujo de control": {
+        "loc": 13,
+        "nodes": 5,
+        "edges": 8,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 15,
+        "longitud": 15,
+        "volumen": 58.6,
+        "dificultad": 0.5,
+        "esfuerzo de implementacion": 29.3,
+        "tiempo estimado de desarrollo": 1.63,
+        "estimacion de bug": 0.0195,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

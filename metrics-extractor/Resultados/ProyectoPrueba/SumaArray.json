@@ -1,0 +1,44 @@
+{
+  "Nombre del archivo": "SumaArray.java",
+  "clase": "SumaArray",
+  "metodos": [
+    {
+      "metodo": "calcular",
+      "halstead": {
+        "vocabulario": 13,
+        "longitud": 18,
+        "volumen": 66.61,
+        "dificultad": 5.83,
+        "esfuerzo de implementacion": 388.55,
+        "tiempo estimado de desarrollo": 21.59,
+        "estimacion de bug": 0.0222,
+        "numero ciclomatico": 4
+      },
+      "grafo de flujo de control": {
+        "loc": 11,
+        "nodes": 4,
+        "edges": 6,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 10,
+        "longitud": 10,
+        "volumen": 33.22,
+        "dificultad": 0.5,
+        "esfuerzo de implementacion": 16.61,
+        "tiempo estimado de desarrollo": 0.92,
+        "estimacion de bug": 0.0111,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

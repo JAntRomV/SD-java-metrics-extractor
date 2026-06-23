@@ -1,0 +1,44 @@
+{
+  "Nombre del archivo": "MultiplicarArray.java",
+  "clase": "MultiplicarArray",
+  "metodos": [
+    {
+      "metodo": "multiplicar",
+      "halstead": {
+        "vocabulario": 16,
+        "longitud": 23,
+        "volumen": 92.0,
+        "dificultad": 9.0,
+        "esfuerzo de implementacion": 828.0,
+        "tiempo estimado de desarrollo": 46.0,
+        "estimacion de bug": 0.0307,
+        "numero ciclomatico": 4
+      },
+      "grafo de flujo de control": {
+        "loc": 11,
+        "nodes": 4,
+        "edges": 6,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 12,
+        "longitud": 13,
+        "volumen": 46.6,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.0155,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "Nombre del archivo": "MCM.java",
+  "clase": "MCM",
+  "metodos": [
+    {
+      "metodo": "calcularMCD",
+      "halstead": {
+        "vocabulario": 9,
+        "longitud": 15,
+        "volumen": 47.55,
+        "dificultad": 5.63,
+        "esfuerzo de implementacion": 267.46,
+        "tiempo estimado de desarrollo": 14.86,
+        "estimacion de bug": 0.0158,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    },
+    {
+      "metodo": "calcular",
+      "halstead": {
+        "vocabulario": 11,
+        "longitud": 25,
+        "volumen": 86.49,
+        "dificultad": 13.13,
+        "esfuerzo de implementacion": 1135.13,
+        "tiempo estimado de desarrollo": 63.06,
+        "estimacion de bug": 0.0288,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 10,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 8,
+        "longitud": 10,
+        "volumen": 30.0,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.01,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

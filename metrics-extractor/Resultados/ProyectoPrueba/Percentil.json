@@ -1,0 +1,44 @@
+{
+  "Nombre del archivo": "Percentil.java",
+  "clase": "Percentil",
+  "metodos": [
+    {
+      "metodo": "calcular",
+      "halstead": {
+        "vocabulario": 27,
+        "longitud": 58,
+        "volumen": 275.78,
+        "dificultad": 12.38,
+        "esfuerzo de implementacion": 3412.82,
+        "tiempo estimado de desarrollo": 189.6,
+        "estimacion de bug": 0.0919,
+        "numero ciclomatico": 5
+      },
+      "grafo de flujo de control": {
+        "loc": 23,
+        "nodes": 5,
+        "edges": 8,
+        "unconnected nodos": 3
+      }
+    },
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 17,
+        "longitud": 18,
+        "volumen": 73.57,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.0245,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

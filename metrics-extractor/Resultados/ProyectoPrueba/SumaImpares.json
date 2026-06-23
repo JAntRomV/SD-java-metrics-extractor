@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "SumaImpares.java",
+  "clase": "SumaImpares",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 14,
+        "longitud": 21,
+        "volumen": 79.95,
+        "dificultad": 2.8,
+        "esfuerzo de implementacion": 223.87,
+        "tiempo estimado de desarrollo": 12.44,
+        "estimacion de bug": 0.0267,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

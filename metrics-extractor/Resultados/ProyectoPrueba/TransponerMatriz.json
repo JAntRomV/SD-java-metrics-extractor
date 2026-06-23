@@ -1,0 +1,44 @@
+{
+  "Nombre del archivo": "TransponerMatriz.java",
+  "clase": "TransponerMatriz",
+  "metodos": [
+    {
+      "metodo": "transponer",
+      "halstead": {
+        "vocabulario": 18,
+        "longitud": 38,
+        "volumen": 158.46,
+        "dificultad": 12.5,
+        "esfuerzo de implementacion": 1980.71,
+        "tiempo estimado de desarrollo": 110.04,
+        "estimacion de bug": 0.0528,
+        "numero ciclomatico": 5
+      },
+      "grafo de flujo de control": {
+        "loc": 17,
+        "nodes": 5,
+        "edges": 8,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 15,
+        "longitud": 18,
+        "volumen": 70.32,
+        "dificultad": 1.15,
+        "esfuerzo de implementacion": 81.14,
+        "tiempo estimado de desarrollo": 4.51,
+        "estimacion de bug": 0.0234,
+        "numero ciclomatico": 4
+      },
+      "grafo de flujo de control": {
+        "loc": 12,
+        "nodes": 4,
+        "edges": 6,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

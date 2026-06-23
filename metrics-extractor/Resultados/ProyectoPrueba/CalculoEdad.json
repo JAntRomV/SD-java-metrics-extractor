@@ -1,0 +1,63 @@
+{
+  "Nombre del archivo": "CalculoEdad.java",
+  "clase": "CalculoEdad",
+  "metodos": [
+    {
+      "metodo": "calcularEdad",
+      "halstead": {
+        "vocabulario": 8,
+        "longitud": 10,
+        "volumen": 30.0,
+        "dificultad": 4.17,
+        "esfuerzo de implementacion": 125.0,
+        "tiempo estimado de desarrollo": 6.94,
+        "estimacion de bug": 0.01,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "calcularEdadExacta",
+      "halstead": {
+        "vocabulario": 7,
+        "longitud": 9,
+        "volumen": 25.27,
+        "dificultad": 2.25,
+        "esfuerzo de implementacion": 56.85,
+        "tiempo estimado de desarrollo": 3.16,
+        "estimacion de bug": 0.0084,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 8,
+        "longitud": 8,
+        "volumen": 24.0,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.008,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

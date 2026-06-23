@@ -1,0 +1,44 @@
+{
+  "Nombre del archivo": "PuntoMedio.java",
+  "clase": "PuntoMedio",
+  "metodos": [
+    {
+      "metodo": "calcular",
+      "halstead": {
+        "vocabulario": 14,
+        "longitud": 23,
+        "volumen": 87.57,
+        "dificultad": 6.5,
+        "esfuerzo de implementacion": 569.2,
+        "tiempo estimado de desarrollo": 31.62,
+        "estimacion de bug": 0.0292,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 10,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 10,
+        "longitud": 10,
+        "volumen": 33.22,
+        "dificultad": 0.5,
+        "esfuerzo de implementacion": 16.61,
+        "tiempo estimado de desarrollo": 0.92,
+        "estimacion de bug": 0.0111,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

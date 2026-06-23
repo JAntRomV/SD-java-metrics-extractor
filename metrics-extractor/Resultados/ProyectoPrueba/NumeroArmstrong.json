@@ -1,0 +1,44 @@
+{
+  "Nombre del archivo": "NumeroArmstrong.java",
+  "clase": "NumeroArmstrong",
+  "metodos": [
+    {
+      "metodo": "esArmstrong",
+      "halstead": {
+        "vocabulario": 19,
+        "longitud": 29,
+        "volumen": 123.19,
+        "dificultad": 8.55,
+        "esfuerzo de implementacion": 1053.27,
+        "tiempo estimado de desarrollo": 58.52,
+        "estimacion de bug": 0.0411,
+        "numero ciclomatico": 4
+      },
+      "grafo de flujo de control": {
+        "loc": 17,
+        "nodes": 4,
+        "edges": 6,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 8,
+        "longitud": 9,
+        "volumen": 27.0,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.009,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

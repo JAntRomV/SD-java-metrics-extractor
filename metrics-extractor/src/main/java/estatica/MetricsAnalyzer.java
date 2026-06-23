@@ -1,5 +1,5 @@
 package estatica;
-//-----------------------Recorre el arbol calcula el grafo de flujo cfg= Extrae las metricas clase x clase------------------------------
+//______________/Recorre el arbol y Extrae las metricas de cada metodod\_________________________
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.*;
@@ -7,51 +7,57 @@ import com.github.javaparser.ast.stmt.*;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import java.util.HashSet;
 import java.util.Set;
-//---------------------------LLaman al visitir----------------------------
-public class MetricsAnalyzer extends VoidVisitorAdapter<Void> {
 
+
+public class MetricsAnalyzer extends VoidVisitorAdapter<Void> {
+//------>Guarda el reporte global  donde se ira juntando toda la informacion 
     private final ProjectMetrics projectMetrics;
-//----------------------- revisa en que clase y archivo se encuentra--------------------------
+//------>Nombre del archivo y clase que se analiza
     private String currentClassName = "Unknown";
     private String currentFileName  = "Unknown";
 
+//------>Es el constructor recibe los reportes para poder guardar los datos 
     public MetricsAnalyzer(ProjectMetrics projectMetrics) {
         this.projectMetrics = projectMetrics;
     }
 
-//--------------------App llama a este setter antes de parsear cada archivo .java-----------------------
+//------> le dice cual es el nombre del archivo que va a empezar a leer
     public void setCurrentFileName(String fileName) {
         this.currentFileName = fileName;
     }
 
 
-//-----------guarda el nombre de la clase anterior acrualiza el current y llama alsuper.visit-------
+/**      Cada vez que se encuentra una clase guarda el nombre anterior a la clase
+*------> actualiza el nombre de la clase que se esta leyendo  recorre el codigo
+*        y cuando termina regresa al nombre anterior 
+*/
     @Override
     public void visit(ClassOrInterfaceDeclaration cid, Void arg) {
+
         String previousClass = this.currentClassName;
+
         this.currentClassName = cid.getNameAsString();
 
         super.visit(cid, arg);  
 
         this.currentClassName = previousClass; 
     }
-
+//_______________________________________________________________
     @Override
     public void visit(MethodDeclaration md, Void arg) {
 
-//----------------------------- Salta si estan vacios------------------------------------------
+//----->Salta el metodo si estavacio
         if (!md.getBody().isPresent()) {
             super.visit(md, arg);
             return;
         }
 
-//------------------------------registra en que linea empieza y termina cada metodo------------------------------
+//------>CAlcula cuantas lineas de codigo tiene el metodo
         int loc = (md.getBegin().isPresent() && md.getEnd().isPresent())
                 ? md.getEnd().get().line - md.getBegin().get().line + 1
                 : 0;
 
-//-busca recursivamente en todo el AST del método todos los nodos de ese tipo. 
-// Cada uno representa un punto donde el flujo de ejecución puede tomar caminos distintos
+//------>BUsca y cuenta todos los puntos de decision
         int ifs       = md.findAll(IfStmt.class).size();
         int fors      = md.findAll(ForStmt.class).size();
         int foreachs  = md.findAll(ForEachStmt.class).size();
@@ -62,40 +68,47 @@ public class MetricsAnalyzer extends VoidVisitorAdapter<Void> {
         int ternaries = md.findAll(ConditionalExpr.class).size();
         int decisions = ifs + fors + foreachs + whiles + dos + switches + catches + ternaries;
 
-//--------------------------Halstead --------------------
+//----->Extrae las variables base deeeeeee halstead
         int[] halstead = collectHalstead(md);
 
-//-------------------------CFG--------------------------------------------
-        int[] cfg = buildCfg(md, decisions);
-        // cfg[0]=nodes, cfg[1]=edges, cfg[2]=CC, cfg[3]=unconnectedNodes
-//extrae el texto fuente completo  de cada metodo        
+//----->Se llama a la clase CfgCalculator
+CfgCalculator.CfgResult cfg = CfgCalculator.estimateCfg(md, decisions);
+
+//----->Extrae el texto fuente completo     
         String sourceCode = md.toString();
 
-//-------reune todos los valores en un objeto y lo registra en el proyecto------
+//------>Reune todos los valores en un objeto y lo registra en el proyecto------
         MethodMetrics method = new MethodMetrics(
-                currentFileName, currentClassName, md.getNameAsString(),
+                currentFileName, 
+                currentClassName, 
+                md.getNameAsString(),
                 sourceCode,
                 loc,
                 halstead[0], halstead[1], halstead[2], halstead[3],
-                cfg[2],         // CC
-                cfg[0],         // nodes
-                cfg[1],         // edges
-                cfg[3]          // unconnectedNodes
+                cfg.cyclomaticComplexity, 
+                cfg.nodes,                
+                cfg.edges,               
+                cfg.unconnectedNodes      
         );
-
+//----->Registra el metodo en el reporte global
         projectMetrics.addMethod(currentClassName, currentFileName, method);
 
         super.visit(md, arg);
     }
 
-//--------------------No se guarda duplicados solo se guarda una vez----------------------
+//____________________________________________________________________
     private static int[] collectHalstead(MethodDeclaration md) {
+
+//------>No permiten que se guarden  nombres repetidos
         Set<String> distinctOps  = new HashSet<>();
         Set<String> distinctOpds = new HashSet<>();
+
+//----->Cuenta el total absoluto de veces que aparecen
         int totalOps  = 0;
         int totalOpds = 0;
 
-//--------------------------Captura asignaciones (=, +=, -=, ...)
+//------>Busca asignaciones incremento odecremento-operaciones 
+//       matematicas o comparaciones 
         for (AssignExpr e : md.findAll(AssignExpr.class)) {
             distinctOps.add(e.getOperator().asString());
             totalOps++;
@@ -110,7 +123,7 @@ public class MetricsAnalyzer extends VoidVisitorAdapter<Void> {
             distinctOps.add(e.getOperator().asString());
             totalOps++;
         }
-//------------------------------palabras clave de control---------------------------------------
+//------->Cuenta palabras clave comooperadores 
         addKeyword(md, IfStmt.class,       "if",      distinctOps); totalOps += md.findAll(IfStmt.class).size();
         addKeyword(md, ForStmt.class,      "for",     distinctOps); totalOps += md.findAll(ForStmt.class).size();
         addKeyword(md, ForEachStmt.class,  "foreach", distinctOps); totalOps += md.findAll(ForEachStmt.class).size();
@@ -124,40 +137,34 @@ public class MetricsAnalyzer extends VoidVisitorAdapter<Void> {
             distinctOpds.add(e.getNameAsString());
             totalOpds++;
         }
-//----------------------------Operandos: literales
         for (IntegerLiteralExpr e : md.findAll(IntegerLiteralExpr.class)) {
-            distinctOpds.add(e.getValue()); totalOpds++;
+            distinctOpds.add(e.getValue()); 
+            totalOpds++;
         }
         for (DoubleLiteralExpr e : md.findAll(DoubleLiteralExpr.class)) {
-            distinctOpds.add(e.getValue()); totalOpds++;
+            distinctOpds.add(e.getValue()); 
+            totalOpds++;
         }
         for (StringLiteralExpr e : md.findAll(StringLiteralExpr.class)) {
-            distinctOpds.add(e.getValue()); totalOpds++;
+            distinctOpds.add(e.getValue()); 
+            totalOpds++;
         }
         for (BooleanLiteralExpr e : md.findAll(BooleanLiteralExpr.class)) {
-            distinctOpds.add(String.valueOf(e.isValue())); totalOpds++;
+            distinctOpds.add(String.valueOf(e.isValue())); 
+            totalOpds++;
         }
         for (NullLiteralExpr e : md.findAll(NullLiteralExpr.class)) {
-            distinctOpds.add("null"); totalOpds++;
+            distinctOpds.add("null"); 
+            totalOpds++;
         }
 
         return new int[]{ distinctOps.size(), distinctOpds.size(), totalOps, totalOpds };
     }
 
-//------------------Agrega la palabra clave al set de operadores distintos si hay al menos 1 ocurrencia-----------
+//------>Agrega la palabra clave al set de operadores distintos si hay al menos 1 ocurrencia
     private static <T extends com.github.javaparser.ast.Node> void addKeyword(
             MethodDeclaration md, Class<T> type, String keyword, Set<String> ops) {
         if (!md.findAll(type).isEmpty()) ops.add(keyword);
     }
 
-    private static int[] buildCfg(MethodDeclaration md, int decisions) {
-        int nodes            = 2 + decisions;
-        int edges            = nodes + decisions;
-        int cc               = edges - nodes + 2;
-        int earlyExits       = md.findAll(ReturnStmt.class).size()
-                             + md.findAll(ThrowStmt.class).size();
-        int unconnectedNodes = Math.max(0, earlyExits - 1);
-
-        return new int[]{ nodes, edges, cc, unconnectedNodes };
-    }
 }

@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "SumaDigitos.java",
+  "clase": "SumaDigitos",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 13,
+        "longitud": 18,
+        "volumen": 66.61,
+        "dificultad": 5.14,
+        "esfuerzo de implementacion": 342.55,
+        "tiempo estimado de desarrollo": 19.03,
+        "estimacion de bug": 0.0222,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 9,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}
