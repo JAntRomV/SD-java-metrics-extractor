@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/SumaNumeros.java",
+  "clase": "SumaNumeros",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 10,
+        "longitud": 17,
+        "volumen": 56.47,
+        "dificultad": 0.61,
+        "esfuerzo de implementacion": 34.51,
+        "tiempo estimado de desarrollo": 1.92,
+        "estimacion de bug": 0.0188,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

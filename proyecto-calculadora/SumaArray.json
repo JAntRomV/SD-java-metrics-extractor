@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/SumaArray.java",
+  "clase": "SumaArray",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 13,
+        "longitud": 14,
+        "volumen": 51.81,
+        "dificultad": 1.09,
+        "esfuerzo de implementacion": 56.52,
+        "tiempo estimado de desarrollo": 3.14,
+        "estimacion de bug": 0.0173,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

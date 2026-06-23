@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/Hipotenusa.java",
+  "clase": "Hipotenusa",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 10,
+        "longitud": 14,
+        "volumen": 46.51,
+        "dificultad": 1.25,
+        "esfuerzo de implementacion": 58.13,
+        "tiempo estimado de desarrollo": 3.23,
+        "estimacion de bug": 0.0155,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

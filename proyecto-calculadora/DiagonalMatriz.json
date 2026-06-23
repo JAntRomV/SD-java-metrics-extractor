@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/DiagonalMatriz.java",
+  "clase": "DiagonalMatriz",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 19,
+        "longitud": 24,
+        "volumen": 101.95,
+        "dificultad": 2.67,
+        "esfuerzo de implementacion": 271.87,
+        "tiempo estimado de desarrollo": 15.1,
+        "estimacion de bug": 0.034,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/VolumenEsfera.java",
+  "clase": "VolumenEsfera",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 9,
+        "longitud": 12,
+        "volumen": 38.04,
+        "dificultad": 2.0,
+        "esfuerzo de implementacion": 76.08,
+        "tiempo estimado de desarrollo": 4.23,
+        "estimacion de bug": 0.0127,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 5,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

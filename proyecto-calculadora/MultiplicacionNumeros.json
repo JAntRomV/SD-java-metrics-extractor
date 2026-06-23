@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/MultiplicacionNumeros.java",
+  "clase": "MultiplicacionNumeros",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 11,
+        "longitud": 17,
+        "volumen": 58.81,
+        "dificultad": 1.22,
+        "esfuerzo de implementacion": 71.88,
+        "tiempo estimado de desarrollo": 3.99,
+        "estimacion de bug": 0.0196,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

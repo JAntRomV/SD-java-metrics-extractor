@@ -1,0 +1,44 @@
+{
+  "Nombre del archivo": "PerimetroCuadrado.java",
+  "clase": "PerimetroCuadrado",
+  "metodos": [
+    {
+      "metodo": "calcular",
+      "halstead": {
+        "vocabulario": 9,
+        "longitud": 10,
+        "volumen": 31.7,
+        "dificultad": 3.13,
+        "esfuerzo de implementacion": 99.06,
+        "tiempo estimado de desarrollo": 5.5,
+        "estimacion de bug": 0.0106,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 6,
+        "longitud": 6,
+        "volumen": 15.51,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.0052,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "Nombre del archivo": "DiasAAnios.java",
+  "clase": "DiasAAnios",
+  "metodos": [
+    {
+      "metodo": "convertir",
+      "halstead": {
+        "vocabulario": 12,
+        "longitud": 15,
+        "volumen": 53.77,
+        "dificultad": 4.5,
+        "esfuerzo de implementacion": 241.98,
+        "tiempo estimado de desarrollo": 13.44,
+        "estimacion de bug": 0.0179,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 10,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 6,
+        "longitud": 7,
+        "volumen": 18.09,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.006,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

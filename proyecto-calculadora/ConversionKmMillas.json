@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/ConversionKmMillas.java",
+  "clase": "ConversionKmMillas",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 8,
+        "longitud": 11,
+        "volumen": 33.0,
+        "dificultad": 1.17,
+        "esfuerzo de implementacion": 38.5,
+        "tiempo estimado de desarrollo": 2.14,
+        "estimacion de bug": 0.011,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 5,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

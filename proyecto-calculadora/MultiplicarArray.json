@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/MultiplicarArray.java",
+  "clase": "MultiplicarArray",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 14,
+        "longitud": 15,
+        "volumen": 57.11,
+        "dificultad": 1.08,
+        "esfuerzo de implementacion": 61.87,
+        "tiempo estimado de desarrollo": 3.44,
+        "estimacion de bug": 0.019,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

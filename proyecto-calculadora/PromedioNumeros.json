@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/PromedioNumeros.java",
+  "clase": "PromedioNumeros",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 10,
+        "longitud": 12,
+        "volumen": 39.86,
+        "dificultad": 1.93,
+        "esfuerzo de implementacion": 76.88,
+        "tiempo estimado de desarrollo": 4.27,
+        "estimacion de bug": 0.0133,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 9,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

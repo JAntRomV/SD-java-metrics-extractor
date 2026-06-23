@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "LeyOhm.java",
+  "clase": "LeyOhm",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 10,
+        "longitud": 11,
+        "volumen": 36.54,
+        "dificultad": 1.0,
+        "esfuerzo de implementacion": 36.54,
+        "tiempo estimado de desarrollo": 2.03,
+        "estimacion de bug": 0.0122,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

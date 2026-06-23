@@ -1,0 +1,44 @@
+{
+  "Nombre del archivo": "MediaGeometrica.java",
+  "clase": "MediaGeometrica",
+  "metodos": [
+    {
+      "metodo": "calcular",
+      "halstead": {
+        "vocabulario": 19,
+        "longitud": 28,
+        "volumen": 118.94,
+        "dificultad": 7.2,
+        "esfuerzo de implementacion": 856.38,
+        "tiempo estimado de desarrollo": 47.58,
+        "estimacion de bug": 0.0396,
+        "numero ciclomatico": 5
+      },
+      "grafo de flujo de control": {
+        "loc": 15,
+        "nodes": 5,
+        "edges": 8,
+        "unconnected nodos": 2
+      }
+    },
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 8,
+        "longitud": 8,
+        "volumen": 24.0,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.008,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

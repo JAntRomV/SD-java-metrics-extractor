@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/CalculoIMC.java",
+  "clase": "CalculoIMC",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 9,
+        "longitud": 10,
+        "volumen": 31.7,
+        "dificultad": 1.75,
+        "esfuerzo de implementacion": 55.47,
+        "tiempo estimado de desarrollo": 3.08,
+        "estimacion de bug": 0.0106,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

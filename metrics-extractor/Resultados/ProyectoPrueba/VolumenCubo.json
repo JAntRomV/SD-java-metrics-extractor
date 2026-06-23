@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "VolumenCubo.java",
+  "clase": "VolumenCubo",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 8,
+        "longitud": 8,
+        "volumen": 24.0,
+        "dificultad": 0.5,
+        "esfuerzo de implementacion": 12.0,
+        "tiempo estimado de desarrollo": 0.67,
+        "estimacion de bug": 0.008,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 5,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

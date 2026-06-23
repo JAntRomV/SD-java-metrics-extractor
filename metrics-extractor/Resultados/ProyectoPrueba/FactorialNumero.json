@@ -1,0 +1,44 @@
+{
+  "Nombre del archivo": "FactorialNumero.java",
+  "clase": "FactorialNumero",
+  "metodos": [
+    {
+      "metodo": "calcularFactorial",
+      "halstead": {
+        "vocabulario": 15,
+        "longitud": 19,
+        "volumen": 74.23,
+        "dificultad": 6.29,
+        "esfuerzo de implementacion": 466.59,
+        "tiempo estimado de desarrollo": 25.92,
+        "estimacion de bug": 0.0247,
+        "numero ciclomatico": 4
+      },
+      "grafo de flujo de control": {
+        "loc": 11,
+        "nodes": 4,
+        "edges": 6,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 9,
+        "longitud": 11,
+        "volumen": 34.87,
+        "dificultad": 0.63,
+        "esfuerzo de implementacion": 21.79,
+        "tiempo estimado de desarrollo": 1.21,
+        "estimacion de bug": 0.0116,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 10,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

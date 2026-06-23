@@ -1,0 +1,44 @@
+{
+  "Nombre del archivo": "InvertirArray.java",
+  "clase": "InvertirArray",
+  "metodos": [
+    {
+      "metodo": "invertir",
+      "halstead": {
+        "vocabulario": 16,
+        "longitud": 25,
+        "volumen": 100.0,
+        "dificultad": 9.64,
+        "esfuerzo de implementacion": 964.29,
+        "tiempo estimado de desarrollo": 53.57,
+        "estimacion de bug": 0.0333,
+        "numero ciclomatico": 4
+      },
+      "grafo de flujo de control": {
+        "loc": 11,
+        "nodes": 4,
+        "edges": 6,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 10,
+        "longitud": 11,
+        "volumen": 36.54,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.0122,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

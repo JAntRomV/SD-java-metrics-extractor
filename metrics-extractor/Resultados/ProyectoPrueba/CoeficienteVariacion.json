@@ -1,0 +1,44 @@
+{
+  "Nombre del archivo": "CoeficienteVariacion.java",
+  "clase": "CoeficienteVariacion",
+  "metodos": [
+    {
+      "metodo": "calcular",
+      "halstead": {
+        "vocabulario": 23,
+        "longitud": 45,
+        "volumen": 203.56,
+        "dificultad": 10.38,
+        "esfuerzo de implementacion": 2113.9,
+        "tiempo estimado de desarrollo": 117.44,
+        "estimacion de bug": 0.0679,
+        "numero ciclomatico": 6
+      },
+      "grafo de flujo de control": {
+        "loc": 23,
+        "nodes": 6,
+        "edges": 10,
+        "unconnected nodos": 2
+      }
+    },
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 9,
+        "longitud": 10,
+        "volumen": 31.7,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.0106,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

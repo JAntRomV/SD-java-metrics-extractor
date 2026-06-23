@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/SumaPares.java",
+  "clase": "SumaPares",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 13,
+        "longitud": 21,
+        "volumen": 77.71,
+        "dificultad": 3.11,
+        "esfuerzo de implementacion": 241.76,
+        "tiempo estimado de desarrollo": 13.43,
+        "estimacion de bug": 0.0259,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

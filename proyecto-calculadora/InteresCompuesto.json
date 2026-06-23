@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/InteresCompuesto.java",
+  "clase": "InteresCompuesto",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 12,
+        "longitud": 13,
+        "volumen": 46.6,
+        "dificultad": 1.0,
+        "esfuerzo de implementacion": 46.6,
+        "tiempo estimado de desarrollo": 2.59,
+        "estimacion de bug": 0.0155,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

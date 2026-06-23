@@ -1,0 +1,44 @@
+{
+  "Nombre del archivo": "MaximoArray.java",
+  "clase": "MaximoArray",
+  "metodos": [
+    {
+      "metodo": "encontrar",
+      "halstead": {
+        "vocabulario": 17,
+        "longitud": 30,
+        "volumen": 122.62,
+        "dificultad": 12.86,
+        "esfuerzo de implementacion": 1576.59,
+        "tiempo estimado de desarrollo": 87.59,
+        "estimacion de bug": 0.0409,
+        "numero ciclomatico": 5
+      },
+      "grafo de flujo de control": {
+        "loc": 13,
+        "nodes": 5,
+        "edges": 8,
+        "unconnected nodos": 1
+      }
+    },
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 10,
+        "longitud": 10,
+        "volumen": 33.22,
+        "dificultad": 0.5,
+        "esfuerzo de implementacion": 16.61,
+        "tiempo estimado de desarrollo": 0.92,
+        "estimacion de bug": 0.0111,
+        "numero ciclomatico": 2
+      },
+      "grafo de flujo de control": {
+        "loc": 6,
+        "nodes": 2,
+        "edges": 2,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

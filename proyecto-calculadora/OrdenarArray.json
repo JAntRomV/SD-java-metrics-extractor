@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "src/main/java/com/proyecto/maven/OrdenarArray.java",
+  "clase": "OrdenarArray",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 12,
+        "longitud": 14,
+        "volumen": 50.19,
+        "dificultad": 0.59,
+        "esfuerzo de implementacion": 29.66,
+        "tiempo estimado de desarrollo": 1.65,
+        "estimacion de bug": 0.0167,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 8,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

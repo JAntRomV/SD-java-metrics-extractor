@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "NumeroMayor.java",
+  "clase": "NumeroMayor",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 13,
+        "longitud": 22,
+        "volumen": 81.41,
+        "dificultad": 3.33,
+        "esfuerzo de implementacion": 271.37,
+        "tiempo estimado de desarrollo": 15.08,
+        "estimacion de bug": 0.0271,
+        "numero ciclomatico": 4
+      },
+      "grafo de flujo de control": {
+        "loc": 7,
+        "nodes": 4,
+        "edges": 6,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}
