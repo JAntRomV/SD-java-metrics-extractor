@@ -6,6 +6,7 @@ import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.*;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -74,15 +75,12 @@ public class MetricsAnalyzer extends VoidVisitorAdapter<Void> {
 //----->Se llama a la clase CfgCalculator
 CfgCalculator.CfgResult cfg = CfgCalculator.estimateCfg(md, decisions);
 
-//----->Extrae el texto fuente completo     
-        String sourceCode = md.toString();
 
 //------>Reune todos los valores en un objeto y lo registra en el proyecto------
         MethodMetrics method = new MethodMetrics(
                 currentFileName, 
                 currentClassName, 
                 md.getNameAsString(),
-                sourceCode,
                 loc,
                 halstead[0], halstead[1], halstead[2], halstead[3],
                 cfg.cyclomaticComplexity, 
@@ -90,6 +88,12 @@ CfgCalculator.CfgResult cfg = CfgCalculator.estimateCfg(md, decisions);
                 cfg.edges,               
                 cfg.unconnectedNodes      
         );
+
+//----->Nuevo
+        //----->Extraer los caminos de Code2Seq para este método
+        List<String> caminosC2S = Code2SeqExtractor.extraerCaminos(md);
+        method.setCaminosCode2Seq(caminosC2S);    
+            
 //----->Registra el metodo en el reporte global
         projectMetrics.addMethod(currentClassName, currentFileName, method);
 

@@ -41,6 +41,8 @@ public class MetricsExporter {
                 } else {
                     writeCsv(className, fileName, methods, projectFolder);
                 }
+                writeCode2SeqJson(className, fileName,methods, projectFolder);
+
                 totalArchivos++;
             }
         }    
@@ -168,4 +170,43 @@ public class MetricsExporter {
 // redondea numeros  decimales
     private static double r2(double v) { return Math.round(v * 100.0)   / 100.0; }
     private static double r4(double v) { return Math.round(v * 10000.0) / 10000.0; }
+
+    //-----> NUEVO MÉTODO: Escribe el JSON de Code2Seq agrupando los resultados por método
+private static void writeCode2SeqJson(String className, String fileName, List<MethodMetrics> methods, File folder) {
+    File out = new File(folder, sanitize(className) + "_code2seq.json");
+    try (PrintWriter w = new PrintWriter(out, java.nio.charset.StandardCharsets.UTF_8)) {
+
+        w.println("{");
+        w.println("  \"Nombre del archivo\": \"" + esc(fileName) + "\",");
+        w.println("  \"clase\": \"" + esc(className) + "\",");
+        w.println("  \"metodos\": [");
+
+        for (int i = 0; i < methods.size(); i++) {
+            MethodMetrics m = methods.get(i);
+            boolean lastMethod = (i == methods.size() - 1);
+
+            w.println("    {");
+            w.println("      \"nombre_metodo\": \"" + esc(m.getMethodName()) + "\",");
+            w.println("      \"caminos_code2seq\": [");
+
+            List<String> caminos = m.getCaminosCode2Seq();
+            for (int j = 0; j < caminos.size(); j++) {
+                boolean lastCamino = (j == caminos.size() - 1);
+                w.println("        \"" + esc(caminos.get(j)) + "\"" + (lastCamino ? "" : ","));
+            }
+
+            w.println("      ]");
+            w.println("    }" + (lastMethod ? "" : ","));
+        }
+
+        w.println("  ]");
+        w.println("}");
+        
+        System.out.println("  [Code2Seq JSON] " + out.getName() + " generado con éxito.");
+
+    } catch (Exception e) {
+        System.err.println("Error generando Code2Seq JSON para " + className + ": " + e.getMessage());
+    }
+}
+
 }

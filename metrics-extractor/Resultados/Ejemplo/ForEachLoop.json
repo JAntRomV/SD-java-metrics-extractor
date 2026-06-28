@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "ForEachLoop.java",
+  "clase": "ForEachLoop",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 3,
+        "longitud": 3,
+        "volumen": 4.75,
+        "dificultad": 0.5,
+        "esfuerzo de implementacion": 2.38,
+        "tiempo estimado de desarrollo": 0.13,
+        "estimacion de bug": 0.0016,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 5,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

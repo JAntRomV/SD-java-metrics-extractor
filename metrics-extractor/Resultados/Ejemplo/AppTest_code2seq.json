@@ -1,0 +1,11 @@
+{
+  "Nombre del archivo": "AppTest.java",
+  "clase": "AppTest",
+  "metodos": [
+    {
+      "nombre_metodo": "shouldAnswerWithTrue",
+      "caminos_code2seq": [
+      ]
+    }
+  ]
+}

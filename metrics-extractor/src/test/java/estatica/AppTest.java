@@ -10,6 +10,7 @@ public class AppTest {
     @Test
     public void testFormulasBasicasHalstead() {
 //-----> ESCENARIO (Datos controlados en papel)
+
         int n1 = 4;  // 4 operadores distintos
         int n2 = 4;  // 4 operandos distintos
         int N1 = 8;  // 8 operadores totales

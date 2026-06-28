@@ -1,0 +1,17 @@
+{
+  "Nombre del archivo": "DoWhileLoop.java",
+  "clase": "DoWhileLoop",
+  "metodos": [
+    {
+      "nombre_metodo": "main",
+      "caminos_code2seq": [
+        "0|DeclaradorVariable->Defines una variable->;->Llaves{}|i",
+        "0|DeclaradorVariable->Defines una variable->;->Llaves{}|i",
+        "0|DeclaradorVariable->Defines una variable->;->Llaves{}|1",
+        "i|OperacionUnaria->;->Llaves{}->BucleDoWhile|i",
+        "i|OperacionUnaria->;->Llaves{}->BucleDoWhile|1",
+        "i|Operacion(<)|1"
+      ]
+    }
+  ]
+}

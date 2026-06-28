@@ -1,0 +1,17 @@
+{
+  "Nombre del archivo": "WhileLoop.java",
+  "clase": "WhileLoop",
+  "metodos": [
+    {
+      "nombre_metodo": "main",
+      "caminos_code2seq": [
+        "0|DeclaradorVariable->Defines una variable->;->Llaves{}|i",
+        "0|DeclaradorVariable->Defines una variable->;->Llaves{}|1",
+        "0|DeclaradorVariable->Defines una variable->;->Llaves{}|i",
+        "i|Operacion(<)|1",
+        "i|Operacion(<)->Bucle(while)|i",
+        "1|Operacion(<)->Bucle(while)|i"
+      ]
+    }
+  ]
+}

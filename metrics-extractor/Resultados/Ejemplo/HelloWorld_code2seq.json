@@ -1,0 +1,12 @@
+{
+  "Nombre del archivo": "HelloWorld.java",
+  "clase": "HelloWorld",
+  "metodos": [
+    {
+      "nombre_metodo": "main",
+      "caminos_code2seq": [
+        "System|FieldAccessExpr->Llamada a Metodo|\\\"Hello World\\\""
+      ]
+    }
+  ]
+}

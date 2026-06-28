@@ -1,0 +1,14 @@
+{
+  "Nombre del archivo": "SwitchStatement.java",
+  "clase": "SwitchStatement",
+  "metodos": [
+    {
+      "nombre_metodo": "main",
+      "caminos_code2seq": [
+        "1|DeclaradorVariable->Defines una variable->;->Llaves{}|option",
+        "1|DeclaradorVariable->Defines una variable->;->Llaves{}|1",
+        "option|SelectorSwitch|1"
+      ]
+    }
+  ]
+}

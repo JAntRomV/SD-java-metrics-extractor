@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "IfStatement.java",
+  "clase": "IfStatement",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 5,
+        "longitud": 5,
+        "volumen": 11.61,
+        "dificultad": 1.0,
+        "esfuerzo de implementacion": 11.61,
+        "tiempo estimado de desarrollo": 0.64,
+        "estimacion de bug": 0.0039,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 5,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

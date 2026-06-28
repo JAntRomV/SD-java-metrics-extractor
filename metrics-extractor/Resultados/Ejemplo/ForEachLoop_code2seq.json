@@ -1,0 +1,12 @@
+{
+  "Nombre del archivo": "ForEachLoop.java",
+  "clase": "ForEachLoop",
+  "metodos": [
+    {
+      "nombre_metodo": "main",
+      "caminos_code2seq": [
+        "1|ArrayInitializerExpr->DeclaradorVariable->Defines una variable->;->Llaves{}|values"
+      ]
+    }
+  ]
+}

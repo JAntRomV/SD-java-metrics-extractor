@@ -1,0 +1,17 @@
+{
+  "Nombre del archivo": "ForLoop.java",
+  "clase": "ForLoop",
+  "metodos": [
+    {
+      "nombre_metodo": "main",
+      "caminos_code2seq": [
+        "0|DeclaradorVariable->Defines una variable->Bucle(for)|i",
+        "0|DeclaradorVariable->Defines una variable->Bucle(for)|1",
+        "0|DeclaradorVariable->Defines una variable->Bucle(for)|i",
+        "i|Operacion(<)|1",
+        "i|Operacion(<)->Bucle(for)|i",
+        "1|Operacion(<)->Bucle(for)|i"
+      ]
+    }
+  ]
+}
