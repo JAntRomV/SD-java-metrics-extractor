@@ -22,3 +22,19 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+target
+# Entornos virtuales en la raíz
+venv_code2vec/
+venv_graphcodebert/
+
+# Carpetas de dependencias y builds de Python
+__pycache__/
+*.pyc
+
+# Carpetas de salida locales antiguas (opcional)
+proyecto_reportes/
+
+# Ignorar directorios de compilación de Maven de forma global
+**/target/
+*.jar
+*.class
