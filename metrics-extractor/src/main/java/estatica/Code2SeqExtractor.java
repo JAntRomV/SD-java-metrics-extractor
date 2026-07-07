@@ -1,24 +1,22 @@
 package estatica;
 
+import com.github.javaparser.Position;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.VariableDeclarator;
-import com.github.javaparser.ast.expr.NameExpr;
-import com.github.javaparser.ast.expr.VariableDeclarationExpr;
-import com.github.javaparser.ast.expr.LiteralExpr;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.BinaryExpr;
-import com.github.javaparser.ast.stmt.IfStmt;
-import com.github.javaparser.ast.stmt.WhileStmt;
-import com.github.javaparser.ast.stmt.BlockStmt;
-import com.github.javaparser.ast.stmt.ExpressionStmt;
-import com.github.javaparser.ast.stmt.ForStmt;
+import com.github.javaparser.ast.expr.LiteralExpr;
+import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.expr.SimpleName;
 import java.util.ArrayList;
 import java.util.List;
 
+//-----> Clase que sirve para extraer caminos del codigo y volverlos a armar como texto
 public class Code2SeqExtractor {
 
-//----->Guarda el nodo real y el texto de lo que vale 
+    //-----> Estructura para guardar el nodo real y su texto plano
     private static class TerminalNode {
         Node node;
         String valor;
@@ -29,153 +27,195 @@ public class Code2SeqExtractor {
         }
     }
 
-//-----/Guarda todas las variables y valores fijos y los guarda en una lista\---------
-    public static List<String> extraerCaminos(MethodDeclaration md) {
+    //-----> Extrae todos los pares de terminales (variables/valores) y su camino en el AST
+    public static List<String> extraerCaminosDesdeMetodo(MethodDeclaration md) {
         List<TerminalNode> terminales = new ArrayList<>();
         List<String> caminos = new ArrayList<>();
 
-//----> examina cada una de las partes del metodo
+        //-----> Buscamos absolutamente todas las piezas (nodos) dentro del metodo
         md.findAll(Node.class).forEach(nodo -> {
-          
-        //---->Siencuentra un nombre de variable u objetivo extrae su texto en plano  
             if (nodo instanceof NameExpr) {
+
+                //-----> Uso de una variable (ej. dentro de una expresion)
                 terminales.add(new TerminalNode(nodo, ((NameExpr) nodo).getNameAsString()));
-
-        //----> Si escuentra valores fijos hace lo mismo       
             } else if (nodo instanceof LiteralExpr) {
-
-            //--->.replace coloca diagonales a las comillas    
+                
+                //-----> Valor fijo (numero, cadena, booleano, etc.)
                 String textoSafe = nodo.toString().replace("\"", "\\\"");
                 terminales.add(new TerminalNode(nodo, textoSafe));
+            } else if (nodo instanceof SimpleName) {
+
+                //-----> Captura el nombre real al crear variables.
+                Node padre = nodo.getParentNode().orElse(null);
+                
+                //-----> Si el padre es una variable creada o un parametro, guardamos su nombre
+                if (padre instanceof VariableDeclarator || padre instanceof Parameter) {
+                    terminales.add(new TerminalNode(nodo, ((SimpleName) nodo).asString()));
+                }
             }
         });
-//-----/Agarra la lista anterior y empieza a buscar los pares el inicio y el final\----
+
+        //-----> Comparamos cada palabra o valor contra todos los demas para hacer parejas
         for (int i = 0; i < terminales.size(); i++) {
             for (int j = i + 1; j < terminales.size(); j++) {
-                TerminalNode inicio = terminales.get(i);
-                TerminalNode fin = terminales.get(j);
+                TerminalNode a = terminales.get(i);
+                TerminalNode b = terminales.get(j);
 
+                //-----> Ordena por aparicion visual en el codigo (de izquierda a derecha).
+                TerminalNode inicio = a;
+                TerminalNode fin = b;
+                Position posA = a.node.getBegin().orElse(null);
+                Position posB = b.node.getBegin().orElse(null);
+                
+                //-----> Si 'a' esta mas adelante en el archivo que 'b', los volteamos
+                if (posA != null && posB != null && posA.compareTo(posB) > 0) {
+                    inicio = b;
+                    fin = a;
+                }
+
+                //-----> Buscamos la ruta entre ellos en el arbol
                 String camino = encontrarCaminoEntreNodos(inicio.node, fin.node);
+                
+                //-----> Juntamos todo en un "trillizo": Origen | Ruta | Destino
                 String trillizo = inicio.valor + "|" + camino + "|" + fin.valor;
                 caminos.add(trillizo);
             }
         }
         return caminos;
     }
-//----/Agarra esos pares y calcula el camino\------ 
+
+    //-----> Calcula el camino completo entre dos nodos: sube desde "inicio" hasta el
+    //-----> ancestro comun LCA y luego baja hasta "fin".
     private static String encontrarCaminoEntreNodos(Node inicio, Node fin) {
-//---->Se crea una lista vacia llamada ruta para ir anotando el camino
-    List<String> ruta = new ArrayList<>();
-    
-//-----> Subimos desde el nodo de inicio hacia sus ancestros
-    Node actual = inicio.getParentNode().orElse(null);
-    
-//----->  seguira escalando de padre en padre hacia arriba hasta que se termine el arcbol 
-    while (actual != null) {
-    
-//----> NUEVO: Se quitaron los  nombres técnicos
-        if (actual instanceof BinaryExpr) {
-            ruta.add("Operacion(" + ((BinaryExpr) actual).getOperator().asString() + ")");
+        List<String> subida = new ArrayList<>();
+        List<String> bajada = new ArrayList<>();
 
-        } else if (actual instanceof AssignExpr) {
-            ruta.add("Asignacion(" + ((AssignExpr) actual).getOperator().asString() + ")");
+        //-----> Empezamos a subir desde el padre del primer nodo
+        Node actual = inicio.getParentNode().orElse(null);
+        Node lca = null;
 
-        } else if (actual instanceof IfStmt) {
-            ruta.add("Condicion(if)");
-
-        } else if (actual instanceof WhileStmt) {
-            ruta.add("Bucle(while)");
-
-        } else if (actual instanceof ForStmt) {
-            ruta.add("Bucle(for)");
-        } 
-//----->Estructura del Código y Bloques
-        else if (actual instanceof BlockStmt) {
-            ruta.add("Llaves{}");
-        } else if (actual instanceof ExpressionStmt) {
-            ruta.add(";");
-        } else if (actual instanceof com.github.javaparser.ast.CompilationUnit) {
-            ruta.add("Archivo.Java");
-        } 
-//----->Declaración de Variables, Atributos y Parámetros
-        else if (actual instanceof VariableDeclarator) {
-            ruta.add("DeclaradorVariable");
-
-        } else if (actual instanceof VariableDeclarationExpr) {
-            ruta.add("Defines una variable");
-
-        } else if (actual instanceof com.github.javaparser.ast.body.FieldDeclaration) {
-            ruta.add("Declaracion de atributo");
-
-        } else if (actual instanceof com.github.javaparser.ast.body.Parameter) {
-            ruta.add("Parametro/Argumento");
-        } 
-//----->Llamadas, Retornos y Creación de Objetos
-        else if (actual instanceof com.github.javaparser.ast.expr.MethodCallExpr) {
-            ruta.add("Llamada a Metodo");
-
-        } else if (actual instanceof com.github.javaparser.ast.stmt.ReturnStmt) {
-            ruta.add("Retorno");
-
-        } else if (actual instanceof com.github.javaparser.ast.expr.ObjectCreationExpr) {
-            ruta.add("CreacionObjeto");
-        } 
-//----->Operaciones Matemáticas Avanzadas o Paréntesis
-        else if (actual instanceof com.github.javaparser.ast.expr.UnaryExpr) {
-            ruta.add("OperacionUnaria"); 
-
-        } else if (actual instanceof com.github.javaparser.ast.expr.ConditionalExpr) {
-            ruta.add("CondicionTernaria"); 
-
-        } else if (actual instanceof com.github.javaparser.ast.expr.EnclosedExpr) {
-            ruta.add("Parentesis"); 
-        } 
-//----->Otras Estructuras de Control (Manejo de Errores y Casos)
-        else if (actual instanceof com.github.javaparser.ast.stmt.TryStmt) {
-            ruta.add("ZonaTry");
-
-        } else if (actual instanceof com.github.javaparser.ast.stmt.CatchClause) {
-            ruta.add("ZonaCatch");
-
-        } else if (actual instanceof com.github.javaparser.ast.stmt.ThrowStmt) {
-            ruta.add("LanzarError");
-
-        } else if (actual instanceof com.github.javaparser.ast.stmt.SwitchStmt) {
-            ruta.add("SelectorSwitch");
-
-        } else if (actual instanceof com.github.javaparser.ast.stmt.SwitchEntry) {
-            ruta.add("CasoSwitch");
-
-        } else if (actual instanceof com.github.javaparser.ast.stmt.DoStmt) {
-            ruta.add("BucleDoWhile");
-
-        } else if (actual instanceof com.github.javaparser.ast.stmt.ForEachStmt) {
-            ruta.add("BucleForEach");
+        //-----> Subimos por el arbol buscando la rama comun que tambien conecte a 'fin'
+        while (actual != null) {
+            if (actual.isAncestorOf(fin)) {
+                lca = actual;
+                //-----> Encontramos el punto de union y lo marcamos con un asterisco (*)
+                subida.add("*" + describirNodo(actual));
+                break;
+            }
+            //-----> Si no es el punto comun, lo anotamos en la ruta de subida
+            subida.add(describirNodo(actual));
+            actual = actual.getParentNode().orElse(null);
         }
-//----->Arreglos
-        else if (actual instanceof com.github.javaparser.ast.expr.ArrayCreationExpr) {
-            ruta.add("CrearArreglo");
 
-        } else if (actual instanceof com.github.javaparser.ast.expr.ArrayAccessExpr) {
-            ruta.add("AccesoArreglo");
-        } 
-//-----> Si no se encuentra se escribe el nombre tecnico 
-        else {
-          ruta.add(actual.getClass().getSimpleName());        }
+        //-----> Si encontramos el punto comun, ahora rastreamos el camino de bajada hacia 'fin'
+        if (lca != null) {
+            Node actualBajada = fin.getParentNode().orElse(null);
+            while (actualBajada != null && actualBajada != lca) {
+
+                //-----> Lo agregamos al inicio de la lista de bajada para mantener el orden correcto
+                bajada.add(0, describirNodo(actualBajada));
+                actualBajada = actualBajada.getParentNode().orElse(null);
+            }
+        }
+
+        //-----> Proteccion por si la subida quedo vacia
+        if (subida.isEmpty()) {
+            subida.add("*ChildOf");
+        }
+
+        //-----> Juntamos la ruta de subida con la de bajada usando flechas "->"
+        List<String> rutaCompleta = new ArrayList<>(subida);
+        rutaCompleta.addAll(bajada);
+        return String.join("->", rutaCompleta);
+    }
+
+    //-----> Guarda el tipo de dato o signo (+, =, ==) para no perder informacion.
+    private static String describirNodo(Node nodo) {
+        String nombreClase = nodo.getClass().getSimpleName();
         
-//----->cada vez que sube revisa si en donde nos encontramos es el nodo final
-
-        if (actual.isAncestorOf(fin)) {
-            break; // Detenemos el camino porque ya encontramos el punto de unión
+        //-----> Si es una creacion de variable, le pegamos el tipo
+        if (nodo instanceof VariableDeclarator) {
+            String tipo = ((VariableDeclarator) nodo).getType().asString();
+            return nombreClase + "(" + tipo + ")";
         }
-        actual = actual.getParentNode().orElse(null);
+        
+        //-----> Si es una operacion matematica/logica, le pegamos el simbolo 
+        if (nodo instanceof BinaryExpr) {
+            String operador = ((BinaryExpr) nodo).getOperator().asString();
+            return nombreClase + "(" + operador + ")";
+        }
+        
+        //-----> Si es una asignacion de valor, le pegamos el signo
+        if (nodo instanceof AssignExpr) {
+            String operador = ((AssignExpr) nodo).getOperator().asString();
+            return nombreClase + "(" + operador + ")";
+        }
+        return nombreClase;
     }
 
-    // Si la ruta quedó vacía, ponemos un conector genérico
-    if (ruta.isEmpty()) {
-        ruta.add("ChildOf");
+    //-----> Toma los trillizos generados y reconstruye fragmentos de codigo verificables
+    public static List<String> reconstruirCodigoDesdeCaminos(List<String> caminos) {
+        List<String> codigoReconstruido = new ArrayList<>();
+
+        //-----> Revisamos cada trillizo uno por uno
+        for (String camino : caminos) {
+            String[] partes = camino.split("\\|");
+            if (partes.length < 3) continue; //-----> Si esta roto, lo saltamos
+
+            String inicio = partes[0].trim();
+            String ruta = partes[1].trim();
+            String fin = partes[2].trim();
+
+            //----->Ignora rutas largas de ecuaciones complejas para evitar armar lineas inventadas.
+            String[] nodos = ruta.split("->");
+            if (nodos.length != 1) continue; //-----> Si la ruta es larga o compleja, la ignoramos
+
+            //-----> Revisamos si el nodo tiene la marca del asterisco (*) de union
+            String nodoLCA = nodos[0].startsWith("*") ? nodos[0].substring(1) : null;
+            if (nodoLCA == null) continue;
+
+            //-----> Si se unieron en una creacion de variable, armamos: "tipo variable = valor"
+            if (nodoLCA.startsWith("VariableDeclarator")) {
+                String tipo = extraerParametro(nodoLCA, "VariableDeclarator");
+                if (tipo != null) {
+                    agregarSiNuevo(codigoReconstruido, tipo + " " + inicio + "=" + fin);
+                }
+            //-----> Si se unieron en un signo de igual, armamos: "variable = valor"
+            } else if (nodoLCA.startsWith("AssignExpr")) {
+                String operador = extraerParametro(nodoLCA, "AssignExpr");
+                if (operador != null) {
+                    agregarSiNuevo(codigoReconstruido, inicio + operador + fin);
+                }
+            //-----> Si se unieron en un operador matematico, armamos: "variable + valor"
+            } else if (nodoLCA.startsWith("BinaryExpr")) {
+                String operador = extraerParametro(nodoLCA, "BinaryExpr");
+                if (operador != null) {
+                    agregarSiNuevo(codigoReconstruido, inicio + operador + fin);
+                }
+            }
+        }
+
+        return codigoReconstruido;
     }
 
-    return String.join("->", ruta);
-}
+    //-----> Agrega la linea de codigo a la lista solo si no la habiamos guardado antes
+    private static void agregarSiNuevo(List<String> lista, String linea) {
+        if (!lista.contains(linea)) {
+            lista.add(linea);
+        }
+    }
+
+    //-----> Extrae el valor entre parentesis de un token tipo "NombreNodo(valor)"
+    private static String extraerParametro(String nodoConParametro, String nombreNodo) {
+        int idx = nodoConParametro.indexOf(nombreNodo + "(");
+
+        if (idx == -1) return null; //-----> Si no tiene parentesis, salimos
+        int inicioParam = idx + nombreNodo.length() + 1;
+        int finParam = nodoConParametro.indexOf(")", inicioParam);
+        
+        if (finParam == -1) return null; //-----> Si esta mal cerrado, salimos
+        
+        //-----> Corta y devuelve lo que este adentro, por ejemplo el "int" o el "+"
+        return nodoConParametro.substring(inicioParam, finParam);
+    }
 }

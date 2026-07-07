@@ -1,5 +1,8 @@
 package estatica;
+
 //______________/Recorre el arbol y Extrae las metricas de cada metodod\_________________________
+import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.DataKey;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.*;
@@ -13,6 +16,10 @@ import java.util.Set;
 public class MetricsAnalyzer extends VoidVisitorAdapter<Void> {
 //------>Guarda el reporte global  donde se ira juntando toda la informacion 
     private final ProjectMetrics projectMetrics;
+
+//-----> Guarda cuántas líneas se le deben restar a un método porque se le podó un submétodo de adentro
+    public static final DataKey<Integer> LINEAS_PODADAS = new DataKey<Integer>() {};
+
 //------>Nombre del archivo y clase que se analiza
     private String currentClassName = "Unknown";
     private String currentFileName  = "Unknown";
@@ -27,10 +34,18 @@ public class MetricsAnalyzer extends VoidVisitorAdapter<Void> {
         this.currentFileName = fileName;
     }
 
+//-----> Saca las métricas de un método que se sacó de adentro de otro método (anidado)
+    public void analizarMetodoSuelto(MethodDeclaration md, String nombreClase) {
+        String claseAnterior = this.currentClassName;
+        this.currentClassName = nombreClase;
+        this.visit(md, null);
+        this.currentClassName = claseAnterior;
+    }
 
-/**      Cada vez que se encuentra una clase guarda el nombre anterior a la clase
+
+/** Cada vez que se encuentra una clase guarda el nombre anterior a la clase
 *------> actualiza el nombre de la clase que se esta leyendo  recorre el codigo
-*        y cuando termina regresa al nombre anterior 
+* y cuando termina regresa al nombre anterior 
 */
     @Override
     public void visit(ClassOrInterfaceDeclaration cid, Void arg) {
@@ -58,6 +73,11 @@ public class MetricsAnalyzer extends VoidVisitorAdapter<Void> {
                 ? md.getEnd().get().line - md.getBegin().get().line + 1
                 : 0;
 
+//-----> Si a este método se le podó un submétodo de adentro, no contamos esas líneas
+        if (md.containsData(LINEAS_PODADAS)) {
+            loc -= md.getData(LINEAS_PODADAS);
+        }
+
 //------>BUsca y cuenta todos los puntos de decision
         int ifs       = md.findAll(IfStmt.class).size();
         int fors      = md.findAll(ForStmt.class).size();
@@ -69,12 +89,11 @@ public class MetricsAnalyzer extends VoidVisitorAdapter<Void> {
         int ternaries = md.findAll(ConditionalExpr.class).size();
         int decisions = ifs + fors + foreachs + whiles + dos + switches + catches + ternaries;
 
-//----->Extrae las variables base deeeeeee halstead
+//------>Extrae las variables base deeeeeee halstead
         int[] halstead = collectHalstead(md);
 
 //----->Se llama a la clase CfgCalculator
-CfgCalculator.CfgResult cfg = CfgCalculator.estimateCfg(md, decisions);
-
+        CfgCalculator.CfgResult cfg = CfgCalculator.estimateCfg(md, decisions);
 
 //------>Reune todos los valores en un objeto y lo registra en el proyecto------
         MethodMetrics method = new MethodMetrics(
@@ -88,15 +107,13 @@ CfgCalculator.CfgResult cfg = CfgCalculator.estimateCfg(md, decisions);
                 cfg.edges,               
                 cfg.unconnectedNodes      
         );
-
-//----->Nuevo
-        //----->Extraer los caminos de Code2Seq para este método
-        List<String> caminosC2S = Code2SeqExtractor.extraerCaminos(md);
-        method.setCaminosCode2Seq(caminosC2S);    
-            
+    
 //----->Registra el metodo en el reporte global
         projectMetrics.addMethod(currentClassName, currentFileName, method);
+//Le pertenece a code2seq - Extraer los caminos de Code2Seq para este método
 
+        List<String> caminosC2S = Code2SeqExtractor.extraerCaminosDesdeMetodo(md);
+        method.setCaminosCode2Seq(caminosC2S);
         super.visit(md, arg);
     }
 
@@ -166,9 +183,8 @@ CfgCalculator.CfgResult cfg = CfgCalculator.estimateCfg(md, decisions);
     }
 
 //------>Agrega la palabra clave al set de operadores distintos si hay al menos 1 ocurrencia
-    private static <T extends com.github.javaparser.ast.Node> void addKeyword(
+    private static <T extends Node> void addKeyword(
             MethodDeclaration md, Class<T> type, String keyword, Set<String> ops) {
         if (!md.findAll(type).isEmpty()) ops.add(keyword);
     }
-
 }

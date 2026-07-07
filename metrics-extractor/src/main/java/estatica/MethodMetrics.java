@@ -10,7 +10,7 @@ public class MethodMetrics {
     private final String className;
     private final String methodName;
     
-//----->Nuevo
+//----->Le pertenece a code2sep
     private List<String> caminosCode2Seq = new ArrayList<>();
 
 //------>LOC
@@ -91,6 +91,8 @@ public class MethodMetrics {
     public int getN1Total() { return N1; } 
     public int getN2Total() { return N2; } 
 
+    //le pertenece a code2seq
     public void setCaminosCode2Seq(List<String> caminos) { this.caminosCode2Seq = caminos; }
-    public List<String> getCaminosCode2Seq() { return this.caminosCode2Seq; }
+public List<String> getCaminosCode2Seq() { return this.caminosCode2Seq; }
+
 }
