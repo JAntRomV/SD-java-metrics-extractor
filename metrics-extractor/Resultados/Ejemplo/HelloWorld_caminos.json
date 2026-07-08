@@ -1,0 +1,25 @@
+{
+  "clase": "HelloWorld.java",
+  "caminos": [
+    {
+      "camino_id": 1,
+      "texto": "System.out.println(\"Hello World\");|System.out.println(\"Hello World\")|System.out|System|System",
+      "serie_numerica": [1, 2, 3, 4, 5]
+    },
+    {
+      "camino_id": 2,
+      "texto": "System.out.println(\"Hello World\");|System.out.println(\"Hello World\")|System.out|System|System|out",
+      "serie_numerica": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "camino_id": 3,
+      "texto": "System.out.println(\"Hello World\");|System.out.println(\"Hello World\")|System.out|System|System|out|println",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7]
+    },
+    {
+      "camino_id": 4,
+      "texto": "System.out.println(\"Hello World\");|System.out.println(\"Hello World\")|System.out|System|System|out|println|\"Hello World\"",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8]
+    }
+  ]
+}

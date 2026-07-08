@@ -1,0 +1,2 @@
+Nombre del archivo,clase,metodo,n1_operadores_distintos,n2_operandos_distintos,N1_total_operadores,N2_total_operandos,vocabulario,longitud,volumen,dificultad,esfuerzo de implementacion,tiempo estimado de desarrollo,estimacion de bug,numero ciclomatico,loc,nodes,edges,unconnected nodos
+DoWhileLoop.java,DoWhileLoop,main,3,3,3,4,6,7,18.09,2.0,36.19,2.01,0.006,3,6,3,4,0

@@ -5,12 +5,21 @@
     {
       "nombre_metodo": "main",
       "caminos_code2seq": [
-        "0|DeclaradorVariable->Defines una variable->Bucle(for)|i",
-        "0|DeclaradorVariable->Defines una variable->Bucle(for)|1",
-        "0|DeclaradorVariable->Defines una variable->Bucle(for)|i",
-        "i|Operacion(<)|1",
-        "i|Operacion(<)->Bucle(for)|i",
-        "1|Operacion(<)->Bucle(for)|i"
+        "args|Parameter->*MethodDeclaration->BlockStmt->ForStmt->VariableDeclarationExpr->VariableDeclarator(int)|i",
+        "args|Parameter->*MethodDeclaration->BlockStmt->ForStmt->VariableDeclarationExpr->VariableDeclarator(int)|0",
+        "args|Parameter->*MethodDeclaration->BlockStmt->ForStmt->BinaryExpr(<)|i",
+        "args|Parameter->*MethodDeclaration->BlockStmt->ForStmt->BinaryExpr(<)|1",
+        "args|Parameter->*MethodDeclaration->BlockStmt->ForStmt->UnaryExpr|i",
+        "i|*VariableDeclarator(int)|0",
+        "i|VariableDeclarator(int)->VariableDeclarationExpr->*ForStmt->BinaryExpr(<)|i",
+        "i|VariableDeclarator(int)->VariableDeclarationExpr->*ForStmt->BinaryExpr(<)|1",
+        "i|VariableDeclarator(int)->VariableDeclarationExpr->*ForStmt->UnaryExpr|i",
+        "0|VariableDeclarator(int)->VariableDeclarationExpr->*ForStmt->BinaryExpr(<)|i",
+        "0|VariableDeclarator(int)->VariableDeclarationExpr->*ForStmt->BinaryExpr(<)|1",
+        "0|VariableDeclarator(int)->VariableDeclarationExpr->*ForStmt->UnaryExpr|i",
+        "i|*BinaryExpr(<)|1",
+        "i|BinaryExpr(<)->*ForStmt->UnaryExpr|i",
+        "1|BinaryExpr(<)->*ForStmt->UnaryExpr|i"
       ]
     }
   ]

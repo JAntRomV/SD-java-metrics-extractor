@@ -38,3 +38,5 @@ proyecto_reportes/
 **/target/
 *.jar
 *.class
+.json
+ContadorProyecto.java

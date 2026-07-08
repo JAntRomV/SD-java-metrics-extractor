@@ -1,0 +1,2 @@
+Nombre del archivo,clase,metodo,n1_operadores_distintos,n2_operandos_distintos,N1_total_operadores,N2_total_operandos,vocabulario,longitud,volumen,dificultad,esfuerzo de implementacion,tiempo estimado de desarrollo,estimacion de bug,numero ciclomatico,loc,nodes,edges,unconnected nodos
+ForEachLoop.java,ForEachLoop,main,1,2,1,2,3,3,4.75,0.5,2.38,0.13,0.0016,3,5,3,4,0

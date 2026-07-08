@@ -1,0 +1,180 @@
+{
+  "clase": "IfElseStatement.java",
+  "caminos": [
+    {
+      "camino_id": 1,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long",
+      "serie_numerica": [1, 2, 3, 4]
+    },
+    {
+      "camino_id": 2,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin",
+      "serie_numerica": [1, 2, 3, 4, 5]
+    },
+    {
+      "camino_id": 3,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8]
+    },
+    {
+      "camino_id": 4,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    },
+    {
+      "camino_id": 5,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+    },
+    {
+      "camino_id": 6,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    },
+    {
+      "camino_id": 7,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    },
+    {
+      "camino_id": 8,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+    },
+    {
+      "camino_id": 9,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+    },
+    {
+      "camino_id": 10,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+    },
+    {
+      "camino_id": 11,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+    },
+    {
+      "camino_id": 12,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+    },
+    {
+      "camino_id": 13,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
+    },
+    {
+      "camino_id": 14,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+    },
+    {
+      "camino_id": 15,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34]
+    },
+    {
+      "camino_id": 16,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]
+    },
+    {
+      "camino_id": 17,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime|if(value>0)|condicion_sisi|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 42, 43, 44, 45, 46]
+    },
+    {
+      "camino_id": 18,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime|if(value>0)|condicion_sisi|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 42, 43, 44, 45, 46, 47]
+    },
+    {
+      "camino_id": 19,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime|if(value>0)|condicion_sisi|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 42, 43, 44, 45, 46, 47, 48]
+    },
+    {
+      "camino_id": 20,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime|if(value>0)|condicion_sisi|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51]
+    },
+    {
+      "camino_id": 21,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime|if(value>0)|condicion_sisi|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52]
+    },
+    {
+      "camino_id": 22,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime|if(value>0)|else{}|condicion_sino|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 54, 55, 56, 57, 58]
+    },
+    {
+      "camino_id": 23,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime|if(value>0)|else{}|condicion_sino|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 54, 55, 56, 57, 58, 59]
+    },
+    {
+      "camino_id": 24,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime|if(value>0)|else{}|condicion_sino|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 54, 55, 56, 57, 58, 59, 60]
+    },
+    {
+      "camino_id": 25,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime|if(value>0)|else{}|condicion_sino|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63]
+    },
+    {
+      "camino_id": 26,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime|if(value>0)|else{}|condicion_sino|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]
+    },
+    {
+      "camino_id": 27,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime|long end = System.nanoTime();|long end = System.nanoTime()|end = System.nanoTime()|long",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 65, 66, 67, 68]
+    },
+    {
+      "camino_id": 28,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime|long end = System.nanoTime();|long end = System.nanoTime()|end = System.nanoTime()|long|end",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 65, 66, 67, 68, 69]
+    },
+    {
+      "camino_id": 29,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime|long end = System.nanoTime();|long end = System.nanoTime()|end = System.nanoTime()|long|end|System.nanoTime()|System|System",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 65, 66, 67, 68, 69, 70, 71, 72]
+    },
+    {
+      "camino_id": 30,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime|long end = System.nanoTime();|long end = System.nanoTime()|end = System.nanoTime()|long|end|System.nanoTime()|System|System|nanoTime",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 65, 66, 67, 68, 69, 70, 71, 72, 73]
+    },
+    {
+      "camino_id": 31,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime|long end = System.nanoTime();|long end = System.nanoTime()|end = System.nanoTime()|long|end|System.nanoTime()|System|System|nanoTime|System.out.println(end - begin);|System.out.println(end - begin)|System.out|System|System",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78]
+    },
+    {
+      "camino_id": 32,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime|long end = System.nanoTime();|long end = System.nanoTime()|end = System.nanoTime()|long|end|System.nanoTime()|System|System|nanoTime|System.out.println(end - begin);|System.out.println(end - begin)|System.out|System|System|out",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79]
+    },
+    {
+      "camino_id": 33,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime|long end = System.nanoTime();|long end = System.nanoTime()|end = System.nanoTime()|long|end|System.nanoTime()|System|System|nanoTime|System.out.println(end - begin);|System.out.println(end - begin)|System.out|System|System|out|println",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80]
+    },
+    {
+      "camino_id": 34,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime|long end = System.nanoTime();|long end = System.nanoTime()|end = System.nanoTime()|long|end|System.nanoTime()|System|System|nanoTime|System.out.println(end - begin);|System.out.println(end - begin)|System.out|System|System|out|println|end - begin|end|end",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83]
+    },
+    {
+      "camino_id": 35,
+      "texto": "long begin = System.nanoTime();|long begin = System.nanoTime()|begin = System.nanoTime()|long|begin|System.nanoTime()|System|System|nanoTime|System.out.println(begin);|System.out.println(begin)|System.out|System|System|out|println|begin|begin|int value = 0;|int value = 0|value = 0|int|value|0|System.out.println(System.nanoTime());|System.out.println(System.nanoTime())|System.out|System|System|out|println|System.nanoTime()|System|System|nanoTime|long end = System.nanoTime();|long end = System.nanoTime()|end = System.nanoTime()|long|end|System.nanoTime()|System|System|nanoTime|System.out.println(end - begin);|System.out.println(end - begin)|System.out|System|System|out|println|end - begin|end|end|begin|begin",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85]
+    }
+  ]
+}

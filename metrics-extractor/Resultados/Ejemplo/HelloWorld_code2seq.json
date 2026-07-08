@@ -5,7 +5,9 @@
     {
       "nombre_metodo": "main",
       "caminos_code2seq": [
-        "System|FieldAccessExpr->Llamada a Metodo|\\\"Hello World\\\""
+        "args|Parameter->*MethodDeclaration->BlockStmt->ExpressionStmt->MethodCallExpr->FieldAccessExpr|System",
+        "args|Parameter->*MethodDeclaration->BlockStmt->ExpressionStmt->MethodCallExpr|\\\"Hello World\\\"",
+        "System|FieldAccessExpr->*MethodCallExpr|\\\"Hello World\\\""
       ]
     }
   ]

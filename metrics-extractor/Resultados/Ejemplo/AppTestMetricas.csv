@@ -1,0 +1,2 @@
+Nombre del archivo,clase,metodo,n1_operadores_distintos,n2_operandos_distintos,N1_total_operadores,N2_total_operandos,vocabulario,longitud,volumen,dificultad,esfuerzo de implementacion,tiempo estimado de desarrollo,estimacion de bug,numero ciclomatico,loc,nodes,edges,unconnected nodos
+AppTest.java,AppTest,shouldAnswerWithTrue,0,1,0,1,1,1,0.0,0.0,0.0,0.0,0.0,2,5,2,2,0

@@ -5,9 +5,16 @@
     {
       "nombre_metodo": "main",
       "caminos_code2seq": [
-        "1|DeclaradorVariable->Defines una variable->;->Llaves{}|value",
-        "1|DeclaradorVariable->Defines una variable->;->Llaves{}|0",
-        "value|Operacion(>)|0"
+        "args|Parameter->*MethodDeclaration->BlockStmt->ExpressionStmt->VariableDeclarationExpr->VariableDeclarator(int)|value",
+        "args|Parameter->*MethodDeclaration->BlockStmt->ExpressionStmt->VariableDeclarationExpr->VariableDeclarator(int)|1",
+        "args|Parameter->*MethodDeclaration->BlockStmt->IfStmt->BinaryExpr(>)|value",
+        "args|Parameter->*MethodDeclaration->BlockStmt->IfStmt->BinaryExpr(>)|0",
+        "value|*VariableDeclarator(int)|1",
+        "value|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->IfStmt->BinaryExpr(>)|value",
+        "value|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->IfStmt->BinaryExpr(>)|0",
+        "1|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->IfStmt->BinaryExpr(>)|value",
+        "1|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->IfStmt->BinaryExpr(>)|0",
+        "value|*BinaryExpr(>)|0"
       ]
     }
   ]

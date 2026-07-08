@@ -1,0 +1,35 @@
+{
+  "clase": "ForEachLoop.java",
+  "caminos": [
+    {
+      "camino_id": 1,
+      "texto": "int[] values = { 1 };|int[] values = { 1 }|values = { 1 }|int[]|int",
+      "serie_numerica": [1, 2, 3, 4, 5]
+    },
+    {
+      "camino_id": 2,
+      "texto": "int[] values = { 1 };|int[] values = { 1 }|values = { 1 }|int[]|int|values",
+      "serie_numerica": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "camino_id": 3,
+      "texto": "int[] values = { 1 };|int[] values = { 1 }|values = { 1 }|int[]|int|values|{ 1 }|1",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8]
+    },
+    {
+      "camino_id": 4,
+      "texto": "int[] values = { 1 };|int[] values = { 1 }|values = { 1 }|int[]|int|values|{ 1 }|1|for (int value : values) { }|int value|value|int",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    },
+    {
+      "camino_id": 5,
+      "texto": "int[] values = { 1 };|int[] values = { 1 }|values = { 1 }|int[]|int|values|{ 1 }|1|for (int value : values) { }|int value|value|int|value",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+    },
+    {
+      "camino_id": 6,
+      "texto": "int[] values = { 1 };|int[] values = { 1 }|values = { 1 }|int[]|int|values|{ 1 }|1|for (int value : values) { }|int value|value|int|value|values|values",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    }
+  ]
+}
