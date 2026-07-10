@@ -1,0 +1,35 @@
+{
+  "clase": "DoWhileLoop.java",
+  "caminos": [
+    {
+      "camino_id": 1,
+      "texto": "int i = 0;|int i = 0|i = 0|int",
+      "serie_numerica": [1, 2, 3, 4]
+    },
+    {
+      "camino_id": 2,
+      "texto": "int i = 0;|int i = 0|i = 0|int|i",
+      "serie_numerica": [1, 2, 3, 4, 5]
+    },
+    {
+      "camino_id": 3,
+      "texto": "int i = 0;|int i = 0|i = 0|int|i|0",
+      "serie_numerica": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "camino_id": 4,
+      "texto": "int i = 0;|int i = 0|i = 0|int|i|0|do { i++; } while (i < 1);|i++;|i++|i|i",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12]
+    },
+    {
+      "camino_id": 5,
+      "texto": "int i = 0;|int i = 0|i = 0|int|i|0|do { i++; } while (i < 1);|i++;|i++|i|i|i < 1|i|i",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15]
+    },
+    {
+      "camino_id": 6,
+      "texto": "int i = 0;|int i = 0|i = 0|int|i|0|do { i++; } while (i < 1);|i++;|i++|i|i|i < 1|i|i|1",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16]
+    }
+  ]
+}

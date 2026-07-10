@@ -1,0 +1,21 @@
+{
+  "Nombre del archivo": "ForEachLoop.java",
+  "clase": "ForEachLoop",
+  "metodos": [
+    {
+      "nombre_metodo": "main",
+      "caminos_code2seq": [
+        "args|Parameter->*MethodDeclaration->BlockStmt->ExpressionStmt->VariableDeclarationExpr->VariableDeclarator(int[])|values",
+        "args|Parameter->*MethodDeclaration->BlockStmt->ExpressionStmt->VariableDeclarationExpr->VariableDeclarator(int[])->ArrayInitializerExpr|1",
+        "args|Parameter->*MethodDeclaration->BlockStmt->ForEachStmt->VariableDeclarationExpr->VariableDeclarator(int)|value",
+        "args|Parameter->*MethodDeclaration->BlockStmt->ForEachStmt|values",
+        "values|*VariableDeclarator(int[])->ArrayInitializerExpr|1",
+        "values|VariableDeclarator(int[])->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->ForEachStmt->VariableDeclarationExpr->VariableDeclarator(int)|value",
+        "values|VariableDeclarator(int[])->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->ForEachStmt|values",
+        "1|ArrayInitializerExpr->VariableDeclarator(int[])->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->ForEachStmt->VariableDeclarationExpr->VariableDeclarator(int)|value",
+        "1|ArrayInitializerExpr->VariableDeclarator(int[])->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->ForEachStmt|values",
+        "value|VariableDeclarator(int)->VariableDeclarationExpr->*ForEachStmt|values"
+      ]
+    }
+  ]
+}

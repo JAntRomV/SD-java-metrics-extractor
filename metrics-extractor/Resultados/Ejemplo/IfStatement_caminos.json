@@ -1,0 +1,25 @@
+{
+  "clase": "IfStatement.java",
+  "caminos": [
+    {
+      "camino_id": 1,
+      "texto": "int value = 1;|int value = 1|value = 1|int",
+      "serie_numerica": [1, 2, 3, 4]
+    },
+    {
+      "camino_id": 2,
+      "texto": "int value = 1;|int value = 1|value = 1|int|value",
+      "serie_numerica": [1, 2, 3, 4, 5]
+    },
+    {
+      "camino_id": 3,
+      "texto": "int value = 1;|int value = 1|value = 1|int|value|1",
+      "serie_numerica": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "camino_id": 4,
+      "texto": "int value = 1;|int value = 1|value = 1|int|value|1|if(value>0)|condicion_sisi",
+      "serie_numerica": [1, 2, 3, 4, 5, 6, 7]
+    }
+  ]
+}

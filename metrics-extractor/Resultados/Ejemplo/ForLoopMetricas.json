@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "ForLoop.java",
+  "clase": "ForLoop",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 6,
+        "longitud": 7,
+        "volumen": 18.09,
+        "dificultad": 2.0,
+        "esfuerzo de implementacion": 36.19,
+        "tiempo estimado de desarrollo": 2.01,
+        "estimacion de bug": 0.006,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 4,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

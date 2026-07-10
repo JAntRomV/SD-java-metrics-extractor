@@ -1,0 +1,15 @@
+{
+  "clase": "AppTest.java",
+  "caminos": [
+    {
+      "camino_id": 1,
+      "texto": "assertTrue(true);|assertTrue(true)|assertTrue",
+      "serie_numerica": [1, 2, 3]
+    },
+    {
+      "camino_id": 2,
+      "texto": "assertTrue(true);|assertTrue(true)|assertTrue|true",
+      "serie_numerica": [1, 2, 3, 4]
+    }
+  ]
+}

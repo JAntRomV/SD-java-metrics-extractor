@@ -1,0 +1,26 @@
+{
+  "Nombre del archivo": "DoWhileLoop.java",
+  "clase": "DoWhileLoop",
+  "metodos": [
+    {
+      "nombre_metodo": "main",
+      "caminos_code2seq": [
+        "args|Parameter->*MethodDeclaration->BlockStmt->ExpressionStmt->VariableDeclarationExpr->VariableDeclarator(int)|i",
+        "args|Parameter->*MethodDeclaration->BlockStmt->ExpressionStmt->VariableDeclarationExpr->VariableDeclarator(int)|0",
+        "args|Parameter->*MethodDeclaration->BlockStmt->DoStmt->BlockStmt->ExpressionStmt->UnaryExpr|i",
+        "args|Parameter->*MethodDeclaration->BlockStmt->DoStmt->BinaryExpr(<)|i",
+        "args|Parameter->*MethodDeclaration->BlockStmt->DoStmt->BinaryExpr(<)|1",
+        "i|*VariableDeclarator(int)|0",
+        "i|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->DoStmt->BlockStmt->ExpressionStmt->UnaryExpr|i",
+        "i|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->DoStmt->BinaryExpr(<)|i",
+        "i|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->DoStmt->BinaryExpr(<)|1",
+        "0|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->DoStmt->BlockStmt->ExpressionStmt->UnaryExpr|i",
+        "0|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->DoStmt->BinaryExpr(<)|i",
+        "0|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->DoStmt->BinaryExpr(<)|1",
+        "i|UnaryExpr->ExpressionStmt->BlockStmt->*DoStmt->BinaryExpr(<)|i",
+        "i|UnaryExpr->ExpressionStmt->BlockStmt->*DoStmt->BinaryExpr(<)|1",
+        "i|*BinaryExpr(<)|1"
+      ]
+    }
+  ]
+}

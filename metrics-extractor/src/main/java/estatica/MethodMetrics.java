@@ -1,11 +1,17 @@
 package estatica;
 
+import java.util.ArrayList;
+import java.util.List;
+
 //_____________________/Solo guarda resultados\______________
 public class MethodMetrics {
 
     private final String fileName;
     private final String className;
     private final String methodName;
+    
+//----->Le pertenece a code2sep
+    private List<String> caminosCode2Seq = new ArrayList<>();
 
 //------>LOC
     private final int loc;
@@ -34,7 +40,6 @@ public class MethodMetrics {
 //______________________________________________________________________
     public MethodMetrics(
             String fileName, String className, String methodName,
-            String sourceCode,
             int loc,
             int n1, int n2, int N1, int N2,
             int cyclomaticComplexity,
@@ -85,4 +90,9 @@ public class MethodMetrics {
     public int getN2() { return n2; }
     public int getN1Total() { return N1; } 
     public int getN2Total() { return N2; } 
+
+    //le pertenece a code2seq
+    public void setCaminosCode2Seq(List<String> caminos) { this.caminosCode2Seq = caminos; }
+public List<String> getCaminosCode2Seq() { return this.caminosCode2Seq; }
+
 }

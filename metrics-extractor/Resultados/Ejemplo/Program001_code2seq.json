@@ -1,0 +1,11 @@
+{
+  "Nombre del archivo": "Program001.java",
+  "clase": "Program001",
+  "metodos": [
+    {
+      "nombre_metodo": "main",
+      "caminos_code2seq": [
+      ]
+    }
+  ]
+}

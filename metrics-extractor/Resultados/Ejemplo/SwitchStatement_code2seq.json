@@ -1,0 +1,21 @@
+{
+  "Nombre del archivo": "SwitchStatement.java",
+  "clase": "SwitchStatement",
+  "metodos": [
+    {
+      "nombre_metodo": "main",
+      "caminos_code2seq": [
+        "args|Parameter->*MethodDeclaration->BlockStmt->ExpressionStmt->VariableDeclarationExpr->VariableDeclarator(int)|option",
+        "args|Parameter->*MethodDeclaration->BlockStmt->ExpressionStmt->VariableDeclarationExpr->VariableDeclarator(int)|1",
+        "args|Parameter->*MethodDeclaration->BlockStmt->SwitchStmt|option",
+        "args|Parameter->*MethodDeclaration->BlockStmt->SwitchStmt->SwitchEntry|1",
+        "option|*VariableDeclarator(int)|1",
+        "option|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->SwitchStmt|option",
+        "option|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->SwitchStmt->SwitchEntry|1",
+        "1|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->SwitchStmt|option",
+        "1|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->SwitchStmt->SwitchEntry|1",
+        "option|*SwitchStmt->SwitchEntry|1"
+      ]
+    }
+  ]
+}

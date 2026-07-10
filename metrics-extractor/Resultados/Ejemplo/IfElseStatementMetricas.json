@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "IfElseStatement.java",
+  "clase": "IfElseStatement",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 8,
+        "longitud": 19,
+        "volumen": 57.0,
+        "dificultad": 4.8,
+        "esfuerzo de implementacion": 273.6,
+        "tiempo estimado de desarrollo": 15.2,
+        "estimacion de bug": 0.019,
+        "numero ciclomatico": 3
+      },
+      "grafo de flujo de control": {
+        "loc": 13,
+        "nodes": 3,
+        "edges": 4,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

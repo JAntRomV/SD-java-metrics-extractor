@@ -1,0 +1,25 @@
+{
+  "Nombre del archivo": "SwitchStatement.java",
+  "clase": "SwitchStatement",
+  "metodos": [
+    {
+      "metodo": "main",
+      "halstead": {
+        "vocabulario": 2,
+        "longitud": 3,
+        "volumen": 3.0,
+        "dificultad": 0.0,
+        "esfuerzo de implementacion": 0.0,
+        "tiempo estimado de desarrollo": 0.0,
+        "estimacion de bug": 0.001,
+        "numero ciclomatico": 4
+      },
+      "grafo de flujo de control": {
+        "loc": 9,
+        "nodes": 4,
+        "edges": 6,
+        "unconnected nodos": 0
+      }
+    }
+  ]
+}

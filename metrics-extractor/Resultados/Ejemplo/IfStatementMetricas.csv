@@ -1,0 +1,2 @@
+Nombre del archivo,clase,metodo,n1_operadores_distintos,n2_operandos_distintos,N1_total_operadores,N2_total_operandos,vocabulario,longitud,volumen,dificultad,esfuerzo de implementacion,tiempo estimado de desarrollo,estimacion de bug,numero ciclomatico,loc,nodes,edges,unconnected nodos
+IfStatement.java,IfStatement,main,2,3,2,3,5,5,11.61,1.0,11.61,0.64,0.0039,3,5,3,4,0

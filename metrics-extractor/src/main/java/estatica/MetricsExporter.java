@@ -1,5 +1,5 @@
 package estatica;
-//Genera un archivo por cada clase y decide si json csv 20 metodos
+//Genera un archivo por cada clase 
 import java.io.File;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -7,8 +7,6 @@ import java.util.List;
 
 public class MetricsExporter {
 
-//------>Si tiene menos de 20 metodos se hace JSON 
-    private static final int JSON_THRESHOLD = 20;
 //____________________________________________________________
     public static void export(List<ProjectMetrics> reports, String outputFolder) {
 
@@ -35,12 +33,11 @@ public class MetricsExporter {
 //------>Si la clase no tiene ningun metodo se salta y continua 
                 if (methods.isEmpty()) continue;
 
-//------>Se revisa si tiene menos de 20 metodos para crear un json o un csv
-                if (methods.size() < JSON_THRESHOLD) {
-                    writeJson(className, fileName, methods, projectFolder);
-                } else {
-                    writeCsv(className, fileName, methods, projectFolder);
-                }
+//------>Se crea json y csv
+              writeJson(className, fileName, methods, projectFolder);
+              writeCsv(className, fileName, methods, projectFolder);
+              //Le pertenece a code2seq
+              writeCode2SeqJson(className, fileName, methods, projectFolder);
                 totalArchivos++;
             }
         }    
@@ -54,7 +51,7 @@ public class MetricsExporter {
 //_____________________________________________________________________________________
 
     private static void writeJson(String className, String fileName,List<MethodMetrics> methods, File folder) {
-        File out = new File(folder, sanitize(className) + ".json");
+        File out = new File(folder, sanitize(className) + "Metricas.json");
         try (PrintWriter w = new PrintWriter(out, StandardCharsets.UTF_8)) {
 
             w.println("{");
@@ -90,24 +87,16 @@ public class MetricsExporter {
             w.println("  ]");
             w.println("}");
 
-            System.out.println("  [JSON] " + out.getName() + " (" + methods.size() + " método(s))");
+            System.out.println("  [MetricasJSON] " + out.getName() + " (" + methods.size() + " método(s))");
 
         } catch (Exception e) {
-            System.err.println("Error JSON " + className + ": " + e.getMessage());
+            System.err.println("Error MetricasJSON " + className + ": " + e.getMessage());
         }
     }
-    private static String escCode(String s) {
-        if (s == null) return "";
-        return s.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\r", "")
-                .replace("\n", "\\n");
-    }
-
 //___________________________________________________________________________________
     private static void writeCsv(String className, String fileName,List<MethodMetrics> methods, File folder) {
 //------>DEfine el nombre del archivo.csv        
-        File out = new File(folder, sanitize(className) + ".csv");
+        File out = new File(folder, sanitize(className) + "Metricas.csv");
         try (PrintWriter w = new PrintWriter(out, StandardCharsets.UTF_8)) {
 
 //Se escribe  la primera linea del archivo 
@@ -142,10 +131,10 @@ public class MetricsExporter {
                 );
             }
 //------>Muestra un mensaje de que se finalizo 
-            System.out.println("  [CSV]  " + out.getName() + " (" + methods.size() + " método(s))");
+            System.out.println("  [MetricasCSV]  " + out.getName() + " (" + methods.size() + " método(s))");
 
         } catch (Exception e) {
-            System.err.println("Error CSV " + className + ": " + e.getMessage());
+            System.err.println("Error MetricasCSV " + className + ": " + e.getMessage());
         }
     }
    //------>LImpia los nombres de archivos, carpetas, comillas, barras  
@@ -168,4 +157,71 @@ public class MetricsExporter {
 // redondea numeros  decimales
     private static double r2(double v) { return Math.round(v * 100.0)   / 100.0; }
     private static double r4(double v) { return Math.round(v * 10000.0) / 10000.0; }
+//-----> Le pertenece a code2seq: Escribe el JSON de Code2Seq agrupando los resultados por método
+private static void writeCode2SeqJson(String className, String fileName, List<MethodMetrics> methods, File folder) {
+    File out = new File(folder, sanitize(className) + "_code2seq.json");
+    try (PrintWriter w = new PrintWriter(out, java.nio.charset.StandardCharsets.UTF_8)) {
+
+        w.println("{");
+        w.println("  \"Nombre del archivo\": \"" + esc(fileName) + "\",");
+        w.println("  \"clase\": \"" + esc(className) + "\",");
+        w.println("  \"metodos\": [");
+
+        for (int i = 0; i < methods.size(); i++) {
+            MethodMetrics m = methods.get(i);
+            boolean lastMethod = (i == methods.size() - 1);
+
+            w.println("    {");
+            w.println("      \"nombre_metodo\": \"" + esc(m.getMethodName()) + "\",");
+            w.println("      \"caminos_code2seq\": [");
+
+            List<String> caminos = m.getCaminosCode2Seq();
+            for (int j = 0; j < caminos.size(); j++) {
+                boolean lastCamino = (j == caminos.size() - 1);
+                w.println("        \"" + esc(caminos.get(j)) + "\"" + (lastCamino ? "" : ","));
+            }
+
+            w.println("      ]");
+            w.println("    }" + (lastMethod ? "" : ","));
+        }
+
+        w.println("  ]");
+        w.println("}");
+        
+        System.out.println("  [Code2Seq JSON] " + out.getName() + " generado con éxito.");
+
+    } catch (Exception e) {
+        System.err.println("Error generando Code2Seq JSON para " + className + ": " + e.getMessage());
+    }
+}
+
+public static void writeArbolCaminosJson(String nombreClase, String nombreProyecto, String outputFolder, ArbolCaminoExtractor.ResultadoClase resultadoArbol) {
+        File baseFolder = new File(outputFolder);
+        File projectFolder = new File(baseFolder, sanitize(nombreProyecto));
+        if (!projectFolder.exists()) projectFolder.mkdirs();
+
+        File archivoJsonCaminos = new File(projectFolder, nombreClase.replace(".java", "_caminos.json"));
+
+        try (PrintWriter writer = new PrintWriter(archivoJsonCaminos, StandardCharsets.UTF_8.name())) {
+            writer.println("{");
+            writer.println("  \"clase\": \"" + resultadoArbol.nombreClase + "\",");
+            writer.println("  \"caminos\": [");
+            
+            for (int i = 0; i < resultadoArbol.vectorTexto.size(); i++) {
+                boolean esUltimo = (i == resultadoArbol.vectorTexto.size() - 1);
+                writer.println("    {");
+                writer.println("      \"camino_id\": " + (i + 1) + ",");
+                String textoLimpio = resultadoArbol.vectorTexto.get(i).replace("\"", "\\\""); 
+                writer.println("      \"texto\": \"" + textoLimpio + "\",");
+                writer.println("      \"serie_numerica\": " + resultadoArbol.vectorNumerico.get(i).toString());
+                writer.println("    }" + (esUltimo ? "" : ","));
+            }
+            
+            writer.println("  ]");
+            writer.println("}");
+            System.out.println(" [CAMINO JSON] Generado por el Exporter para: " + nombreClase);
+        } catch (Exception e) {
+            System.err.println(" Error al escribir el JSON del camino: " + e.getMessage());
+        }
+    }
 }

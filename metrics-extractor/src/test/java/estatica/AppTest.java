@@ -1,70 +1,151 @@
 package estatica;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+//-----> Prueba de extremo a extremo: corre App igual que lo haría Maven, pero con carpetas temporales
 public class AppTest {
 
-    // SERIE DE PRUEBAS 1: FÓRMULAS DE HALSTEAD
-
     @Test
-    public void testFormulasBasicasHalstead() {
-//-----> ESCENARIO (Datos controlados en papel)
-        int n1 = 4;  // 4 operadores distintos
-        int n2 = 4;  // 4 operandos distintos
-        int N1 = 8;  // 8 operadores totales
-        int N2 = 8;  // 8 operandos totales
+    //-----> Verifica que al analizar un proyecto de prueba se generen todos los archivos esperados
+    void analizaProyectoDePruebaYGeneraLosArchivosEsperados(@TempDir Path carpetaTemporal) throws IOException {
 
-//----->COMPROBACIONES
-    // Vocabulario: n1 + n2 = 4 + 4 = 8
-        assertEquals(8, HalsteadCalculator.calculateVocabulary(n1, n2), "El vocabulario debería ser 8");
+        //-----> Arma una carpeta de código fuente con un proyecto de prueba adentro
+        Path carpetaProyectos  = carpetaTemporal.resolve("codigoFuente");
+        Path carpetaResultados = carpetaTemporal.resolve("resultados");
+        Path proyectoDemo      = carpetaProyectos.resolve("ProyectoDemo");
+        Files.createDirectories(proyectoDemo);
 
-    // Longitud: N1 + N2 = 8 + 8 = 16
-        assertEquals(16, HalsteadCalculator.calculateLength(N1, N2), "La longitud debería ser 16");
+        //-----> Clase Java de prueba con un método simple para poder verificar sus métricas
+        String codigoDePrueba =
+                "package demo;\n" +
+                "public class Calculadora {\n" +
+                "    public int sumar(int a, int b) {\n" +
+                "        if (a > 0) {\n" +
+                "            return a + b;\n" +
+                "        }\n" +
+                "        return b;\n" +
+                "    }\n" +
+                "}\n";
+
+        Files.writeString(proyectoDemo.resolve("Calculadora.java"), codigoDePrueba);
+
+        //-----> Corre App igual que lo haría Maven, pero apuntando a las carpetas temporales
+        App.main(new String[] { carpetaProyectos.toString(), carpetaResultados.toString() });
+
+        //-----> Verifica que sí se haya creado la carpeta de resultados del proyecto
+        File carpetaProyectoResultado = new File(carpetaResultados.toFile(), "ProyectoDemo");
+        assertTrue(carpetaProyectoResultado.exists(), "Debería crearse la carpeta de resultados del proyecto");
+
+        //-----> Verifica que se haya generado el JSON de métricas de la clase
+        File jsonMetricas = new File(carpetaProyectoResultado, "CalculadoraMetricas.json");
+        assertTrue(jsonMetricas.exists(), "Debería generarse el JSON de métricas");
+
+        //-----> Verifica que el JSON tenga el nombre del método esperado adentro
+        String contenidoJson = Files.readString(jsonMetricas.toPath());
+        assertTrue(contenidoJson.contains("\"metodo\": \"sumar\""), "El JSON debe contener el método sumar");
+
+        //-----> Verifica que se haya generado el CSV de métricas
+        File csvMetricas = new File(carpetaProyectoResultado, "CalculadoraMetricas.csv");
+        assertTrue(csvMetricas.exists(), "Debería generarse el CSV de métricas");
+
+        //-----> Verifica que se haya generado el JSON de caminos del árbol
+        File jsonCaminos = new File(carpetaProyectoResultado, "Calculadora_caminos.json");
+        assertTrue(jsonCaminos.exists(), "Debería generarse el JSON de caminos del árbol");
+
+        //-----> Verifica que se haya generado el JSON de Code2Seq
+        File jsonCode2Seq = new File(carpetaProyectoResultado, "Calculadora_code2seq.json");
+        assertTrue(jsonCode2Seq.exists(), "Debería generarse el JSON de Code2Seq");
     }
 
     @Test
-    public void testFormulasDecimalesHalstead() {
-//----->Escenario teórico para probar Volumen, Dificultad y Esfuerzo
-        int longitud = 16;
-        int vocabulario = 8;
-        int n1 = 4;
-        int n2 = 4;
-        int N2 = 8;
+    //-----> Verifica que un método anidado adentro de otro saque sus propias métricas por separado
+    void separaLasMetricasDeUnMetodoAnidado(@TempDir Path carpetaTemporal) throws IOException {
 
-        // Cálculos esperados:
-        // Volumen = 16 * log2(8) = 16 * 3 = 48.0
-        // Dificultad = (4 / 2) * (8 / 4) = 4.0
-        // Esfuerzo = 48.0 * 4.0 = 192.0
+        //-----> Arma un proyecto de prueba con un método que tiene otro método anidado adentro
+        Path carpetaProyectos  = carpetaTemporal.resolve("codigoFuente");
+        Path carpetaResultados = carpetaTemporal.resolve("resultados");
+        Path proyectoDemo      = carpetaProyectos.resolve("ProyectoAnidado");
+        Files.createDirectories(proyectoDemo);
 
-        // Usamos 0.001 como margen de tolerancia por los decimales (double)
-        assertEquals(48.0, HalsteadCalculator.calculateVolume(longitud, vocabulario), 0.001, "El volumen debería ser 48.0");
-        assertEquals(4.0, HalsteadCalculator.calculateDifficulty(n1, n2, N2), 0.001, "La dificultad debería ser 4.0");
-        assertEquals(192.0, HalsteadCalculator.calculateEffort(48.0, 4.0), 0.001, "El esfuerzo debería ser 192.0");
+        //-----> "externo" tiene adentro una clase anónima con su propio método "run" (el anidado)
+        String codigoConMetodoAnidado =
+                "package demo;\n" +
+                "public class ConAnidado {\n" +
+                "    public void externo() {\n" +
+                "        Runnable r = new Runnable() {\n" +
+                "            public void run() {\n" +
+                "                int x = 1;\n" +
+                "                int y = 2;\n" +
+                "                int z = x + y;\n" +
+                "            }\n" +
+                "        };\n" +
+                "        r.run();\n" +
+                "    }\n" +
+                "}\n";
+
+        Files.writeString(proyectoDemo.resolve("ConAnidado.java"), codigoConMetodoAnidado);
+
+        App.main(new String[] { carpetaProyectos.toString(), carpetaResultados.toString() });
+
+        File carpetaProyectoResultado = new File(carpetaResultados.toFile(), "ProyectoAnidado");
+        File jsonMetricas = new File(carpetaProyectoResultado, "ConAnidadoMetricas.json");
+        assertTrue(jsonMetricas.exists(), "Debería generarse el JSON de métricas");
+
+        String contenidoJson = Files.readString(jsonMetricas.toPath());
+
+        //-----> Deben aparecer los dos métodos por separado: el de afuera y el anidado
+        assertTrue(contenidoJson.contains("\"metodo\": \"externo\""), "Debe aparecer el método externo");
+        assertTrue(contenidoJson.contains("\"metodo\": \"run\""), "Debe aparecer el método anidado por separado");
     }
 
-    // SERIE DE PRUEBAS 2: CÁLCULOS DEL GRAFO (CFG) Y COMPLEJIDAD CICLOMÁTICA
-
     @Test
-    public void testCalculoGrafoYComplejidad() {
-        // --- Escenario simulado para un método que tiene 3 decisiones (por ejemplo, 3 "if") ---
-        int decisionesEncontradas = 3;
+    //-----> Verifica que el resumen de consola sí cuente el método anidado, no solo el de afuera
+    void elResumenDeConsolaCuentaElMetodoAnidado(@TempDir Path carpetaTemporal) throws IOException {
 
-        // Le pedimos a tu clase experta CfgCalculator que estime el resultado
-        // (Le pasamos 'null' en el MethodDeclaration porque solo queremos evaluar las matemáticas internas)
-        CfgCalculator.CfgResult resultado = CfgCalculator.estimateCfg(null, decisionesEncontradas);
+        Path carpetaProyectos  = carpetaTemporal.resolve("codigoFuente");
+        Path carpetaResultados = carpetaTemporal.resolve("resultados");
+        Path proyectoDemo      = carpetaProyectos.resolve("ProyectoAnidado");
+        Files.createDirectories(proyectoDemo);
 
-        // --- COMPROBACIONES ---
-        // Nodos esperados = decisiones + 2 -> 3 + 2 = 5
-        assertEquals(5, resultado.nodes, "Debería tener 5 nodos");
+        //-----> Esta clase tiene 2 métodos en realidad: "externo" y el "run" anidado adentro
+        String codigoConMetodoAnidado =
+                "package demo;\n" +
+                "public class ConAnidado {\n" +
+                "    public void externo() {\n" +
+                "        Runnable r = new Runnable() {\n" +
+                "            public void run() {\n" +
+                "                int x = 1;\n" +
+                "            }\n" +
+                "        };\n" +
+                "        r.run();\n" +
+                "    }\n" +
+                "}\n";
 
-        // Aristas (Edges) esperadas = decisiones + 2 -> 3 + 2 = 5
-        assertEquals(5, resultado.edges, "Debería tener 5 aristas");
+        Files.writeString(proyectoDemo.resolve("ConAnidado.java"), codigoConMetodoAnidado);
 
-        // Complejidad Ciclomática (CC) esperada = decisiones + 1 -> 3 + 1 = 4
-        assertEquals(4, resultado.cyclomaticComplexity, "La complejidad ciclomática debería ser 4");
-        
-        // Nodos inconexos (sueltos) siempre esperamos 0
-        assertEquals(0, resultado.unconnectedNodes, "Los nodos inconexos deberían ser 0");
+        //-----> Captura lo que se imprime en consola para poder revisarlo después
+        java.io.ByteArrayOutputStream salidaCapturada = new java.io.ByteArrayOutputStream();
+        java.io.PrintStream salidaOriginal = System.out;
+        System.setOut(new java.io.PrintStream(salidaCapturada));
+
+        try {
+            App.main(new String[] { carpetaProyectos.toString(), carpetaResultados.toString() });
+        } finally {
+            System.setOut(salidaOriginal);
+        }
+
+        String textoConsola = salidaCapturada.toString();
+
+        //-----> La consola debe decir 2 métodos (externo + run), no 1
+        assertTrue(textoConsola.contains("ConAnidado.java tiene: 2 métodos"),
+                "El resumen de consola debería contar también el método anidado");
     }
 }

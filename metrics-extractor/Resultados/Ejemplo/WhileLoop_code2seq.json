@@ -1,0 +1,26 @@
+{
+  "Nombre del archivo": "WhileLoop.java",
+  "clase": "WhileLoop",
+  "metodos": [
+    {
+      "nombre_metodo": "main",
+      "caminos_code2seq": [
+        "args|Parameter->*MethodDeclaration->BlockStmt->ExpressionStmt->VariableDeclarationExpr->VariableDeclarator(int)|i",
+        "args|Parameter->*MethodDeclaration->BlockStmt->ExpressionStmt->VariableDeclarationExpr->VariableDeclarator(int)|0",
+        "args|Parameter->*MethodDeclaration->BlockStmt->WhileStmt->BinaryExpr(<)|i",
+        "args|Parameter->*MethodDeclaration->BlockStmt->WhileStmt->BinaryExpr(<)|1",
+        "args|Parameter->*MethodDeclaration->BlockStmt->WhileStmt->BlockStmt->ExpressionStmt->UnaryExpr|i",
+        "i|*VariableDeclarator(int)|0",
+        "i|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->WhileStmt->BinaryExpr(<)|i",
+        "i|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->WhileStmt->BinaryExpr(<)|1",
+        "i|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->WhileStmt->BlockStmt->ExpressionStmt->UnaryExpr|i",
+        "0|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->WhileStmt->BinaryExpr(<)|i",
+        "0|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->WhileStmt->BinaryExpr(<)|1",
+        "0|VariableDeclarator(int)->VariableDeclarationExpr->ExpressionStmt->*BlockStmt->WhileStmt->BlockStmt->ExpressionStmt->UnaryExpr|i",
+        "i|*BinaryExpr(<)|1",
+        "i|BinaryExpr(<)->*WhileStmt->BlockStmt->ExpressionStmt->UnaryExpr|i",
+        "1|BinaryExpr(<)->*WhileStmt->BlockStmt->ExpressionStmt->UnaryExpr|i"
+      ]
+    }
+  ]
+}
