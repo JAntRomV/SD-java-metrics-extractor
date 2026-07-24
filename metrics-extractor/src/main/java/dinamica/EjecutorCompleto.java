@@ -1,0 +1,189 @@
+package dinamica;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+//-----> Orquestador general que coordina y ejecuta la Fase 1 y la Fase 2 de manera secuencial
+public class EjecutorCompleto {
+
+    public static void main(String[] args) throws Exception {
+        Map<String, String> params = parseArgs(args);
+
+        String rutaProyecto = params.get("proyecto");
+        String rutaClases = params.get("clases");
+        String carpetaSalida = params.getOrDefault("salida", "resultados_dinamicos");
+        String classpathCompleto = null;
+
+        System.out.println("==========================================================");
+        System.out.println(" INICIANDO METRICAS DINAMICAS");
+        System.out.println("==========================================================");
+
+        DirFileTools.crearDirectorio(carpetaSalida);
+
+        // Paso 1: Compila el proyecto externo (si se recibió la carpeta raíz)
+        if (rutaProyecto != null) {
+            System.out.println("-----> Paso 1: Compilando proyecto externo...");
+            CompiladorProyecto.ResultadoCompilacion res = CompiladorProyecto.compilar(rutaProyecto, true);
+            if (!res.exitoso) {
+                System.err.println("-----> Error al compilar el proyecto: " + res.mensaje);
+                return;
+            }
+            rutaClases = res.carpetaClases;
+            classpathCompleto = res.classpathCompleto;
+        }
+
+        if (rutaClases == null) {
+            System.err.println("Uso: java -cp ... dinamica.EjecutorCompleto --proyecto:/ruta [--salida:resultados_dinamicos]");
+            return;
+        }
+
+        // Reutiliza las clases compiladas y el classpath calculado sin volver a compilar
+        List<String> argsComunes = new ArrayList<>();
+        argsComunes.add("--clases:" + rutaClases);
+        argsComunes.add("--salida:" + carpetaSalida);
+        if (classpathCompleto != null) {
+            argsComunes.add("--classpath:" + classpathCompleto);
+        }
+        String[] argsFaseComun = argsComunes.toArray(new String[0]);
+
+        // Paso 2: Ejecuta la Fase 1 (Benchmarks globales con JMH)
+        System.out.println("\n----------------------------------------------------------");
+        System.out.println("-----> FASE 1: BENCHMARKS");
+        System.out.println("----------------------------------------------------------");
+
+        EjecutorDinamico.main(argsFaseComun);
+
+        String rutaBenchmarksCsv = carpetaSalida + "/Benchmarks.csv";
+        if (!DirFileTools.existeArchivo(rutaBenchmarksCsv)) {
+            System.err.println("-----> Error: La Fase 1 finalizo pero no genero el archivo: " + rutaBenchmarksCsv);
+            return;
+        }
+
+        // Paso 3: Ejecuta la Fase 2 (Medición detallada por instrucciones)
+        System.out.println("\n----------------------------------------------------------");
+        System.out.println("-----> FASE 2: CRONÓMETRO DE CAMINOS");
+        System.out.println("----------------------------------------------------------");
+
+        MainLauncher.main(argsFaseComun);
+
+        String rutaCaminosCsv = carpetaSalida + "/cronometro_caminos.csv";
+
+        // Paso 4: Muestra el resumen estadístico de la ejecución
+        int metodosProcesados = contarMetodosUnicos(rutaBenchmarksCsv);
+        int caminosGenerados = contarCaminosGenerados(rutaCaminosCsv);
+
+        Map<String, String> resumenEscaneo = leerResumen(carpetaSalida + "/_escaneo_resumen.txt");
+        Map<String, String> resumenCaminos = leerResumen(carpetaSalida + "/_caminos_resumen.txt");
+
+        System.out.println("\n==========================================================");
+        System.out.println(" RESUMEN DEL BENCHMARK");
+        System.out.println("==========================================================");
+        if (resumenEscaneo.isEmpty()) {
+            System.out.println("  (Se uso un catalogo ya existente, no hubo escaneo nuevo esta vez)");
+        } else {
+            System.out.println("  Clases encontradas   : " + resumenEscaneo.getOrDefault("clasesEncontradas", "?"));
+            System.out.println("  Clases descartadas   : " + resumenEscaneo.getOrDefault("clasesDescartadas", "?"));
+            System.out.println("  Metodos validos      : " + resumenEscaneo.getOrDefault("metodosValidos", "?"));
+            System.out.println("  Metodos descartados  : " + resumenEscaneo.getOrDefault("metodosDescartados", "?"));
+        }
+        System.out.println("  Metodos transferidos a Fase 2 : " + metodosProcesados);
+
+        System.out.println("\n==========================================================");
+        System.out.println(" RESUMEN CRONOMETROS CAMINOS");
+        System.out.println("==========================================================");
+        System.out.println("  Caminos generados          : " + caminosGenerados);
+        if (!resumenCaminos.isEmpty()) {
+            String noSeguibles = resumenCaminos.getOrDefault("metodosNoSeguibles", "0");
+            System.out.println("  Metodos NO cronometrados   : " + noSeguibles
+                    + (noSeguibles.equals("0") ? " (todos se lograron medir)" : ""));
+        }
+
+        System.out.println("\n==========================================================");
+        System.out.println(" SE FINALIZO CON ÉXITO");
+        System.out.println("==========================================================");
+        System.out.println(" Archivos consolidados en '" + carpetaSalida + "':");
+        System.out.println("   1. " + rutaBenchmarksCsv);
+        System.out.println("   2. " + rutaCaminosCsv);
+        System.out.println("==========================================================");
+    }
+
+    private static Map<String, String> leerResumen(String rutaArchivo) {
+        Map<String, String> datos = new HashMap<>();
+        File archivo = new File(rutaArchivo);
+        if (!archivo.exists()) return datos;
+
+        try {
+            for (String linea : Files.readAllLines(archivo.toPath())) {
+                String[] partes = linea.split("=", 2);
+                if (partes.length == 2) {
+                    datos.put(partes[0].trim(), partes[1].trim());
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("-----> No se pudo leer " + rutaArchivo + ": " + e.getMessage());
+        }
+        return datos;
+    }
+
+    private static int contarMetodosUnicos(String rutaCsv) {
+        try {
+            List<String> lineas = Files.readAllLines(Paths.get(rutaCsv));
+            Set<String> metodosUnicos = new HashSet<>();
+
+            for (int i = 1; i < lineas.size(); i++) {
+                String linea = lineas.get(i).trim();
+                if (linea.isEmpty()) continue;
+
+                String[] columnas = linea.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+
+                for (String col : columnas) {
+                    String valor = col.replace("\"", "").trim();
+                    if (valor.contains("#") && !valor.startsWith("dinamica.")) {
+                        metodosUnicos.add(valor);
+                        break;
+                    }
+                }
+            }
+            return metodosUnicos.size();
+        } catch (Exception e) {
+            System.err.println("-----> Error contando métodos en CSV de Benchmarks: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    private static int contarCaminosGenerados(String rutaCsv) {
+        try {
+            List<String> lineas = Files.readAllLines(Paths.get(rutaCsv));
+            int caminos = 0;
+            for (int i = 1; i < lineas.size(); i++) {
+                if (!lineas.get(i).trim().isEmpty()) {
+                    caminos++;
+                }
+            }
+            return caminos;
+        } catch (Exception e) {
+            System.err.println("-----> Error contando caminos en CSV final: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    private static Map<String, String> parseArgs(String[] args) {
+        Map<String, String> map = new HashMap<>();
+        for (String arg : args) {
+            if (arg.startsWith("--")) {
+                String[] parts = arg.substring(2).split(":", 2);
+                if (parts.length == 2) {
+                    map.put(parts[0], parts[1]);
+                }
+            }
+        }
+        return map;
+    }
+}

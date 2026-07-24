@@ -1,18 +1,16 @@
 package dinamica;
 
+//-----> Molde para guardar el resultado de rendimiento (tiempo y memoria) de un método
 public class ResultadoDinamico {
 
-    //-----> Identificadores basicos del metodo analizado
     private final String fileName;
     private final String className;
     private final String methodName;
 
-    //-----> Almacena el tiempo promedio obtenido y su rango de variacion
     private final double tiempoScore;
     private final double tiempoError;
     private final String unidadTiempo;
 
-    //-----> Almacena la cantidad de memoria RAM en bytes consumida por el metodo
     private final double memoriaAsignadaBytes;
 
     public ResultadoDinamico(
@@ -29,12 +27,11 @@ public class ResultadoDinamico {
         this.memoriaAsignadaBytes = memoriaAsignadaBytes;
     }
 
-    
+    // Clave estándar en formato Clase#Metodo
     public String getLlaveUnion() {
         return className + "#" + methodName;
     }
 
-    //-----> Metodos basicos para poder leer las variables guardadas desde otros archivos
     public String getFileName()             { return fileName; }
     public String getClassName()            { return className; }
     public String getMethodName()           { return methodName; }

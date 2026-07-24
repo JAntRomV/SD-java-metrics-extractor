@@ -23,9 +23,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javaparser.version>3.25.9</javaparser.version>
 
-         <jmh.version>1.37</jmh.version>
-         <javac.target>1.8</javac.target>
-         <uberjar.name>benchmarks</uberjar.name>
+        <jmh.version>1.37</jmh.version>
+        <javac.target>1.8</javac.target>
+        <uberjar.name>benchmarks</uberjar.name>
     </properties>
 
     <dependencies>
@@ -65,6 +65,28 @@
 
     <build>
         <plugins>
+            <!-- 🔌 PLUGIN AGREGADO: Copia automáticamente las dependencias a target/dependency/ al compilar -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/dependency</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- Agregado: asegura que JMH procese las anotaciones @Benchmark al compilar -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

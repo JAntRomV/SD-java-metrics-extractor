@@ -1,0 +1,7 @@
+IDLog,Iteracion,Clase,ParamN,Etiqueta,TiempoNanos,FechaHora,DuracionNanos,DuracionNanosTime
+1,1,org.remus.giteabot.bitbucket.model.BitbucketReview#getUserLogin,0,INSTR-1,271995331436345,2026-07-23 22:01:21.116.79281116.116562660,1248312,1216814
+1,1,org.remus.giteabot.bitbucket.model.BitbucketReview#getCommentsCount,0,INSTR-1,271995868557010,2026-07-23 22:01:21.653.79281653.653681583,210129,210031
+1,1,org.remus.giteabot.bitbucket.model.BitbucketReviewComment#getBody,0,INSTR-1,271996447453361,2026-07-23 22:01:22.232.79282232.232577843,236396,236123
+1,1,org.remus.giteabot.bitbucket.model.BitbucketReviewComment#getUserLogin,0,INSTR-1,271996963372489,2026-07-23 22:01:22.748.79282748.748499625,455652,453637
+1,1,org.remus.giteabot.gitea.model.GiteaReviewComment#getUserLogin,0,INSTR-1,271997520105994,2026-07-23 22:01:23.305.79283305.305230541,352759,352382
+1,1,org.remus.giteabot.gitea.model.GiteaReview#getUserLogin,0,INSTR-1,271998137112291,2026-07-23 22:01:23.922.79283922.922236917,269611,269097
