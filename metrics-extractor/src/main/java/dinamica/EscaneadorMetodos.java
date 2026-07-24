@@ -9,9 +9,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+//-----> Escanea los archivos .class del proyecto objetivo para encontrar métodos ejecutables sin parámetros
 public class EscaneadorMetodos {
 
-    //-----> Guarda los datos de un metodo encontrado: su clase y su nombre
+    // Representa un método destino dentro del formato Clase#Metodo
     public static class MetodoObjetivo {
         public final String claseCompleta;
         public final String nombreMetodo;
@@ -21,63 +22,80 @@ public class EscaneadorMetodos {
             this.nombreMetodo = nombreMetodo;
         }
 
-        //-----> Une los datos con un gato "Clase#metodo" para que sea nuestra llave de union
         public String comoTexto() {
             return claseCompleta + "#" + nombreMetodo;
         }
     }
 
-    //-----> Marcadores para saber cuantos archivos procesamos con exito y cuantos fallaron
+    // Contadores estadísticos del escaneo
     public int clasesEncontradas = 0;
     public int clasesDescartadas = 0;
     public int metodosValidos = 0;
     public int metodosDescartados = 0;
 
-    //-----> Revisa la carpeta de clases y genera la lista de metodos listos para medir
     public List<MetodoObjetivo> escanear(String rutaCarpetaClases) throws Exception {
+        return escanear(rutaCarpetaClases, rutaCarpetaClases);
+    }
+
+    // Lee las carpetas y usa Reflexión para cargar las clases y filtrar métodos sin parámetros
+    public List<MetodoObjetivo> escanear(String rutaCarpetaClases, String classpathParaCargar) throws Exception {
         List<MetodoObjetivo> catalogo = new ArrayList<>();
 
-        File directorioBase = new File(rutaCarpetaClases);
-        if (!directorioBase.exists()) {
-            throw new IllegalArgumentException("No existe la carpeta: " + rutaCarpetaClases);
+        String[] rutas = rutaCarpetaClases.split(java.util.regex.Pattern.quote(File.pathSeparator));
+
+        List<File> directoriosBase = new ArrayList<>();
+        for (String ruta : rutas) {
+            if (ruta.isBlank()) continue;
+            File dir = new File(ruta);
+            if (!dir.exists()) {
+                throw new IllegalArgumentException("No existe la carpeta: " + ruta);
+            }
+            directoriosBase.add(dir);
         }
 
-        //-----> Herramienta especial para poder leer e inyectar las clases externas a la memoria
-        URL url = directorioBase.toURI().toURL();
-        URLClassLoader loader = new URLClassLoader(new URL[]{url}, this.getClass().getClassLoader());
+        if (directoriosBase.isEmpty()) {
+            throw new IllegalArgumentException("No se recibio ninguna carpeta de clases valida: " + rutaCarpetaClases);
+        }
 
-        List<String> nombresDeClases = new ArrayList<>();
-        buscarClasesRecursivo(directorioBase, "", nombresDeClases);
-        clasesEncontradas = nombresDeClases.size();
+        List<URL> urls = new ArrayList<>();
+        for (String ruta : classpathParaCargar.split(java.util.regex.Pattern.quote(File.pathSeparator))) {
+            if (!ruta.isBlank()) {
+                urls.add(new File(ruta).toURI().toURL());
+            }
+        }
 
-        //-----> Analiza cada clase encontrada una por una
-        for (String nombreClase : nombresDeClases) {
-            try {
-                Class<?> clazz = loader.loadClass(nombreClase);
+        // Carga dinámicamente las clases del proyecto externo
+        try (URLClassLoader loader = new URLClassLoader(urls.toArray(new URL[0]), this.getClass().getClassLoader())) {
+            for (File directorioBase : directoriosBase) {
+                List<String> nombresDeClases = new ArrayList<>();
+                buscarClasesRecursivo(directorioBase, "", nombresDeClases);
+                clasesEncontradas += nombresDeClases.size();
 
-                //-----> Filtro/Escudo: Intentamos crear una copia basica. Si no tiene constructor vacio, da error y se salta la clase
-                clazz.getDeclaredConstructor().newInstance();
+                for (String nombreClase : nombresDeClases) {
+                    try {
+                        Class<?> clazz = loader.loadClass(nombreClase);
+                        clazz.getDeclaredConstructor().newInstance(); // Requiere constructor público sin parámetros
 
-                //-----> Revisa todos los metodos que tiene la clase adentro
-                for (Method metodo : clazz.getDeclaredMethods()) {
-                    //-----> Filtro/Escudo: Solo acepta metodos sin parametros y que no sean internos del sistema (que no tengan $)
-                    if (metodo.getParameterCount() == 0 && !metodo.getName().contains("$")) {
-                        catalogo.add(new MetodoObjetivo(nombreClase, metodo.getName()));
-                        metodosValidos++;
-                    } else {
-                        metodosDescartados++;
+                        for (Method metodo : clazz.getDeclaredMethods()) {
+                            // Filtra métodos ejecutables (sin argumentos y que no sean internos)
+                            if (metodo.getParameterCount() == 0 && !metodo.getName().contains("$")) {
+                                catalogo.add(new MetodoObjetivo(nombreClase, metodo.getName()));
+                                metodosValidos++;
+                            } else {
+                                metodosDescartados++;
+                            }
+                        }
+                    } catch (Throwable e) {
+                        clasesDescartadas++; // Si no se puede instanciar, la descarta
                     }
                 }
-            } catch (Throwable e) {
-                //-----> Si la clase pide configuraciones extrañas (como Sprin)
-                clasesDescartadas++;
             }
         }
 
         return catalogo;
     }
 
-    //-----> Escribe la lista final de metodos en el archivo de texto
+    // Guarda los métodos encontrados en el catálogo de texto
     public void guardarCatalogo(List<MetodoObjetivo> catalogo, String rutaArchivo) throws Exception {
         try (PrintWriter w = new PrintWriter(rutaArchivo, StandardCharsets.UTF_8)) {
             for (MetodoObjetivo m : catalogo) {
@@ -86,7 +104,16 @@ public class EscaneadorMetodos {
         }
     }
 
-    //-----> Muestra en la pantalla el reporte final con los contadores
+    // Guarda el informe estadístico del escaneo
+    public void guardarResumen(String rutaArchivo) throws Exception {
+        try (PrintWriter w = new PrintWriter(rutaArchivo, StandardCharsets.UTF_8)) {
+            w.println("clasesEncontradas=" + clasesEncontradas);
+            w.println("clasesDescartadas=" + clasesDescartadas);
+            w.println("metodosValidos=" + metodosValidos);
+            w.println("metodosDescartados=" + metodosDescartados);
+        }
+    }
+
     public void mostrarResumen() {
         System.out.println("-----> Clases encontradas: " + clasesEncontradas);
         System.out.println("-----> Clases descartadas (sin constructor vacio / error): " + clasesDescartadas);
@@ -94,7 +121,7 @@ public class EscaneadorMetodos {
         System.out.println("-----> Metodos descartados (con parametros / internos): " + metodosDescartados);
     }
 
-    //-----> Se mete carpeta por carpeta buscando archivos que terminen en .class de forma automatica
+    // Recorre las carpetas buscando archivos .class
     private void buscarClasesRecursivo(File carpetaActual, String paqueteActual, List<String> listaClases) {
         File[] archivos = carpetaActual.listFiles();
         if (archivos == null) return;

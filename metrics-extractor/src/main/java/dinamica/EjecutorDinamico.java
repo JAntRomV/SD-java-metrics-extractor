@@ -15,24 +15,28 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
+//-----> Lanzador de la Fase 1 (Benchmarks de tiempo general y memoria usando JMH)
 public class EjecutorDinamico {
+
+    private static final String INCLUDE_METODO_BENCHMARK =
+            "^" + Pattern.quote(MetodoBenchmark.class.getName()) + "\\.";
 
     public static void main(String[] args) throws Exception {
 
-        //-----> Convierte los argumentos de la terminal en una lista facil de leer
         Map<String, String> params = getParams(args);
 
-        //-----> Obtiene la ruta de los archivos compilados
-        String rutaClases = params.get("ruta");
-
-        //-----> Si le diste la carpeta raiz, manda a llamar al CompiladorProyecto de forma automatica
+        String rutaClases = params.getOrDefault("clases", params.get("ruta"));
         String rutaProyecto = params.get("proyecto");
+
+        String classpathParaCargar = params.getOrDefault("classpath", rutaClases);
+
+        // Si se recibe el proyecto sin compilar, lo compila primero
         if (rutaProyecto != null) {
             System.out.println("-----> Se recibio --proyecto, intentando compilar automaticamente...");
-            CompiladorProyecto.ResultadoCompilacion resultado = CompiladorProyecto.compilar(rutaProyecto);
+            CompiladorProyecto.ResultadoCompilacion resultado = CompiladorProyecto.compilar(rutaProyecto, true);
 
-            //-----> Si la compilacion falla, detiene el programa por completo
             if (!resultado.exitoso) {
                 System.err.println("-----> No se pudo compilar: " + resultado.mensaje);
                 return;
@@ -40,59 +44,53 @@ public class EjecutorDinamico {
 
             System.out.println("-----> Compilacion exitosa, clases en: " + resultado.carpetaClases);
             rutaClases = resultado.carpetaClases;
+            classpathParaCargar = resultado.classpathCompleto;
         }
 
-        //-----> Valida que tengamos una ruta para analizar, de lo contrario se detiene
         if (rutaClases == null) {
-            System.err.println("Falta el parametro --ruta:/ruta/a/target/classes o --proyecto:/ruta/a/la/raiz");
+            System.err.println("Falta el parametro --clases:/ruta/a/target/classes o --proyecto:/ruta/a/la/raiz");
             return;
         }
 
-        //-----> Define el nombre del archivo de texto donde se guardara el catalogo de metodos[cite: 2]
         String rutaCatalogo = params.getOrDefault("catalogo", "catalogo_metodos.txt");
 
-        //-----> Define cuantos metodos se procesan por grupo y cual grupo se va a correr ahorita
         int batchSize = Integer.parseInt(params.getOrDefault("batchSize", "50"));
         int batchIndex = Integer.parseInt(params.getOrDefault("batchIndex", "0"));
 
-        //-----> Configura los tiempos y repeticiones para las mediciones del reloj de JMH[cite: 2]
         int iterations = Integer.parseInt(params.getOrDefault("I", "10"));
         int warmupIterations = Integer.parseInt(params.getOrDefault("WI", "2"));
         int forks = Integer.parseInt(params.getOrDefault("F", "1"));
         int minHeap = Integer.parseInt(params.getOrDefault("MINH", "2048"));
         int maxHeap = Integer.parseInt(params.getOrDefault("MAXH", "2048"));
 
-        //-----> Carga la lista de metodos (la lee del archivo si ya existe, o escanea el proyecto)
-        List<String> catalogo = obtenerCatalogo(rutaClases, rutaCatalogo);
+        String carpetaResultados = params.getOrDefault("salida", "resultados_dinamicos");
+        Files.createDirectories(Paths.get(carpetaResultados));
 
-        //-----> Calcula cuantos lotes o grupos totales salieron en base al tamaño elegido
+        // Obtiene el catálogo de métodos mediante el escaneador o usando uno existente
+        List<String> catalogo = obtenerCatalogo(rutaClases, classpathParaCargar, rutaCatalogo, carpetaResultados);
+
         int totalLotes = (int) Math.ceil(catalogo.size() / (double) batchSize);
         System.out.println("-----> Catalogo total: " + catalogo.size() + " metodos, en " + totalLotes + " lotes de " + batchSize);
 
-        //-----> Proteccion por si pides correr un lote que no existe
         if (batchIndex >= totalLotes) {
             System.out.println("-----> El lote " + batchIndex + " no existe, el maximo es " + (totalLotes - 1));
             return;
         }
 
-        //-----> Corta el catalogo gigante para quedarse unicamente con los metodos del lote actual
         int inicio = batchIndex * batchSize;
         int fin = Math.min(inicio + batchSize, catalogo.size());
         List<String> loteActual = catalogo.subList(inicio, fin);
 
-        System.out.println("-----> Corriendo lote " + batchIndex + " (" + loteActual.size() + " metodos, del " + inicio + " al " + (fin - 1) + ")");
+        System.out.println("-----> Corriendo ejecucion de la Fase 1 (" + loteActual.size() + " metodos, del " + inicio + " al " + (fin - 1) + ")");
 
-        //-----> Crea las carpetas donde se van a guardar los archivos de resultados
-        String carpetaResultados = "resultados_dinamicos/lote_" + batchIndex;
-        Files.createDirectories(Paths.get(carpetaResultados));
-        String resultCSV = carpetaResultados + "/lote_" + batchIndex + "_JMH.csv";
+        String resultCSV = carpetaResultados + "/Benchmarks.csv";
 
-        //-----> Configura el motor de JMH con los archivos, la memoria RAM y el medidor de memoria (GCProfiler)
+        // Configuración y ejecución del Runner de JMH
         Options opt = new OptionsBuilder()
-            .include(MetodoBenchmark.class.getSimpleName())
-            .param("rutaClases", rutaClases)
+            .include(INCLUDE_METODO_BENCHMARK)
+            .param("rutaClases", classpathParaCargar)
             .param("metodoObjetivo", loteActual.toArray(new String[0]))
-            .addProfiler(GCProfiler.class)
+            .addProfiler(GCProfiler.class) // Habilita la medición de uso de memoria/GC
             .jvmArgs("-Xms" + minHeap + "m", "-Xmx" + maxHeap + "m")
             .resultFormat(ResultFormatType.CSV)
             .result(resultCSV)
@@ -106,41 +104,33 @@ public class EjecutorDinamico {
             .timeUnit(java.util.concurrent.TimeUnit.NANOSECONDS)
             .build();
 
-        //-----> Arranca de forma oficial la ejecucion del experimento[cite: 2]
         new Runner(opt).run();
 
-        System.out.println("-----> Lote " + batchIndex + " terminado. Resultados en: " + resultCSV);
-        System.out.println("-----> Cada fila del CSV trae el parametro 'metodoObjetivo' (Clase#metodo),");
+        System.out.println("-----> Fase 1 terminada con exito. Resultados en: " + resultCSV);
     }
 
-    //-----> Revisa si ya guardamos la lista de metodos antes, si no, activa el Escaneador
-    private static List<String> obtenerCatalogo(String rutaClases, String rutaCatalogo) throws Exception {
+    private static List<String> obtenerCatalogo(String rutaClases, String classpathParaCargar, String rutaCatalogo, String carpetaResultados) throws Exception {
         File archivoCatalogo = new File(rutaCatalogo);
 
-        //-----> Si el archivo existe, ahorra tiempo leyendolo directamente
         if (archivoCatalogo.exists()) {
             System.out.println("-----> Usando catalogo existente: " + rutaCatalogo);
             return Files.readAllLines(archivoCatalogo.toPath(), StandardCharsets.UTF_8);
         }
 
-        //-----> Si no existe, llama al escaner para revisar carpeta por carpeta
         System.out.println("-----> No existe el catalogo, escaneando: " + rutaClases);
         EscaneadorMetodos escaner = new EscaneadorMetodos();
-        List<EscaneadorMetodos.MetodoObjetivo> metodos = escaner.escanear(rutaClases);
-        escaner.mostrarResumen();
+        List<EscaneadorMetodos.MetodoObjetivo> metodos = escaner.escanear(rutaClases, classpathParaCargar);
+        escaner.guardarResumen(carpetaResultados + "/_escaneo_resumen.txt");
 
-        //-----> Convierte los objetos de los metodos a texto simple
         List<String> catalogo = new ArrayList<>();
         for (EscaneadorMetodos.MetodoObjetivo m : metodos) {
             catalogo.add(m.comoTexto());
         }
 
-        //-----> Guarda la lista en un archivo de texto para la proxima vez
         escaner.guardarCatalogo(metodos, rutaCatalogo);
         return catalogo;
     }
 
-    //-----> Utilidad que separa los comandos de la terminal que tengan la estructura --clave:valor
     private static Map<String, String> getParams(String[] args) {
         Map<String, String> params = new HashMap<>();
         for (String arg : args) {

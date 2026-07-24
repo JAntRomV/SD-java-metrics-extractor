@@ -2,56 +2,67 @@ package dinamica;
 
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
+import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-//-----> Configura JMH para medir todas las variables posibles y mostrar los resultados en nanosegundos
+//-----> Clase plantilla que usa la herramienta JMH para medir con alta precisión científica el tiempo y consumo de memoria
 @BenchmarkMode(Mode.All)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @State(Scope.Benchmark)
 public class MetodoBenchmark {
 
-    //-----> Recibe la ruta de las clases desde el Ejecutor
+    // JMH inyecta aquí las rutas de las clases y la firma del método
     @Param({""})
     public String rutaClases;
 
-    //-----> Recibe el metodo que toca medir en esta iteracion (con formato Clase#metodo
     @Param({""})
     public String metodoObjetivo;
 
     private Object instancia;
     private Method metodo;
+    private URLClassLoader loader;
 
-    //-----> Se ejecuta un momento antes de iniciar la prueba para preparar el metodo en memoria
+    // Se ejecuta antes de iniciar las pruebas para preparar la clase y método mediante reflexión
     @Setup(Level.Trial)
     public void prepararMetodo() throws Exception {
-        //-----> Separa la llave por el caracter '#' para obtener el nombre de la clase y el metodo por separado
         String[] partes = metodoObjetivo.split("#");
         String nombreClase = partes[0];
         String nombreMetodo = partes[1];
 
-        //-----> Carga la clase de forma dinamica en la prueba actual
-        URL url = new java.io.File(rutaClases).toURI().toURL();
-        URLClassLoader loader = new URLClassLoader(new URL[]{url}, this.getClass().getClassLoader());
+        List<URL> urls = new ArrayList<>();
+        for (String ruta : rutaClases.split(java.util.regex.Pattern.quote(File.pathSeparator))) {
+            if (!ruta.isBlank()) {
+                urls.add(new File(ruta).toURI().toURL());
+            }
+        }
+        this.loader = new URLClassLoader(urls.toArray(new URL[0]), this.getClass().getClassLoader());
 
-        //-----> Crea un clon u objeto real de la clase y localiza el metodo interno
         Class<?> clazz = loader.loadClass(nombreClase);
         this.instancia = clazz.getDeclaredConstructor().newInstance();
         this.metodo = clazz.getDeclaredMethod(nombreMetodo);
         this.metodo.setAccessible(true);
     }
 
-    //-----> Esta es la prueba central que se ejecuta repetidamente para promediar la velocidad
+    // Se ejecuta al terminar la prueba para liberar memoria y recursos
+    @TearDown(Level.Trial)
+    public void limpiar() throws Exception {
+        if (loader != null) {
+            loader.close();
+        }
+    }
+
+    // Este es el método que JMH invoca miles de veces para calcular los promedios de tiempo
     @Benchmark
     public void medirMetodo(Blackhole bh) throws Exception {
-        //-----> Activa el metodo en caliente[cite: 4]
         Object resultado = metodo.invoke(instancia);
-        
-        //-----> Si el metodo devuelve algun dato, se lo tira al Blackhole para obligar a la computadora a procesarlo de verdad
+
         if (resultado != null) {
-            bh.consume(resultado);
+            bh.consume(resultado); // Evita que la JVM elimine llamadas no usadas por optimizaciones
         }
     }
 }
