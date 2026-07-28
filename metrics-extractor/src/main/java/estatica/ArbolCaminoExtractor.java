@@ -9,131 +9,139 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
-//-----> Clase principal que desarma el código y extrae los caminos del árbol
+// -----> Extrae los caminos del árbol de código método por método.
 public class ArbolCaminoExtractor {
 
-    //-----> Estructura contenedora de los resultados finales por clase
-    public static class ResultadoClase {
-        public String nombreClase;
+    // -----> Guarda los caminos (en texto y números) de un solo método.
+    public static class ResultadoMetodo {
+        public String nombreMetodo;
         public List<String> vectorTexto = new ArrayList<>();
         public List<List<Integer>> vectorNumerico = new ArrayList<>();
     }
 
-    //-----> Cuenta los números del 1 en adelante para ponérselos a los nodos
+    // -----> Guarda el nombre de la clase y la lista de todos sus métodos.
+    public static class ResultadoClase {
+        public String nombreClase;
+        public List<ResultadoMetodo> metodos = new ArrayList<>();
+    }
+
+    // -----> Numero que se le asigna a cada nodo del código.
     private int contadorGlobal = 1;
 
-    //-----> Usamos IdentityHashMap para asegurar que cada objeto Nodo físico tenga su propio número único
+    // -----> Mapa para darle un ID único a cada objeto nodo.
     private Map<Node, Integer> numeracionNodos = new IdentityHashMap<>();
 
-    //-----> Función principal que saca los caminos de cada método de la clase
+    // -----> Recorre el archivo de Java y saca los caminos de cada método.
     public ResultadoClase procesarClase(CompilationUnit cu, String nombreArchivo) {
         ResultadoClase resultado = new ResultadoClase();
         resultado.nombreClase = nombreArchivo;
 
-        //-----> Busca todos los métodos que existan en el archivo de Java
+        // -----> Busca todos los métodos del archivo.
         List<MethodDeclaration> metodos = cu.findAll(MethodDeclaration.class);
 
         for (MethodDeclaration metodo : metodos) {
             if (metodo.getBody().isPresent()) {
+                // -----> Reinicia el contador para que cada método empiece desde 1.
                 contadorGlobal = 1;
                 numeracionNodos.clear();
+
+                ResultadoMetodo resultadoMetodo = new ResultadoMetodo();
+                resultadoMetodo.nombreMetodo = metodo.getNameAsString();
+
+                // -----> Le pone números a las piezas y genera sus rutas.
                 asignarNumerosPreorden(metodo.getBody().get());
-                generarCaminos(metodo.getBody().get(), new ArrayList<>(), new ArrayList<>(), resultado);
+                generarCaminos(metodo.getBody().get(), new ArrayList<>(), new ArrayList<>(), resultadoMetodo);
+
+                resultado.metodos.add(resultadoMetodo);
             }
         }
         return resultado;
     }
-//----------------------------
-    //-----> Visita y numera cronológicamente cada elemento del código sin repetir
+
+    // -----> Asigna un número a cada instrucción o parte del código.
     private void asignarNumerosPreorden(Node nodo) {
 
-        //-----> Si es el bloque de llaves principal del método, no le ponemos número para no gastarlo
+        // -----> Salta el bloque principal para no gastar el número 1.
         if (!(nodo instanceof BlockStmt && nodo.getParentNode().isPresent() && nodo.getParentNode().get() instanceof MethodDeclaration)) {
           
-            //-----> Guarda el nodo en la lista junto con su número asignado y suma 1 al contador
+            // -----> Guarda el nodo con su número y suma 1 al contador.
             numeracionNodos.put(nodo, contadorGlobal++);
         }
-        //-----> Revisa los nodos hijos (las ramas de abajo del árbol) para numerarlos también
+        // -----> Sigue numerando las piezas de más abajo.
         for (Node hijo : nodo.getChildNodes()) {
             asignarNumerosPreorden(hijo);
         }
     }
-//----------------------
-    //-----> Camina por el flujo y recolecta los textos y sus respectivos números ya asignados
-    private void generarCaminos(Node nodo, List<String> txtCamino, List<Integer> numCamino, ResultadoClase res) {
 
-        //-----> Busca el número que le tocó a esta pieza  si no tiene le pone 0
+    // -----> Camina por el código uniendo el texto y sus números.
+    private void generarCaminos(Node nodo, List<String> txtCamino, List<Integer> numCamino, ResultadoMetodo res) {
+
+        // -----> Obtiene el número asignado a este nodo.
         int numeroAsignado = numeracionNodos.getOrDefault(nodo, 0);
 
-        //----/CASO BIFURCACIÓN (IF)\----
-        //-----> Si es un  "if", abrimos las ramas de verdadero y falso
+        // -----> Maneja las bifurcaciones cuando encuentra un "if".
         if (nodo instanceof IfStmt) {
             IfStmt condicional = (IfStmt) nodo;
-            //-----> Limpia los espacios en blanco de la condición para que quede compacta
+            // -----> Limpia los espacios de la condición.
             String condicion = "if(" + condicional.getCondition().toString().replaceAll("\\s+", "") + ")";
 
-            // --->Ruta del SÍ 
-            //-----> Copia el camino que llevaba guardado hasta este momento
+            // -----> Ruta para el camino del SÍ.
             List<String> txtSi = new ArrayList<>(txtCamino);
             List<Integer> numSi = new ArrayList<>(numCamino);
             
-            //-----> Agrega el texto del if y su número a la ruta del SÍ
             txtSi.add(condicion);
             if (numeroAsignado != 0) numSi.add(numeroAsignado);
             txtSi.add("condicion_sisi");
             
-            //-----> Se mete a explorar todo lo que está adentro de las llaves del SÍ
+            // -----> Explora la rama del SÍ.
             generarCaminos(condicional.getThenStmt(), txtSi, numSi, res);
 
-            // --->Ruta del NO 
-            //-----> Si el if tiene un "else", creamos su propia rama
+            // -----> Ruta para el camino del NO (si hay un else).
             if (condicional.getElseStmt().isPresent()) {
 
-                //-----> Copia el camino que llevaba antes del if
                 List<String> txtNo = new ArrayList<>(txtCamino);
                 List<Integer> numNo = new ArrayList<>(numCamino);
                 
-                //-----> Agrega el texto del if, su número y las marcas del else a la ruta del NO
                 txtNo.add(condicion);
                 if (numeroAsignado != 0) numNo.add(numeroAsignado);
                 txtNo.add("else{}");
                 txtNo.add("condicion_sino");
                 
-                //-----> Se mete a explorar todo lo que está adentro de las llaves del else
+                // -----> Explora la rama del NO.
                 generarCaminos(condicional.getElseStmt().get(), txtNo, numNo, res);
             }
             return; 
         }
-//--------------------------
-        //--------------/(Cualquier tipo de código)\----
-        //-----> Convierte la pieza de código a texto limpio en una sola línea
+
+        // -----> Procesa cualquier otra línea de código.
         String textoNodo = nodo.toString().trim().replaceAll("\\s+", " ").replace("\n", "");
         
-        //-----> Si no son llaves sueltas ni el método entero, y el texto es cortito, lo guarda
+        // -----> Guarda el texto si es corto y no son llaves sueltas.
         if (!(nodo instanceof BlockStmt) && !(nodo instanceof MethodDeclaration) && textoNodo.length() < 60) {
             txtCamino.add(textoNodo);
             
-            //-----> Guarda el número en la serie numérica si es válido y no estaba repetido
+            // -----> Agrega el número de nodo si es válido.
             if (numeroAsignado != 0 && !numCamino.contains(numeroAsignado)) {
                 numCamino.add(numeroAsignado);
             }
         }
 
-        //-----> Obtiene las piezas más chicas que componen a este nodo
+        // -----> Revisa las piezas hijas.
         List<Node> hijos = nodo.getChildNodes();
-        //-----> Si ya no hay más hijos abajo (llegamos a una punta del árbol)
+        
+        // -----> Si llegó al final del camino, arma y guarda la línea.
         if (hijos.isEmpty()) {
 
-            //-----> Junta todas las palabras usando el separador "|" para armar el renglón final
+            // -----> Une las palabras usando el separador "|".
             String lineaFinal = String.join("|", txtCamino);
 
-            //-----> Si el camino no es repetido y no está vacío, lo guarda en los resultados del JSON
+            // -----> Guarda el camino si no está duplicado dentro del mismo método.
             if (!res.vectorTexto.contains(lineaFinal) && !lineaFinal.isEmpty()) {
                 res.vectorTexto.add(lineaFinal);
                 res.vectorNumerico.add(new ArrayList<>(numCamino));
             }
         } else {
-            //-----> Si todavía quedan hijos abajo, sigue bajando por cada uno de ellos
+            // -----> Si tiene más piezas abajo, sigue bajando.
             for (Node hijo : hijos) {
                 generarCaminos(hijo, txtCamino, numCamino, res);
             }

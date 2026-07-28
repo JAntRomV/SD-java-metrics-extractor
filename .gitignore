@@ -40,4 +40,4 @@ proyecto_reportes/
 *.class
 .json
 ContadorProyecto.java
-target 
+*target 
