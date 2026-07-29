@@ -88,9 +88,14 @@
             </plugin>
 
             <!-- Agregado: asegura que JMH procese las anotaciones @Benchmark al compilar -->
+            <!-- CORRECCION: se agrego <version> explicita. Sin ella, Maven mostraba el warning
+                 "'build.plugins.plugin.version' for org.apache.maven.plugins:maven-compiler-plugin
+                 is missing" y resolvia una version "por defecto" que puede variar entre maquinas,
+                 dando compilaciones inconsistentes. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
                 <configuration>
                     <annotationProcessorPaths>
                         <path>

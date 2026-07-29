@@ -1,89 +1,75 @@
-# Módulo de Análisis Dinámico (Módulo de Carreras y Rendimiento)
+# Módulo de Integración (El Director de Orquesta)
 
 ### ¿Qué hace este proyecto?
-Este programa es un "analizador de rendimiento" para código de Java. A diferencia del análisis estático (que solo lee el texto del código sin correrlo), este módulo **sí ejecuta el código de verdad**. 
+Este módulo es el **punto de entrada único** de todo el sistema. Hasta ahora tenías dos programas separados: uno que lee el código sin correrlo (análisis estático) y otro que lo compila y lo ejecuta de verdad para cronometrarlo (análisis dinámico). Correr los dos a mano, uno tras otro, significa acordarte de las rutas correctas, no mezclar las carpetas de resultados, y esperar a que termine uno para lanzar el otro.
 
-Su trabajo es tomar un proyecto externo (como Keycloak), compilarlo, buscar todos sus métodos y medir en vivo mediante dos enfoques de cronómetro:
-1. **Rendimiento General (JMH):** Mide en nanosegundos el tiempo promedio total que tarda cada método y cuánta memoria RAM gasta al funcionar miles de veces.
-2. **Rendimiento Línea por Línea / Caminos (Instrumentación):** Inyecta "marcas de tiempo" directamente en el código fuente `.java` (dentro de cada instrucción, `if`, `else`, etc.) para registrar paso a paso cómo se ejecuta el método instrucción por instrucción.
+`AnalizadorUnificado` resuelve eso: le das la ruta de UN proyecto externo (como Keycloak) una sola vez, y él se encarga de mandarlo primero al análisis estático y después al dinámico, en el orden correcto, guardando cada resultado en su propia carpeta para que nunca se mezclen los archivos de uno con los del otro.
 
-Para que tu computadora no explote ni se congele si el proyecto tiene miles de métodos, el programa es inteligente: los separa en **lotes** (grupos pequeños, por ejemplo, de 50 en 50) y guarda una lista en un archivo de texto para no tener que buscar los métodos desde cero cada vez.
+Es literalmente un director de orquesta: no toca ningún instrumento él mismo (no analiza código, no compila nada, no corre JMH), solo le da la entrada a cada músico (`ProcesadorMetricas` y `EjecutorCompleto`) en el momento justo.
 
 ---
 
 ### Herramientas que utiliza (Tecnologías)
-* **Java 17 y Maven:** La base del proyecto.
-* **JMH:** El cronómetro científico ultra preciso para medir el tiempo y la RAM.
-* **JavaParser:** Herramienta de "cirugía de código" para leer la estructura del código `.java` e inyectar marcas de tiempo automáticamente sin romper el archivo original.
-* **Reflexión de Java:** Una técnica que le permite a nuestro programa abrir, leer y ejecutar archivos de otro proyecto externo sin necesidad de instalarlos dentro de nuestro código.
-* **ThreadLocal & CSV:** Para registrar y sincronizar los tiempos de las instrucciones en tiempo real por cada hilo sin contaminar los datos entre pruebas.
+* **Java 17 y Maven:** La base del proyecto, igual que los otros dos módulos.
+* **`estatica.ProcesadorMetricas`:** El módulo de análisis estático completo, ya armado. Este módulo solo lo invoca, no repite su lógica.
+* **`dinamica.EjecutorCompleto`:** El orquestador del módulo dinámico (que a su vez ya corre las 2 fases de JMH internamente). Este módulo tampoco repite esa lógica, solo lo llama.
 
 ---
 
-### Modos de Ejecución (`ModeMapper`)
-El programa permite elegir qué tipo de análisis quieres realizar mediante el parámetro `--modo`:
-* **`completo` (por defecto):** Ejecuta tanto el Benchmark de JMH como el análisis de caminos línea por línea.
-* **`fase1` / `benchmark`:** Corre únicamente las mediciones generales de tiempo y RAM con JMH.
-* **`fase2` / `caminos`:** Corre únicamente el análisis detallado paso a paso inyectando cronómetros línea por línea.
+### ¿Cómo funciona?
 
----
+#### 1. `AnalizadorUnificado` (El Director)
+Es la única clase de este módulo, y hace 3 cosas en orden:
 
-###  ¿Cómo funciona?
+* **Lee los argumentos de la terminal.** Necesita al menos `--proyecto` (la ruta al proyecto externo). Si no se lo das, te avisa el modo de uso correcto y se detiene ahí, sin tronar.
+* **Corre el análisis estático primero.** Llama a `ProcesadorMetricas.analizarUnProyecto(...)`, apuntando su salida a una subcarpeta propia: `resultados/resultados_estaticos`. Va primero porque es rápido (solo lee texto, no compila nada) y así detecta de una vez archivos con sintaxis rara antes de gastar tiempo compilando el proyecto completo.
+* **Corre el análisis dinámico después.** Llama a `EjecutorCompleto.main(...)`, pero antes le cambia (o le agrega) el parámetro `--salida` para que apunte a su propia subcarpeta: `resultados/resultados_dinamicos`. Cualquier otro parámetro que hayas puesto en la terminal (`--batchSize`, `--I`, `--WI`, `--classpath`, etc.) se le pasa intacto, tal cual lo escribiste — este módulo no necesita entender esos parámetros, solo reenviarlos.
 
-El programa se divide en piezas especializadas que trabajan en cadena:
-
-#### 1. `CompiladorProyecto` (El Constructor)
-Es el encargado de preparar el proyecto que vamos a medir.
-* Revisa que la carpeta exista de forma real.
-* Detecta si el proyecto usa **Maven** o **Gradle** y activa la terminal oculta para compilarlo automáticamente (`mvn compile`).
-
-
-#### 2. `EscaneadorMetodos` (El Filtro de Seguridad)
-Entra a las carpetas del proyecto ya compilado y busca qué métodos están listos para competir. Aplica los siguientes filtros estrictos:
-* Descarta clases raras o invisibles del sistema (las que tienen un `$` en el nombre).
-* Solo acepta clases que tengan un constructor vacío (es decir, que se puedan crear de forma básica).
-* Solo acepta métodos que **no reciban parámetros** (0 variables de entrada).
-* Al final, anota los métodos sobrevivientes en un archivo llamado `catalogo_metodos.txt` usando la etiqueta `Clase#metodo`.
-
-#### 3. `EjecutorDinamico` (El Jefe / Orquestador)
-Es el cerebro del programa (`main`). Controla todo el experimento en orden:
-* Lee las órdenes y parámetros que le pones en la terminal (`--modo`, `--proyecto`, `--batchSize`, etc.).
-* Manda a compilar el proyecto y abre el catálogo de métodos.
-* Corta la lista gigante en el grupo (lote) que le pediste evaluar.
-* Configura los cronómetros de JMH o de caminos según el modo elegido.
-* Guarda los resultados limpios en una carpeta ordenada por lotes.
-
-#### 4. `MetodoBenchmark` (El Cronómetro Real - JMH)
-Es donde se realiza el experimento de rendimiento global sobre cada método.
-* **Antes de correr (`@Setup`):** Toma la etiqueta `Clase#metodo`, busca el método real en la memoria y crea una copia del objeto por reflexión.
-* **En la carrera (`@Benchmark`):** Corre el método miles de veces. Usa una herramienta llamada `Blackhole` (Hoyo Negro) que se "traga" los resultados del método para obligar a la computadora a procesarlo completo y evitar que el sistema haga trampa ignorando código.
-
-#### 5. `InstrumentadorCaminos` (La Cirugía de Código)
-Si se activa la fase de caminos:
-* Toma el código fuente del archivo `.java` y usa **JavaParser** para leer su estructura.
-* Inyecta llamadas a `RegistradorTiempos.marcar("INSTR-X")` antes de cada línea de código, incluyendo las instrucciones dentro de los bloques `if`, `else` y bucles.
-* Genera una versión modificada en una carpeta de salida sin alterar nunca el archivo original.
-
-#### 6. `RegistradorTiempos` y `TimeLogger` (El Cronómetro Línea por Línea)
-Son los encargados de atrapar las marcas inyectadas durante la ejecución real:
-* **`RegistradorTiempos`:** Maneja el estado global del medidor para el hilo actual (`ThreadLocal`) asegurando que el cronómetro se encienda, marque y apague limpiamente.
-* **`TimeLogger`:** Es la libreta de anotaciones. Cada vez que el código pasa por una línea marcada, guarda un "fotograma": ID de registro, iteración actual, clase, método, marca del nanosegundo y la fecha/hora exacta.
-* Al finalizar la prueba, exporta todo a un archivo `.csv` detallado.
-
-#### 7. `ResultadoDinamico` (El Contenedor de Datos)
-Es una plantilla simple que guarda la información de cada método que ya compitió: su nombre, su clase, su tiempo promedio, su margen de error y la RAM que gastó. Mantiene la llave de unión `Clase#metodo` para conectarse perfectamente con los reportes estáticos.
-
+#### 2. `conSalidaOverride` (El truco de la subcarpeta)
+Es un método pequeño pero importante: toma el arreglo original de argumentos que escribiste en la terminal, y si encuentra un `--salida:algo`, lo reemplaza por la subcarpeta correcta antes de pasárselo a `EjecutorCompleto`. Si no pusiste `--salida` en absoluto, simplemente se lo agrega al final. Así nunca terminas con los CSV del análisis dinámico mezclados en la misma carpeta que los JSON del estático.
 
 ---
 
 ### Cómo se ejecuta el programa
 
-Para poner a andar el analizador dinámico en tu terminal de Ubuntu, sigues estos pasos:
+Para poner a andar el análisis unificado en tu terminal de Ubuntu, sigues estos pasos:
 
-1. **Limpiar y empaquetar tu proyecto:**
-   ```bash
+1. **Empaquetar el proyecto completo:**
+```bash
    mvn clean package
-   java -cp "target/classes:target/dependency/*" dinamica.EjecutorCompleto --proyecto:/home/tania/Documentos/ejemplojava/ai-git-bot-main
-   ```
+```
 
--
+2. **Correr el análisis unificado sobre un proyecto externo:**
+```bash
+   java -cp target/estatica-framework-2.0.0-jar-with-dependencies.jar \
+       integracion.AnalizadorUnificado \
+       --proyecto:/home/tania/Documentos/ejemplojava/keycloak-config-cli-main \
+       --salida:resultados
+```
+
+3. **(Opcional) Ajustar los parámetros de JMH de la fase dinámica**, exactamente igual que si llamaras a `EjecutorCompleto` directamente — se pasan tal cual:
+```bash
+   java -cp target/estatica-framework-2.0.0-jar-with-dependencies.jar \
+       integracion.AnalizadorUnificado \
+       --proyecto:/home/tania/Documentos/ejemplojava/keycloak-config-cli-main \
+       --salida:resultados \
+       --batchSize:30 --I:5 --WI:1
+```
+
+Al terminar, vas a encontrar todo ordenado así:
+
+```
+resultados/
+├── resultados_estaticos/
+│   └── keycloak-config-cli-main/
+│       ├── <Clase>Metricas.json
+│       ├── <Clase>Metricas.csv
+│       ├── <Clase>_code2seq.json
+│       └── <Clase>_caminos.json
+└── resultados_dinamicos/
+    ├── Benchmarks.csv
+    ├── cronometro_caminos.csv
+    ├── _escaneo_resumen.txt
+    ├── _caminos_resumen.txt
+    └── _caminos_no_seguibles.txt
+```
