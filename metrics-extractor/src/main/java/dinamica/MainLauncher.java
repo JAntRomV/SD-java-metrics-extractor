@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-//-----> Orquestador principal de la Fase 2 (Cronómetro de Caminos instrucción por instrucción)
+//-----> Lanzador principal encargado de coordinar la Fase 2 (Cronometro de Caminos)
 public class MainLauncher {
 
     static {
@@ -38,6 +38,7 @@ public class MainLauncher {
 
         String classpathParaCompilar = params.getOrDefault("classpath", rutaClases);
 
+        //-----> Compila previamente el proyecto si fuera requerido
         if (rutaProyecto != null) {
             System.out.println("-----> Proyecto externo detectado: " + rutaProyecto);
             CompiladorProyecto.ResultadoCompilacion res = CompiladorProyecto.compilar(rutaProyecto, true);
@@ -54,7 +55,7 @@ public class MainLauncher {
             return;
         }
 
-        // Lee los métodos aprobados generados en la Fase 1
+        //-----> Filtra los metodos que superaron las validaciones de la Fase 1
         String rutaBenchmarkCsv = carpetaSalida + "/Benchmarks.csv";
         List<String> metodosAprobados = leerMetodosAprobados(rutaBenchmarkCsv);
 
@@ -70,7 +71,7 @@ public class MainLauncher {
         List<String> noSeguibles = new ArrayList<>();
         ArbolCaminoExtractor extractorEstatico = new ArbolCaminoExtractor();
 
-        // Procesa cada método aprobado
+        //-----> Itera sobre cada metodo para aplicar instrumentación de caminos
         for (String entrada : metodosAprobados) {
             String[] partes = entrada.split("#", 2);
             if (partes.length < 2 || partes[0].isBlank() || partes[1].isBlank()) {
@@ -80,7 +81,6 @@ public class MainLauncher {
             String claseCompleta = partes[0];
             String nombreMetodo = partes[1];
 
-            // Localiza la ubicación física del archivo de código fuente .java
             String rutaJava = derivarRutaJava(rutaClases, claseCompleta);
             File archivoJava = new File(rutaJava);
 
@@ -90,12 +90,12 @@ public class MainLauncher {
             }
 
             try {
+                //-----> Realiza el analisis del arbol sintactico y cronometra el metodo
                 CompilationUnit cu = StaticJavaParser.parse(archivoJava);
                 ArbolCaminoExtractor.ResultadoClase resultadoArbol = extractorEstatico.procesarClase(cu, archivoJava.getName());
 
                 System.out.println("-----> Cronometrando método aprobado: " + resultadoArbol.nombreClase + " | " + nombreMetodo);
 
-                // Ejecuta la medición detallada
                 String csv = EjecutorInstrumentado.medirCamino(rutaJava, nombreMetodo, carpetaSalida, classpathParaCompilar);
                 if (csv != null) {
                     csvsGenerados.add(csv);
@@ -105,13 +105,12 @@ public class MainLauncher {
             }
         }
 
-        // Consolida todos los pequeños CSVs generados en un solo archivo definitivo
+        //-----> Consolida todos los archivos parciales generados en uno solo
         String rutaConsolidado = carpetaSalida + "/cronometro_caminos.csv";
         consolidarYLimpiarCSVs(csvsGenerados, rutaConsolidado);
 
         guardarResumenCaminos(carpetaSalida, metodosAprobados.size(), csvsGenerados.size(), noSeguibles.size());
 
-        // Limpia los archivos temporales de código instrumentado
         DirFileTools.borrarDirectorioRecursivo(carpetaSalida + "/_temp_instrumentado");
 
         guardarDetalleNoSeguibles(carpetaSalida, noSeguibles);
@@ -126,6 +125,7 @@ public class MainLauncher {
         System.out.println("=====================================================");
     }
 
+    //-----> Escribe un archivo de log con las razones por las que ciertos metodos no pudieron ser analizados
     private static void guardarDetalleNoSeguibles(String carpetaSalida, List<String> noSeguibles) throws Exception {
         try (PrintWriter w = new PrintWriter(carpetaSalida + "/_caminos_no_seguibles.log", StandardCharsets.UTF_8)) {
             if (noSeguibles.isEmpty()) {
@@ -138,6 +138,7 @@ public class MainLauncher {
         }
     }
 
+    //-----> Guarda datos contables de los resultados globales obtenidos en la Fase 2
     private static void guardarResumenCaminos(String carpetaSalida, int intentados, int medidos, int noSeguibles) throws Exception {
         try (PrintWriter w = new PrintWriter(carpetaSalida + "/_caminos_resumen.txt", StandardCharsets.UTF_8)) {
             w.println("metodosIntentados=" + intentados);
@@ -146,6 +147,7 @@ public class MainLauncher {
         }
     }
 
+    //-----> Carga la lista de metodos validos exportados previamente en Benchmarks.csv
     private static List<String> leerMetodosAprobados(String rutaCsv) throws Exception {
         java.util.LinkedHashSet<String> metodosUnicos = new java.util.LinkedHashSet<>();
         File f = new File(rutaCsv);
@@ -180,6 +182,7 @@ public class MainLauncher {
         return new ArrayList<>(metodosUnicos);
     }
 
+    //-----> Parsea cadenas separadas por comas evitando divisiones internas dentro de comillas
     private static String[] parsearLineaCSV(String linea) {
         List<String> campos = new ArrayList<>();
         for (String parte : linea.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)")) {
@@ -192,7 +195,7 @@ public class MainLauncher {
         return campos.toArray(new String[0]);
     }
 
-    // Busca la ubicación exacta del archivo .java navegando desde la carpeta target/classes hacia el src/main/java del módulo
+    //-----> Mapea el paquete/nombre de una clase Java hacia su ubicacion fisica en 'src/main/java'
     private static String derivarRutaJava(String rutaClases, String claseCompleta) {
         String rutaRelativa = claseCompleta.replace('.', '/') + ".java";
         String[] posiblesRaicesClases = rutaClases.split(java.util.regex.Pattern.quote(File.pathSeparator));
@@ -212,6 +215,7 @@ public class MainLauncher {
         return primeraCandidata;
     }
 
+    //-----> Busca hacia arriba en la estructura de carpetas el archivo descriptor del proyecto (pom.xml/build.gradle)
     private static Path encontrarRaizProyecto(Path carpetaClases) {
         Path actual = carpetaClases.toAbsolutePath().normalize();
         while (actual != null) {
@@ -223,6 +227,7 @@ public class MainLauncher {
         return carpetaClases.getParent().getParent();
     }
 
+    //-----> Fusiona varios CSVs individuales en uno solo borrando los parciales
     private static void consolidarYLimpiarCSVs(List<String> rutasCSV, String rutaSalida) throws Exception {
         try (PrintWriter w = new PrintWriter(rutaSalida, StandardCharsets.UTF_8)) {
             boolean primerArchivo = true;
@@ -240,6 +245,7 @@ public class MainLauncher {
         }
     }
 
+    //-----> Convierte el vector de opciones pasadas al proceso en una coleccion Map
     private static Map<String, String> parseArgs(String[] args) {
         Map<String, String> map = new HashMap<>();
         for (String arg : args) {

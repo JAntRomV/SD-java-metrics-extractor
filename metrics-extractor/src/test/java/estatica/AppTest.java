@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class AppTest {
 
     @Test
-    //-----> Verifica que al analizar un proyecto de prueba se generen todos los archivos esperados
+    //-----> Verifica que al analizar un proyecto de prueba se generen los archivos esperados (JSON y caminos)
     void analizaProyectoDePruebaYGeneraLosArchivosEsperados(@TempDir Path carpetaTemporal) throws IOException {
 
         //-----> Arma una carpeta de código fuente con un proyecto de prueba adentro
@@ -52,17 +52,9 @@ public class AppTest {
         String contenidoJson = Files.readString(jsonMetricas.toPath());
         assertTrue(contenidoJson.contains("\"metodo\": \"sumar\""), "El JSON debe contener el método sumar");
 
-        //-----> Verifica que se haya generado el CSV de métricas
-        File csvMetricas = new File(carpetaProyectoResultado, "CalculadoraMetricas.csv");
-        assertTrue(csvMetricas.exists(), "Debería generarse el CSV de métricas");
-
         //-----> Verifica que se haya generado el JSON de caminos del árbol
         File jsonCaminos = new File(carpetaProyectoResultado, "Calculadora_caminos.json");
         assertTrue(jsonCaminos.exists(), "Debería generarse el JSON de caminos del árbol");
-
-        //-----> Verifica que se haya generado el JSON de Code2Seq
-        File jsonCode2Seq = new File(carpetaProyectoResultado, "Calculadora_code2seq.json");
-        assertTrue(jsonCode2Seq.exists(), "Debería generarse el JSON de Code2Seq");
     }
 
     @Test

@@ -1,6 +1,5 @@
 package estatica;
 
-//______________/Recorre el arbol y Extrae las metricas de cada metodod\_________________________
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.DataKey;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
@@ -9,32 +8,29 @@ import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.stmt.*;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-
+// ----> Esta clase recorre todo el código fuente en Java para contar variables, palabras clave, decisiones y métodos
 public class MetricsAnalyzer extends VoidVisitorAdapter<Void> {
-//------>Guarda el reporte global  donde se ira juntando toda la informacion 
     private final ProjectMetrics projectMetrics;
 
-//-----> Guarda cuántas líneas se le deben restar a un método porque se le podó un submétodo de adentro
+    // ----> Clave especial para restar líneas de código cuando un método tiene sub-métodos adentro
     public static final DataKey<Integer> LINEAS_PODADAS = new DataKey<Integer>() {};
 
-//------>Nombre del archivo y clase que se analiza
     private String currentClassName = "Unknown";
     private String currentFileName  = "Unknown";
 
-//------>Es el constructor recibe los reportes para poder guardar los datos 
+    // ----> Constructor: recibe el reporte del proyecto para ir guardando los hallazgos
     public MetricsAnalyzer(ProjectMetrics projectMetrics) {
         this.projectMetrics = projectMetrics;
     }
 
-//------> le dice cual es el nombre del archivo que va a empezar a leer
+    // ----> Asigna el archivo que se está leyendo en el momento
     public void setCurrentFileName(String fileName) {
         this.currentFileName = fileName;
     }
 
-//-----> Saca las métricas de un método que se sacó de adentro de otro método (anidado)
+    // ----> Analiza un método que fue extraído o cortado de forma independiente
     public void analizarMetodoSuelto(MethodDeclaration md, String nombreClase) {
         String claseAnterior = this.currentClassName;
         this.currentClassName = nombreClase;
@@ -42,43 +38,35 @@ public class MetricsAnalyzer extends VoidVisitorAdapter<Void> {
         this.currentClassName = claseAnterior;
     }
 
-
-/** Cada vez que se encuentra una clase guarda el nombre anterior a la clase
-*------> actualiza el nombre de la clase que se esta leyendo  recorre el codigo
-* y cuando termina regresa al nombre anterior 
-*/
+    // ----> Se ejecuta automáticamente al entrar a una Clase de Java
     @Override
     public void visit(ClassOrInterfaceDeclaration cid, Void arg) {
-
         String previousClass = this.currentClassName;
-
         this.currentClassName = cid.getNameAsString();
-
-        super.visit(cid, arg);  
-
-        this.currentClassName = previousClass; 
+        super.visit(cid, arg);
+        this.currentClassName = previousClass;
     }
-//_______________________________________________________________
+
+    // ----> Se ejecuta automáticamente cada vez que encuentra un Método dentro de una clase
     @Override
     public void visit(MethodDeclaration md, Void arg) {
-
-//----->Salta el metodo si estavacio
+        // ----> Si el método está vacío (sin código), lo ignoramos
         if (!md.getBody().isPresent()) {
             super.visit(md, arg);
             return;
         }
 
-//------>CAlcula cuantas lineas de codigo tiene el metodo
+        // ----> Calculamos cuántas líneas de código (LOC) tiene el método
         int loc = (md.getBegin().isPresent() && md.getEnd().isPresent())
                 ? md.getEnd().get().line - md.getBegin().get().line + 1
                 : 0;
 
-//-----> Si a este método se le podó un submétodo de adentro, no contamos esas líneas
+        // ----> Si le podamos un sub-método, le restamos esas líneas para no contar doble
         if (md.containsData(LINEAS_PODADAS)) {
             loc -= md.getData(LINEAS_PODADAS);
         }
 
-//------>BUsca y cuenta todos los puntos de decision
+        // ----> Contamos todas las decisiones del código (ifs, fors, whiles, switches, etc.)
         int ifs       = md.findAll(IfStmt.class).size();
         int fors      = md.findAll(ForStmt.class).size();
         int foreachs  = md.findAll(ForEachStmt.class).size();
@@ -89,62 +77,58 @@ public class MetricsAnalyzer extends VoidVisitorAdapter<Void> {
         int ternaries = md.findAll(ConditionalExpr.class).size();
         int decisions = ifs + fors + foreachs + whiles + dos + switches + catches + ternaries;
 
-//------>Extrae las variables base deeeeeee halstead
+        // ----> Obtenemos los contadores de Halstead (operadores y operandos)
         int[] halstead = collectHalstead(md);
 
-//----->Se llama a la clase CfgCalculator
+        // ----> Calculamos el grafo de flujo de control (CFG) del método
         CfgCalculator.CfgResult cfg = CfgCalculator.estimateCfg(md, decisions);
 
-//------>Reune todos los valores en un objeto y lo registra en el proyecto------
+        // ----> Creamos el objeto con todas las métricas completas de este método
         MethodMetrics method = new MethodMetrics(
-                currentFileName, 
-                currentClassName, 
+                currentFileName,
+                currentClassName,
                 md.getNameAsString(),
                 loc,
                 halstead[0], halstead[1], halstead[2], halstead[3],
-                cfg.cyclomaticComplexity, 
-                cfg.nodes,                
-                cfg.edges,               
-                cfg.unconnectedNodes      
+                cfg.cyclomaticComplexity,
+                cfg.nodes,
+                cfg.edges,
+                cfg.unconnectedNodes
         );
-    
-//----->Registra el metodo en el reporte global
-        projectMetrics.addMethod(currentClassName, currentFileName, method);
-//Le pertenece a code2seq - Extraer los caminos de Code2Seq para este método
 
-        List<String> caminosC2S = Code2SeqExtractor.extraerCaminosDesdeMetodo(md);
-        method.setCaminosCode2Seq(caminosC2S);
+        // ----> Guardamos el método procesado en el reporte global del proyecto
+        projectMetrics.addMethod(currentClassName, currentFileName, method);
+
         super.visit(md, arg);
     }
 
-//____________________________________________________________________
+    // ----> Función auxiliar para buscar y contar operadores (if, +, =, return) y operandos (variables, números, textos)
     private static int[] collectHalstead(MethodDeclaration md) {
-
-//------>No permiten que se guarden  nombres repetidos
         Set<String> distinctOps  = new HashSet<>();
         Set<String> distinctOpds = new HashSet<>();
 
-//----->Cuenta el total absoluto de veces que aparecen
         int totalOps  = 0;
         int totalOpds = 0;
 
-//------>Busca asignaciones incremento odecremento-operaciones 
-//       matematicas o comparaciones 
+        // ----> Contamos asignaciones (=, +=, etc.)
         for (AssignExpr e : md.findAll(AssignExpr.class)) {
             distinctOps.add(e.getOperator().asString());
             totalOps++;
         }
-        
+
+        // ----> Contamos operaciones binarias (+, -, *, &&, etc.)
         for (BinaryExpr e : md.findAll(BinaryExpr.class)) {
             distinctOps.add(e.getOperator().asString());
             totalOps++;
         }
-        
+
+        // ----> Contamos operaciones unarias (!, ++, --)
         for (UnaryExpr e : md.findAll(UnaryExpr.class)) {
             distinctOps.add(e.getOperator().asString());
             totalOps++;
         }
-//------->Cuenta palabras clave comooperadores 
+
+        // ----> Registramos palabras clave del lenguaje como operadores
         addKeyword(md, IfStmt.class,       "if",      distinctOps); totalOps += md.findAll(IfStmt.class).size();
         addKeyword(md, ForStmt.class,      "for",     distinctOps); totalOps += md.findAll(ForStmt.class).size();
         addKeyword(md, ForEachStmt.class,  "foreach", distinctOps); totalOps += md.findAll(ForEachStmt.class).size();
@@ -153,36 +137,37 @@ public class MetricsAnalyzer extends VoidVisitorAdapter<Void> {
         addKeyword(md, ReturnStmt.class,   "return",  distinctOps); totalOps += md.findAll(ReturnStmt.class).size();
         addKeyword(md, ThrowStmt.class,    "throw",   distinctOps); totalOps += md.findAll(ThrowStmt.class).size();
 
-//-----------------------------nombres de variables / referencias----------------------------
+        // ----> Contamos operandos (variables, números, cadenas de texto, booleanos, nulos)
         for (NameExpr e : md.findAll(NameExpr.class)) {
             distinctOpds.add(e.getNameAsString());
             totalOpds++;
         }
         for (IntegerLiteralExpr e : md.findAll(IntegerLiteralExpr.class)) {
-            distinctOpds.add(e.getValue()); 
+            distinctOpds.add(e.getValue());
             totalOpds++;
         }
         for (DoubleLiteralExpr e : md.findAll(DoubleLiteralExpr.class)) {
-            distinctOpds.add(e.getValue()); 
+            distinctOpds.add(e.getValue());
             totalOpds++;
         }
         for (StringLiteralExpr e : md.findAll(StringLiteralExpr.class)) {
-            distinctOpds.add(e.getValue()); 
+            distinctOpds.add(e.getValue());
             totalOpds++;
         }
         for (BooleanLiteralExpr e : md.findAll(BooleanLiteralExpr.class)) {
-            distinctOpds.add(String.valueOf(e.isValue())); 
+            distinctOpds.add(String.valueOf(e.isValue()));
             totalOpds++;
         }
         for (NullLiteralExpr e : md.findAll(NullLiteralExpr.class)) {
-            distinctOpds.add("null"); 
+            distinctOpds.add("null");
             totalOpds++;
         }
 
+        // ----> Devolvemos el conteo final: [operadores únicos, operandos únicos, total operadores, total operandos]
         return new int[]{ distinctOps.size(), distinctOpds.size(), totalOps, totalOpds };
     }
 
-//------>Agrega la palabra clave al set de operadores distintos si hay al menos 1 ocurrencia
+    // ----> Método de apoyo para agregar palabras clave sin repetir
     private static <T extends Node> void addKeyword(
             MethodDeclaration md, Class<T> type, String keyword, Set<String> ops) {
         if (!md.findAll(type).isEmpty()) ops.add(keyword);

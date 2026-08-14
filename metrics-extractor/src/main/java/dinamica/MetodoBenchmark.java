@@ -10,24 +10,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-//-----> Clase plantilla que usa la herramienta JMH para medir con alta precisión científica el tiempo y consumo de memoria
-@BenchmarkMode(Mode.All)
+//-----> Clase anotada con JMH para preparar, aislar y ejecutar la medicion de cada metodo
+@BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @State(Scope.Benchmark)
 public class MetodoBenchmark {
 
-    // JMH inyecta aquí las rutas de las clases y la firma del método
     @Param({""})
     public String rutaClases;
 
     @Param({""})
     public String metodoObjetivo;
 
+    @Param({""})
+    public String carpetaSalida;
+
     private Object instancia;
     private Method metodo;
     private URLClassLoader loader;
 
-    // Se ejecuta antes de iniciar las pruebas para preparar la clase y método mediante reflexión
+    private TimeLogger _timeLogger;
+
+    //-----> Inicializa la instanciacion del metodo objetivo dinamico antes del benchmark
     @Setup(Level.Trial)
     public void prepararMetodo() throws Exception {
         String[] partes = metodoObjetivo.split("#");
@@ -46,23 +50,41 @@ public class MetodoBenchmark {
         this.instancia = clazz.getDeclaredConstructor().newInstance();
         this.metodo = clazz.getDeclaredMethod(nombreMetodo);
         this.metodo.setAccessible(true);
+
+        this._timeLogger = new TimeLogger(metodoObjetivo, 0);
     }
 
-    // Se ejecuta al terminar la prueba para liberar memoria y recursos
+    //-----> Registra el tiempo de partida al iniciar cada iteracion de la prueba
+    @Setup(Level.Iteration)
+    public void marcarInicioIteracion() {
+        if (_timeLogger != null) {
+            _timeLogger.logTime("IF-START", true);
+        }
+    }
+
+    //-----> Limpia cargadores de clases y exporta registros acumulados a archivos CSV temporales
     @TearDown(Level.Trial)
     public void limpiar() throws Exception {
         if (loader != null) {
             loader.close();
         }
+
+        if (_timeLogger != null && carpetaSalida != null && !carpetaSalida.isBlank()) {
+            File carpetaTemp = new File(carpetaSalida, "_temp_inicios_iteracion");
+            carpetaTemp.mkdirs();
+            String nombreSeguro = metodoObjetivo.replaceAll("[^a-zA-Z0-9_#.]", "_");
+            File archivo = new File(carpetaTemp, nombreSeguro + "_" + System.nanoTime() + ".csv");
+            _timeLogger.toCSV(archivo.getAbsolutePath());
+        }
     }
 
-    // Este es el método que JMH invoca miles de veces para calcular los promedios de tiempo
+    //-----> Metodo medido por JMH evitando optimizaciones de Dead Code mediante Blackhole
     @Benchmark
     public void medirMetodo(Blackhole bh) throws Exception {
         Object resultado = metodo.invoke(instancia);
 
         if (resultado != null) {
-            bh.consume(resultado); // Evita que la JVM elimine llamadas no usadas por optimizaciones
+            bh.consume(resultado);
         }
     }
 }

@@ -23,6 +23,7 @@
 hs_err_pid*
 replay_pid*
 target
+
 # Entornos virtuales en la raíz
 venv_code2vec/
 venv_graphcodebert/
@@ -36,8 +37,24 @@ proyecto_reportes/
 
 # Ignorar directorios de compilación de Maven de forma global
 **/target/
-*.jar
-*.class
-.json
+
+# Credenciales / configuracion local: NUNCA subir el .env con el MONGO_URI real
+.env
+
+# ---> AGREGADO (Issue 4 - Metrics Storage System):
+# Carpetas que genera OrquestadorRepos en cada corrida local: repos clonados
+# y resultados de analisis (JSON/CSV). Son artefactos temporales, no codigo.
+repos_clonados/
+resultados/
+resultados_*/
+catalogo_metodos.txt
+
+# ---> AGREGADO: archivos de configuracion de tu editor/IDE, no son del proyecto
+.idea/
+.vscode/
+*.iml
+
+# ---> AGREGADO: archivos que genera el sistema operativo
+.DS_Store
+Thumbs.db
 ContadorProyecto.java
-*target 
