@@ -27,7 +27,26 @@
         <jmh.version>1.37</jmh.version>
         <javac.target>1.8</javac.target>
         <uberjar.name>benchmarks</uberjar.name>
+
+        <!-- 🔌 AGREGADO: version de Spring Boot usada solo como BOM para fijar
+             versiones compatibles entre spring-boot-starter-web y el resto -->
+        <spring-boot.version>3.2.5</spring-boot.version>
     </properties>
+
+    <!-- 🔌 AGREGADO: importa el BOM de Spring Boot para que las versiones de
+         Jackson, Tomcat embebido, etc. sean consistentes entre si, sin
+         necesidad de cambiar el <parent> del proyecto -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -71,11 +90,38 @@
         </dependency>
 
         <!-- 🔌 AGREGADO (Issue 4 - Metrics Storage System): driver oficial de MongoDB
-             para conectarse al catalogo compartido y leer/escribir el campo "metrics" -->
+             para conectarse al catalogo compartido y leer/escribir el campo "metrics".
+
+             🔧 FIX version mismatch: el BOM de spring-boot-dependencies (mas abajo)
+             gestiona "bson" y "mongodb-driver-core" en la 4.11.2 (la version que usa
+             Spring Data MongoDB), y sin este override Maven las resolvia en 4.11.2
+             aunque mongodb-driver-sync fuera 5.1.1, provocando
+             NoClassDefFoundError: com.mongodb.internal.connection.StreamFactory
+             porque el driver-sync 5.1.1 llama clases internas que en la 4.x tienen
+             otra forma. Declararlas EXPLICITAMENTE aqui, en la misma version que
+             mongodb-driver-sync, siempre le gana al BOM (una dependencia directa
+             tiene prioridad sobre dependencyManagement, sin importar el orden). -->
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver-sync</artifactId>
             <version>5.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>bson</artifactId>
+            <version>5.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-core</artifactId>
+            <version>5.1.1</version>
+        </dependency>
+
+        <!-- 🔌 AGREGADO: API REST para exponer el framework (POST /api/metrics/run,
+             GET /api/metrics/status, GET /api/metrics/summary) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
     </dependencies>
 
@@ -171,13 +217,15 @@
                 <version>3.2.5</version>
             </plugin>
 
-            <!-- 🔌 PLUGIN AGREGADO: Necesario para empaquetar y ejecutar los Benchmarks -->
+            <!-- 🔌 PLUGIN AGREGADO: Necesario para empaquetar y ejecutar los Benchmarks
+                 y (segunda ejecucion, agregada abajo) la API REST -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.2.1</version>
                 <executions>
                     <execution>
+                        <id>shade-benchmarks</id>
                         <phase>package</phase>
                         <goals>
                             <goal>shade</goal>
@@ -188,6 +236,36 @@
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <!-- Define a EjecutorDinamico como el ejecutable del JAR de benchmarks -->
                                     <mainClass>dinamica.EjecutorDinamico</mainClass>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+
+                    <!-- 🔌 EJECUCION AGREGADA: genera target/metrics-api.jar, el jar
+                         ejecutable de la API REST (Spring Boot), independiente del
+                         jar de benchmarks de arriba. Es el que corre el Dockerfile. -->
+                    <execution>
+                        <id>shade-metrics-api</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <finalName>metrics-api</finalName>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>integracion.api.MetricsApiApplication</mainClass>
                                 </transformer>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>

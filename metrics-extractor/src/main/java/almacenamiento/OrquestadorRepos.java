@@ -17,9 +17,16 @@ import java.util.stream.Stream;
 //-----> Orquestador para procesar repos
 public class OrquestadorRepos {
 
-    //-----> Ejecucion principal del lote
+    //-----> Punto de entrada por consola: solo parsea argumentos y delega
     public static void main(String[] args) throws Exception {
         Map<String, String> params = parseArgs(args);
+        ejecutarLote(params);
+    }
+
+    //-----> Cuerpo real del proceso, extraido de main() para poder invocarlo
+    //-----> tambien desde MetricsController (API REST) sin pelearse con
+    //-----> main(String[]). Mismo comportamiento de siempre.
+    public static void ejecutarLote(Map<String, String> params) throws Exception {
 
         String carpetaClones = params.getOrDefault("clones", "repos_clonados");
         String carpetaResultadosBase = params.getOrDefault("salida", "resultados");
