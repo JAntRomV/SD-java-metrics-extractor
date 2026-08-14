@@ -11,7 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-//-----> Mide y almacena en memoria los tiempos de paso por cada línea/instrucción de un método
+//-----> Estructura de almacenamiento temporal para calcular diferencias de nanosegundos y timestamps
 public class TimeLogger {
 
     private final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS.AAAA.nnnnnnnnn");
@@ -25,7 +25,7 @@ public class TimeLogger {
 
     public TimeLogger() {}
 
-    // Inicializa el registrador colocando la primera estampa de tiempo
+    //-----> Inicializa el logger guardando el punto de referencia de tiempo inicial
     public TimeLogger(String className, int paramN) {
         this.className = className;
         this.paramN = paramN;
@@ -37,7 +37,7 @@ public class TimeLogger {
         logTime(etiqueta, false);
     }
 
-    // Método principal invocado por la clase instrumentada en cada línea de código
+    //-----> Calcula deltas de tiempo desde el ultimo punto registrado y agrega una nueva fila a los registros
     public void logTime(String etiqueta, boolean isNewIteration) {
         if (this._prevTimes != null) {
             if (isNewIteration) {
@@ -48,7 +48,6 @@ public class TimeLogger {
             Instant instant = Instant.now();
             LocalDateTime fechaHora = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
 
-            // Resta el tiempo actual menos el tiempo anterior para saber la duración de la instrucción
             long durationNanos = nanos - _prevTimes.getPrevNanos();
             Duration duration = Duration.between(_prevTimes.getPrevFechaHora(), fechaHora);
             long durationNanosTime = duration.toNanos();
@@ -64,14 +63,13 @@ public class TimeLogger {
                     String.valueOf(durationNanos),
                     String.valueOf(durationNanosTime)});
 
-            // Actualiza los datos previos con el tiempo actual
             _prevTimes.setIDLog(IdLOG);
             _prevTimes.setPrevNanos(nanos);
             _prevTimes.setPrevFechaHora(fechaHora);
         }
     }
 
-    // Escribe la lista de registros acumulados en un archivo CSV individual
+    //-----> Vuelca la matriz de registros en el archivo CSV especificado
     public void toCSV(String rutaArchivo) throws IOException {
         if (!LOGS.isEmpty()) {
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(rutaArchivo))) {

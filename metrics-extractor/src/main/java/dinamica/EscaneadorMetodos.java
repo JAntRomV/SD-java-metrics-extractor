@@ -17,11 +17,13 @@ public class EscaneadorMetodos {
         public final String claseCompleta;
         public final String nombreMetodo;
 
+        //-----> Constructor de metodo objetivo
         public MetodoObjetivo(String claseCompleta, String nombreMetodo) {
             this.claseCompleta = claseCompleta;
             this.nombreMetodo = nombreMetodo;
         }
 
+        //-----> Formatea como texto
         public String comoTexto() {
             return claseCompleta + "#" + nombreMetodo;
         }
@@ -33,6 +35,10 @@ public class EscaneadorMetodos {
     public int metodosValidos = 0;
     public int metodosDescartados = 0;
 
+    //-----> Detalle de descarte
+    private final List<String> detalleClasesDescartadas = new ArrayList<>();
+
+    //-----> Sobrecarga de escanear
     public List<MetodoObjetivo> escanear(String rutaCarpetaClases) throws Exception {
         return escanear(rutaCarpetaClases, rutaCarpetaClases);
     }
@@ -87,6 +93,9 @@ public class EscaneadorMetodos {
                         }
                     } catch (Throwable e) {
                         clasesDescartadas++; // Si no se puede instanciar, la descarta
+                        Throwable causaReal = e.getCause() != null ? e.getCause() : e;
+                        detalleClasesDescartadas.add(nombreClase + " -> "
+                                + causaReal.getClass().getSimpleName() + ": " + causaReal.getMessage());
                     }
                 }
             }
@@ -114,6 +123,20 @@ public class EscaneadorMetodos {
         }
     }
 
+    //-----> Guarda clases descartadas
+    public void guardarClasesDescartadas(String rutaArchivo) throws Exception {
+        try (PrintWriter w = new PrintWriter(rutaArchivo, StandardCharsets.UTF_8)) {
+            if (detalleClasesDescartadas.isEmpty()) {
+                w.println("Ninguna clase fue descartada.");
+            } else {
+                for (String linea : detalleClasesDescartadas) {
+                    w.println(linea);
+                }
+            }
+        }
+    }
+
+    //-----> Muestra resumen en consola
     public void mostrarResumen() {
         System.out.println("-----> Clases encontradas: " + clasesEncontradas);
         System.out.println("-----> Clases descartadas (sin constructor vacio / error): " + clasesDescartadas);

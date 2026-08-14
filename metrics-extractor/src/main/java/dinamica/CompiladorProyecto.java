@@ -3,26 +3,30 @@ package dinamica;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-//-----> Automatiza la compilación de proyectos Java externos (Maven o Gradle) sin intervención manual
+//-----> Compilador automatico para proyectos Java
 public class CompiladorProyecto {
 
+    //-----> Lenguajes soportados para clases compiladas
     private static final Set<String> LENGUAJES_CONOCIDOS = Set.of("java", "kotlin", "groovy", "scala");
 
-    // Guardador simple para retornar el resultado de la compilación
+    //-----> Guarda los datos del resultado de compilacion
     public static class ResultadoCompilacion {
         public final boolean exitoso;
         public final String carpetaClases;
         public final String mensaje;
         public final String classpathCompleto;
 
+        //-----> Asigna los valores del resultado
         public ResultadoCompilacion(boolean exitoso, String carpetaClases, String mensaje, String classpathCompleto) {
             this.exitoso = exitoso;
             this.carpetaClases = carpetaClases;
@@ -31,26 +35,29 @@ public class CompiladorProyecto {
         }
     }
 
+    //-----> Sobrecarga del metodo compilar
     public static ResultadoCompilacion compilar(String rutaProyecto) throws Exception {
         return compilar(rutaProyecto, false);
     }
 
-    // Detecta si el proyecto es Maven o Gradle y ejecuta la compilación en la terminal
+    //-----> Detecta la herramienta y compila el proyecto
     public static ResultadoCompilacion compilar(String rutaProyecto, boolean calcularClasspathCompleto) {
         try {
             File raiz = new File(rutaProyecto);
 
+            //-----> Valida que la carpeta exista
             if (!raiz.exists() || !raiz.isDirectory()) {
                 return new ResultadoCompilacion(false, null, "La carpeta del proyecto no existe: " + rutaProyecto, null);
             }
 
+            //-----> Busca archivos de configuracion
             File pomFile = new File(raiz, "pom.xml");
             File gradleFile = new File(raiz, "build.gradle");
             File gradleKtsFile = new File(raiz, "build.gradle.kts");
 
             String[] comando;
 
-            // Detecta la herramienta de construcción
+            //-----> Arma comando para Maven o Gradle
             if (pomFile.exists()) {
                 comando = new String[]{"mvn", "compile", "-q", "-DskipTests"};
             } else if (gradleFile.exists() || gradleKtsFile.exists()) {
@@ -69,42 +76,38 @@ public class CompiladorProyecto {
 
             System.out.println("-----> Compilando con: " + String.join(" ", comando) + " (en " + raiz.getAbsolutePath() + ")");
 
-            // Ejecuta el comando en el sistema operativo
+            //-----> Configura el proceso de compilacion
             ProcessBuilder pb = new ProcessBuilder(comando);
             pb.directory(raiz);
             pb.redirectErrorStream(true);
-            Process proceso = pb.start();
 
-            try (BufferedReader lector = new BufferedReader(new InputStreamReader(proceso.getInputStream()))) {
-                String linea;
-                while ((linea = lector.readLine()) != null) {
-                    System.out.println("   [compilacion] " + linea);
-                }
-            }
+            //-----> Ejecuta el proceso con limite de tiempo
+            ResultadoProceso resultadoProceso = ejecutarProceso(pb, "   [compilacion] ", 15, TimeUnit.MINUTES);
 
-            // Espera máximo 15 minutos a que termine la compilación
-            boolean termino = proceso.waitFor(15, TimeUnit.MINUTES);
-            if (!termino) {
-                proceso.destroyForcibly();
+            if (!resultadoProceso.termino) {
                 return new ResultadoCompilacion(false, null, "La compilacion tardo mas de 15 minutos, se cancelo.", null);
             }
 
-            int codigoSalida = proceso.exitValue();
+            //-----> Revisa si hubo error en el proceso
+            int codigoSalida = resultadoProceso.codigoSalida;
             if (codigoSalida != 0) {
                 return new ResultadoCompilacion(false, null, "La compilacion fallo, codigo de salida: " + codigoSalida, null);
             }
 
-            // Encuentra dónde quedaron los archivos .class compilados
+            //-----> Localiza la carpeta con archivos .class
             String carpetaClases = resolverCarpetaClases(raiz, pomFile.exists());
             if (carpetaClases == null || carpetaClases.isBlank()) {
                 return new ResultadoCompilacion(false, null, "La compilacion salio bien, pero no se encontraron archivos .class compilados en " + rutaProyecto, null);
             }
 
-            // Si se requiere, resuelve también las librerías externas (JARs)
+            //-----> Calcula el classpath con librerias si se pide
             String classpathCompleto = carpetaClases;
             if (calcularClasspathCompleto && pomFile.exists()) {
-                System.out.println("-----> Calculando el classpath completo de dependencias...");
+                System.out.println("-----> Calculando el classpath completo de dependencias (Maven)...");
                 classpathCompleto = obtenerClasspathMaven(raiz, carpetaClases);
+            } else if (calcularClasspathCompleto && (gradleFile.exists() || gradleKtsFile.exists())) {
+                System.out.println("-----> Calculando el classpath completo de dependencias (Gradle)...");
+                classpathCompleto = obtenerClasspathGradle(raiz, carpetaClases);
             }
 
             return new ResultadoCompilacion(true, carpetaClases, "Compilacion exitosa", classpathCompleto);
@@ -114,21 +117,63 @@ public class CompiladorProyecto {
         }
     }
 
-    // Encuentra la ubicación de los archivos .class compilados dentro del proyecto
+    //-----> Estado final de la ejecucion del proceso
+    private static class ResultadoProceso {
+        final boolean termino;
+        final int codigoSalida;
+
+        ResultadoProceso(boolean termino, int codigoSalida) {
+            this.termino = termino;
+            this.codigoSalida = codigoSalida;
+        }
+    }
+
+    //-----> Corre procesos externos con hilo lector y timeout
+    private static ResultadoProceso ejecutarProceso(ProcessBuilder pb, String prefijoLog, long tiempoLimite, TimeUnit unidad) throws Exception {
+        Process proceso = pb.start();
+        proceso.getOutputStream().close();
+
+        Thread hiloLector = new Thread(() -> {
+            try (BufferedReader lector = new BufferedReader(new InputStreamReader(proceso.getInputStream()))) {
+                String linea;
+                while ((linea = lector.readLine()) != null) {
+                    System.out.println(prefijoLog + linea);
+                }
+            } catch (Exception ignorado) {
+                //-----> Proceso terminado a la fuerza
+            }
+        });
+        hiloLector.setDaemon(true);
+        hiloLector.start();
+
+        boolean termino = proceso.waitFor(tiempoLimite, unidad);
+        if (!termino) {
+            proceso.destroyForcibly();
+        }
+        hiloLector.join(3000);
+
+        return new ResultadoProceso(termino, termino ? proceso.exitValue() : -1);
+    }
+//_________________________________________________________________________________________
+    //-----> Busca rutas de archivos .class compilados
     private static String resolverCarpetaClases(File raiz, boolean esMaven) {
+        //-----> Ruta por defecto de Maven
         if (esMaven) {
             File targetClasses = new File(raiz, "target/classes");
             if (targetClasses.exists()) return targetClasses.getAbsolutePath();
         }
 
+        //-----> Busca carpetas en submodulos o Gradle
         List<String> raices = buscarRaicesDeModulos(raiz);
         if (!raices.isEmpty()) {
             return String.join(File.pathSeparator, raices);
         }
 
+        //-----> Busqueda alternativa de clases
         return resolverCarpetaClasesFallback(raiz);
     }
 
+    //-----> Lista carpetas llamadas classes
     private static List<String> buscarRaicesDeModulos(File raiz) {
         List<String> resultado = new ArrayList<>();
         try (var stream = Files.walk(raiz.toPath())) {
@@ -145,7 +190,8 @@ public class CompiladorProyecto {
         }
         return resultado.stream().distinct().collect(Collectors.toList());
     }
-
+//________________________________________________________________________________________
+    //-----> Procesa estructura interna de carpetas classes
     private static List<String> resolverRaicesDentroDeClasses(Path carpetaClasses) {
         List<String> resultado = new ArrayList<>();
         try {
@@ -174,13 +220,15 @@ public class CompiladorProyecto {
         }
         return resultado;
     }
-
+//__________________________________________________________________________________
+    //-----> Revisa si la carpeta contiene archivos .class
     private static boolean contieneClases(Path carpeta) throws Exception {
         try (var stream = Files.walk(carpeta)) {
             return stream.anyMatch(p -> p.toString().endsWith(".class"));
         }
     }
 
+    //-----> Recorre el proyecto buscando archivos .class
     private static String resolverCarpetaClasesFallback(File raiz) {
         List<String> carpetasConClases = new ArrayList<>();
         try (var stream = Files.walk(raiz.toPath())) {
@@ -202,7 +250,7 @@ public class CompiladorProyecto {
         return String.join(File.pathSeparator, carpetasConClases);
     }
 
-    // Le pide a Maven la lista de todas las librerías dependientes del proyecto
+    //-----> Obtiene el classpath de dependencias con Maven
     private static String obtenerClasspathMaven(File raiz, String carpetaClases) {
         try {
             File archivoTemporal = File.createTempFile("classpath-", ".txt");
@@ -216,17 +264,10 @@ public class CompiladorProyecto {
             ProcessBuilder pb = new ProcessBuilder(comandoClasspath);
             pb.directory(raiz);
             pb.redirectErrorStream(true);
-            Process proceso = pb.start();
 
-            try (BufferedReader lector = new BufferedReader(new InputStreamReader(proceso.getInputStream()))) {
-                String linea;
-                while ((linea = lector.readLine()) != null) {
-                    System.out.println("   [classpath] " + linea);
-                }
-            }
+            ResultadoProceso resultadoProceso = ejecutarProceso(pb, "   [classpath] ", 5, TimeUnit.MINUTES);
 
-            boolean termino = proceso.waitFor(5, TimeUnit.MINUTES);
-            if (!termino || proceso.exitValue() != 0 || !archivoTemporal.exists()) {
+            if (!resultadoProceso.termino || resultadoProceso.codigoSalida != 0 || !archivoTemporal.exists()) {
                 return carpetaClases;
             }
 
@@ -234,6 +275,75 @@ public class CompiladorProyecto {
             return dependencias.isEmpty() ? carpetaClases : carpetaClases + File.pathSeparator + dependencias;
         } catch (Exception e) {
             return carpetaClases;
+        }
+    }
+
+    //-----> Obtiene el classpath de dependencias con Gradle
+    private static String obtenerClasspathGradle(File raiz, String carpetaClases) {
+        File initScript = null;
+        File archivoSalida = null;
+        try {
+            initScript = File.createTempFile("init-classpath-", ".gradle");
+            initScript.deleteOnExit();
+            archivoSalida = File.createTempFile("classpath-gradle-", ".txt");
+            archivoSalida.deleteOnExit();
+
+            String rutaSalida = archivoSalida.getAbsolutePath().replace("\\", "\\\\");
+
+            String script =
+                    "allprojects { proyecto ->\n" +
+                    "    proyecto.afterEvaluate {\n" +
+                    "        def archivoDeSalida = new File(\"" + rutaSalida + "\")\n" +
+                    "        def nombresConfig = ['runtimeClasspath', 'compileClasspath', 'testRuntimeClasspath']\n" +
+                    "        nombresConfig.each { nombreConfig ->\n" +
+                    "            def config = proyecto.configurations.findByName(nombreConfig)\n" +
+                    "            if (config != null && config.canBeResolved) {\n" +
+                    "                try {\n" +
+                    "                    config.files.each { archivoJar ->\n" +
+                    "                        archivoDeSalida.append(archivoJar.absolutePath + System.lineSeparator())\n" +
+                    "                    }\n" +
+                    "                } catch (Exception ignorado) { }\n" +
+                    "            }\n" +
+                    "        }\n" +
+                    "    }\n" +
+                    "}\n";
+
+            Files.writeString(initScript.toPath(), script, StandardCharsets.UTF_8);
+
+            File gradlew = new File(raiz, "gradlew");
+            String ejecutable = gradlew.exists() ? "./gradlew" : "gradle";
+
+            //-----> Ejecuta tarea para evaluar dependencias
+            String[] comando = {ejecutable, "--init-script", initScript.getAbsolutePath(), "-q", "help"};
+
+            System.out.println("-----> Ejecutando: " + String.join(" ", comando) + " (en " + raiz.getAbsolutePath() + ")");
+
+            ProcessBuilder pb = new ProcessBuilder(comando);
+            pb.directory(raiz);
+            pb.redirectErrorStream(true);
+
+            ResultadoProceso resultadoProceso = ejecutarProceso(pb, "   [classpath-gradle] ", 5, TimeUnit.MINUTES);
+
+            if (!resultadoProceso.termino || !archivoSalida.exists()) {
+                return carpetaClases;
+            }
+
+            List<String> lineas = Files.readAllLines(archivoSalida.toPath(), StandardCharsets.UTF_8);
+            Set<String> rutasUnicas = new LinkedHashSet<>();
+            for (String linea : lineas) {
+                if (!linea.isBlank()) rutasUnicas.add(linea.trim());
+            }
+
+            if (rutasUnicas.isEmpty()) {
+                return carpetaClases;
+            }
+
+            return carpetaClases + File.pathSeparator + String.join(File.pathSeparator, rutasUnicas);
+        } catch (Exception e) {
+            return carpetaClases;
+        } finally {
+            if (initScript != null) initScript.delete();
+            if (archivoSalida != null) archivoSalida.delete();
         }
     }
 }

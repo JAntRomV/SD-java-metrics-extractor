@@ -9,9 +9,10 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
-//-----> Compila en memoria la clase instrumentada y la ejecuta controlando que no caiga en bucles infinitos
+//-----> Carga, compila dinamicamente y ejecuta metodos instrumentados por reflexiion con timeout
 public class EjecutorInstrumentado {
 
+    //-----> Pool de hilos daemon para controlar la duracion máxima de ejecucion de metodos
     private static final java.util.concurrent.ExecutorService EJECUTOR_TIMEOUT =
             java.util.concurrent.Executors.newCachedThreadPool(runnable -> {
                 Thread hilo = new Thread(runnable);
@@ -19,7 +20,7 @@ public class EjecutorInstrumentado {
                 return hilo;
             });
 
-    // Invoca el método con un límite máximo de tiempo (5 segundos) para abortar si hay un loop infinito
+    //-----> Invoca el metodo por reflexiion deteniendo la ejecucion si excede el tiempo límite
     private static void invocarConTimeout(Method metodo, Object instancia, long segundosLimite) throws Exception {
         TimeLogger loggerDelHiloLlamador = RegistradorTiempos.obtenerLoggerActual();
 
@@ -39,7 +40,7 @@ public class EjecutorInstrumentado {
         }
     }
 
-    // Coordina la instrumentación, compilación temporal y ejecución del método a medir
+    //-----> Instrumenta el codigo, lo compila sobre la marcha y registra los tiempos de execucion por camino
     public static String medirCamino(
             String rutaArchivoOriginal,
             String nombreMetodo,
@@ -49,16 +50,16 @@ public class EjecutorInstrumentado {
         String carpetaTrabajo = carpetaSalida + "/_temp_instrumentado";
         new File(carpetaTrabajo).mkdirs();
 
-        // 1. Inyecta los marcadores
+        //-----> Inserta llamadas de medicion en el codigo fuente original
         InstrumentadorCaminos instrumentador = new InstrumentadorCaminos();
         String rutaInstrumentado = instrumentador.instrumentar(rutaArchivoOriginal, nombreMetodo, carpetaTrabajo);
 
-        // 2. Compila el nuevo código instrumentado
         JavaCompiler compilador = ToolProvider.getSystemJavaCompiler();
         if (compilador == null) {
             throw new IllegalStateException("No hay compilador disponible en el entorno JDK.");
         }
 
+        //-----> Compila el archivo .java modificado en el directorio temporal
         String classpathCompleto = System.getProperty("java.class.path") + File.pathSeparator + classpathExtra;
         int codigoSalida = compilador.run(null, null, null,
                 "-d", carpetaTrabajo, "-cp", classpathCompleto, rutaInstrumentado);
@@ -76,7 +77,7 @@ public class EjecutorInstrumentado {
             }
         }
 
-        // 3. Carga y ejecuta la clase temporal instrumentada
+        //-----> Carga la clase recien compilada en un aislador de clases aislado (ClassLoader)
         URLClassLoader loader = new URLClassLoader(urls.toArray(new URL[0]), EjecutorInstrumentado.class.getClassLoader());
         try {
             Class<?> clazz = loader.loadClass(claseCompleta);
@@ -87,17 +88,23 @@ public class EjecutorInstrumentado {
             String claveMetodo = claseCompleta + "#" + nombreMetodo;
             String rutaCSV = carpetaSalida + "/" + clazz.getSimpleName() + "_" + nombreMetodo + "_caminos.csv";
 
+            //-----> Captura los eventos temporales del flujo de ejecucion
             RegistradorTiempos.iniciarLogger(claveMetodo);
-            invocarConTimeout(metodo, instancia, 5);
-            RegistradorTiempos.escribirCSV(rutaCSV);
+            try {
+                invocarConTimeout(metodo, instancia, 5);
+                RegistradorTiempos.escribirCSV(rutaCSV);
+            } finally {
+                RegistradorTiempos.desactivarLogger();
+            }
 
             System.out.println("-----> Metodo procesado: " + claveMetodo);
             return rutaCSV;
         } finally {
-            loader.close(); // Cierra el classloader para evitar consumo innecesario de recursos
+            loader.close();
         }
     }
 
+    //-----> Analiza con JavaParser la clase para obtener su paquete y nombre calificado
     private static String obtenerClaseCompleta(String rutaArchivoJava) throws Exception {
         com.github.javaparser.ast.CompilationUnit cu =
                 com.github.javaparser.StaticJavaParser.parse(new File(rutaArchivoJava));
