@@ -58,6 +58,21 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         return resultado;
     }
 
+    //-----> 🔌 NUEVO: obtiene TODOS los repos del catalogo, sin filtrar por
+    //-----> status. Se usa para listar el catalogo completo (ej. ver en que
+    //-----> fase van los repos "en progreso"), y como base para que otros
+    //-----> frameworks (ej. el de mineria) repliquen el mismo patron.
+    public List<Document> obtenerTodosLosRepositorios() {
+        List<Document> resultado = new ArrayList<>();
+        Bson orden = Sorts.orderBy(Sorts.ascending("mining.score.rank"), Sorts.ascending("_id"));
+
+        FindIterable<Document> cursor = coleccion.find().sort(orden);
+        for (Document doc : cursor) {
+            resultado.add(doc);
+        }
+        return resultado;
+    }
+
     //-----> Busca un repo por su ID
     public Document obtenerRepositorioPorId(String idRepo) {
         return coleccion.find(Filters.eq("_id", idRepo)).first();

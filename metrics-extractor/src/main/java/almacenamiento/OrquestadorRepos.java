@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -24,28 +25,46 @@ public class OrquestadorRepos {
     }
 
     //-----> Cuerpo real del proceso, extraido de main() para poder invocarlo
-    //-----> tambien desde MetricsController (API REST) sin pelearse con
-    //-----> main(String[]). Mismo comportamiento de siempre.
+    //-----> tambien desde MetricsController (API REST).
+    //-----> 🔌 MODIFICADO: si params trae la llave "repo" con un _id valido,
+    //-----> se procesa SOLO ese repo (ignora "limite" en ese caso). Si no
+    //-----> viene, se comporta exactamente igual que antes: procesa todos
+    //-----> los repos pendientes (respetando "limite" si se manda).
     public static void ejecutarLote(Map<String, String> params) throws Exception {
 
         String carpetaClones = params.getOrDefault("clones", "repos_clonados");
         String carpetaResultadosBase = params.getOrDefault("salida", "resultados");
         Integer limite = params.containsKey("limite") ? Integer.parseInt(params.get("limite")) : null;
+        String repoUnico = params.get("repo");
 
         ConfiguracionMongo config = ConfiguracionMongo.desdeVariablesDeEntorno();
         LectorResultados lector = new LectorResultados();
 
         try (AlmacenMetricasMongo almacen = new AlmacenMetricasMongo(config)) {
 
-            List<Document> pendientes = almacen.obtenerRepositoriosPendientes();
+            List<Document> pendientes;
 
-            if (limite != null && limite < pendientes.size()) {
-                pendientes = pendientes.subList(0, limite);
+            if (repoUnico != null && !repoUnico.isBlank()) {
+                //-----> 🔌 NUEVO: modo "un solo repo"
+                Document repoEncontrado = almacen.obtenerRepositorioPorId(repoUnico);
+                if (repoEncontrado == null) {
+                    System.err.println("-----> No se encontro el repo '" + repoUnico + "' en el catalogo.");
+                    return;
+                }
+                pendientes = new ArrayList<>();
+                pendientes.add(repoEncontrado);
+            } else {
+                pendientes = almacen.obtenerRepositoriosPendientes();
+
+                if (limite != null && limite < pendientes.size()) {
+                    pendientes = pendientes.subList(0, limite);
+                }
             }
 
             System.out.println("==========================================================");
             System.out.println(" REPOS A PROCESAR: " + pendientes.size()
-                    + (limite != null ? " (limitado con --limite:" + limite + ")" : ""));
+                    + (repoUnico != null ? " (modo: un solo repo -> " + repoUnico + ")"
+                       : (limite != null ? " (limitado con --limite:" + limite + ")" : "")));
             System.out.println("==========================================================");
 
             int exitosos = 0;

@@ -1,5 +1,6 @@
 package integracion.api;
 
+import almacenamiento.AlmacenMetricasMongo;
 import almacenamiento.ConfiguracionMongo;
 import almacenamiento.DiagnosticoAlmacenamiento;
 import almacenamiento.OrquestadorRepos;
@@ -8,25 +9,33 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-//-----> Endpoints REST para ejecutar y consultar metricas
+//-----> Expone tu framework de metricas (estatico + dinamico) como API REST
 @RestController
 public class MetricsController {
 
-    //-----> Estado y control de ejecucion en segundo plano
+    //-----> Bandera en memoria: evita lanzar dos lotes de procesamiento al mismo tiempo
     private final AtomicBoolean corriendo = new AtomicBoolean(false);
     private volatile String ultimoInicio = null;
     private volatile String ultimoResultado = "sin ejecuciones todavia";
 
-    //-----> Inicia el proceso de analisis en segundo plano
+    //-----> Dispara el analisis en un hilo aparte y responde de inmediato.
+    //-----> 🔌 MODIFICADO: ahora acepta un parametro opcional "repo". Si se
+    //-----> manda (ej. POST /api/metrics/run?repo=owner/nombre), solo se
+    //-----> procesa ESE repo. Si no se manda, se comporta igual que antes:
+    //-----> procesa todos los repos pendientes del catalogo.
     @PostMapping("/api/metrics/run")
-    public ResponseEntity<Map<String, Object>> ejecutar() {
+    public ResponseEntity<Map<String, Object>> ejecutar(
+            @RequestParam(required = false) String repo) {
+
         if (!corriendo.compareAndSet(false, true)) {
             Map<String, Object> cuerpo = new HashMap<>();
             cuerpo.put("iniciado", false);
@@ -37,13 +46,15 @@ public class MetricsController {
         ultimoInicio = Instant.now().toString();
         ultimoResultado = "en progreso";
 
-        //-----> Hilo secundario para no bloquear la respuesta HTTP
         Thread hiloAnalisis = new Thread(() -> {
             try {
-                OrquestadorRepos.ejecutarLote(new HashMap<>());
+                Map<String, String> params = new HashMap<>();
+                if (repo != null && !repo.isBlank()) {
+                    params.put("repo", repo);
+                }
+                OrquestadorRepos.ejecutarLote(params);
                 ultimoResultado = "completado sin errores en " + Instant.now();
             } catch (Throwable e) {
-                //-----> Captura fallos del analisis
                 ultimoResultado = "fallo: " + e.getMessage();
             } finally {
                 corriendo.set(false);
@@ -53,11 +64,13 @@ public class MetricsController {
 
         Map<String, Object> cuerpo = new HashMap<>();
         cuerpo.put("iniciado", true);
-        cuerpo.put("mensaje", "Analisis iniciado en segundo plano");
+        cuerpo.put("mensaje", (repo != null && !repo.isBlank())
+                ? "Analisis del repo '" + repo + "' iniciado en segundo plano"
+                : "Analisis iniciado en segundo plano");
         return ResponseEntity.accepted().body(cuerpo);
     }
 
-    //-----> Devuelve el estado actual de la ejecucion
+    //-----> Consulta rapida en memoria, no toca Mongo
     @GetMapping("/api/metrics/status")
     public Map<String, Object> status() {
         Map<String, Object> cuerpo = new HashMap<>();
@@ -67,12 +80,11 @@ public class MetricsController {
         return cuerpo;
     }
 
-    //-----> Obtiene el resumen de almacenamiento Mongo
+    //-----> Reutiliza DiagnosticoAlmacenamiento.resumenGeneral() que ya tenias armado
     @GetMapping("/api/metrics/summary")
     public ResponseEntity<?> summary() {
         ConfiguracionMongo config = ConfiguracionMongo.desdeVariablesDeEntorno();
         try (DiagnosticoAlmacenamiento diagnostico = new DiagnosticoAlmacenamiento(config)) {
-            //-----> Convierte el Document de BSON a JSON
             Document resumen = diagnostico.resumenGeneral();
             return ResponseEntity.ok(resumen);
         } catch (Exception e) {
@@ -82,7 +94,40 @@ public class MetricsController {
         }
     }
 
-    //-----> Endpoint de monitoreo de salud del servidor
+    //-----> 🔌 NUEVO: lista completa del catalogo (para ver, ej., que repos
+    //-----> estan "en progreso" y en que fase van: estatica/dinamica)
+    @GetMapping("/api/metrics/repos")
+    public ResponseEntity<?> listarRepos() {
+        ConfiguracionMongo config = ConfiguracionMongo.desdeVariablesDeEntorno();
+        try (AlmacenMetricasMongo almacen = new AlmacenMetricasMongo(config)) {
+            List<Document> repos = almacen.obtenerTodosLosRepositorios();
+            return ResponseEntity.ok(repos);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "No se pudo leer el catalogo: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    //-----> 🔌 NUEVO: detalle puntual de un solo repo
+    @GetMapping("/api/metrics/repo")
+    public ResponseEntity<?> obtenerRepo(@RequestParam String id) {
+        ConfiguracionMongo config = ConfiguracionMongo.desdeVariablesDeEntorno();
+        try (AlmacenMetricasMongo almacen = new AlmacenMetricasMongo(config)) {
+            Document repoEncontrado = almacen.obtenerRepositorioPorId(id);
+            if (repoEncontrado == null) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("error", "No se encontro el repo: " + id);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+            }
+            return ResponseEntity.ok(repoEncontrado);
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "No se pudo leer el repo: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
     @GetMapping("/api/health")
     public Map<String, String> health() {
         return Map.of("status", "ok");
