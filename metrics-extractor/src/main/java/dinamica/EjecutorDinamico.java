@@ -245,6 +245,11 @@ public class EjecutorDinamico {
         EscaneadorMetodos escaner = new EscaneadorMetodos();
         List<EscaneadorMetodos.MetodoObjetivo> metodos = escaner.escanear(rutaClases, classpathParaCargar);
         escaner.guardarResumen(carpetaResultados + "/_escaneo_resumen.txt");
+        //-----> 🔌 NUEVO: antes se calculaba pero nadie lo guardaba. Deja constancia
+        //-----> exacta de por que se descarto cada clase (constructor con parametros,
+        //-----> clase abstracta, excepcion al instanciar, etc.), util para diagnosticar
+        //-----> repos que terminan con el catalogo de metodos vacio.
+        escaner.guardarClasesDescartadas(carpetaResultados + "/_clases_descartadas.log");
 
         List<String> catalogo = new ArrayList<>();
         for (EscaneadorMetodos.MetodoObjetivo m : metodos) {

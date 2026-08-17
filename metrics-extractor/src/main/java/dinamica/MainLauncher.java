@@ -59,9 +59,16 @@ public class MainLauncher {
         String rutaBenchmarkCsv = carpetaSalida + "/Benchmarks.csv";
         List<String> metodosAprobados = leerMetodosAprobados(rutaBenchmarkCsv);
 
+        //-----> 🔌 MODIFICADO: antes este 'return' era silencioso -no dejaba ningun
+        //-----> rastro en disco- por lo que EjecutorCompleto seguia como si nada y
+        //-----> terminaba imprimiendo "SE FINALIZO CON EXITO" aunque la Fase 2 nunca
+        //-----> corrio. Ahora se deja constancia explicita en _caminos_resumen.txt
+        //-----> con la razon, para que quien revise despues sepa exactamente que paso.
         if (metodosAprobados.isEmpty()) {
-            System.err.println("-----> No se encontraron métodos aprobados en: " + rutaBenchmarkCsv);
-            System.err.println("-----> Asegúrate de que la Fase 1 (Benchmark) corrió primero con éxito.");
+            String razon = "No se encontraron métodos aprobados en: " + rutaBenchmarkCsv
+                    + " (Benchmarks.csv no existe o no tiene filas de datos; la Fase 1 no genero metodos validos).";
+            System.err.println("-----> " + razon);
+            guardarResumenCaminosSinDatos(carpetaSalida, razon);
             return;
         }
 
@@ -135,6 +142,18 @@ public class MainLauncher {
                     w.println(linea);
                 }
             }
+        }
+    }
+
+    //-----> 🔌 NUEVO: guarda un resumen especial cuando la Fase 2 no pudo ni siquiera
+    //-----> arrancar por falta de metodos aprobados (catalogo vacio desde la Fase 1).
+    private static void guardarResumenCaminosSinDatos(String carpetaSalida, String razon) throws Exception {
+        try (PrintWriter w = new PrintWriter(carpetaSalida + "/_caminos_resumen.txt", StandardCharsets.UTF_8)) {
+            w.println("metodosIntentados=0");
+            w.println("metodosMedidos=0");
+            w.println("metodosNoSeguibles=0");
+            w.println("sinDatos=true");
+            w.println("razonSinDatos=" + razon);
         }
     }
 

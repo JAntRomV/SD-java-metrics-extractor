@@ -55,6 +55,16 @@ public class DiagnosticoAlmacenamiento implements AutoCloseable {
             reporte.append("errorRegistrado", metrics.getString("error"));
         }
 
+        //-----> 🔌 NUEVO: si el repo quedo en "solo estatico completo", muestra la
+        //-----> razon guardada por AlmacenMetricasMongo.marcarSoloEstaticoCompleto()
+        //-----> de por que la fase dinamica no genero datos.
+        if ("metrics_static_only".equals(status) && metrics != null) {
+            Document dinamicasMeta = metrics.get("dinamicas", Document.class);
+            if (dinamicasMeta != null) {
+                reporte.append("razonSinDatosDinamicos", dinamicasMeta.getString("razonSinDatos"));
+            }
+        }
+
         Document metricsEstaticas = metrics != null ? metrics.get("estaticas", Document.class) : null;
         int clasesEsperadas = metricsEstaticas != null ? metricsEstaticas.getInteger("totalClases", 0) : 0;
 
@@ -134,7 +144,9 @@ public class DiagnosticoAlmacenamiento implements AutoCloseable {
         long pendientesConStatusExplicito = coleccion.countDocuments(Filters.eq("status", "pending"));
         conteoStatus.append("pending", pendientesSinStatus + pendientesConStatusExplicito);
 
-        for (String status : new String[]{"metrics_in_progress", "metrics_complete", "metrics_failed"}) {
+        //-----> 🔌 MODIFICADO: se agrega "metrics_static_only" (estatica completa,
+        //-----> dinamica sin datos) como categoria propia en el resumen general.
+        for (String status : new String[]{"metrics_in_progress", "metrics_static_only", "metrics_complete", "metrics_failed"}) {
             conteoStatus.append(status, coleccion.countDocuments(Filters.eq("status", status)));
         }
         reporte.append("reposPorStatus", conteoStatus);
@@ -159,6 +171,12 @@ public class DiagnosticoAlmacenamiento implements AutoCloseable {
     }
 
     //-----> Detecta documentos muy pesados
+    //-----> 🔌 MODIFICADO: los mensajes usaban los nombres viejos de las colecciones
+    //-----> ("repo_class_metrics" / "repo_dynamic_metrics") aunque el codigo real
+    //-----> (ConfiguracionMongo) usa por defecto "repo_metrics_static" y
+    //-----> "repo_metrics_dynamic". Eran solo texto de log -- no afectaban a donde
+    //-----> se escribia -- pero causaban confusion, asi que se corrigen los strings
+    //-----> para que coincidan con los nombres reales de las colecciones.
     private List<String> buscarDocumentosCercaDelLimite(String idRepo) {
         List<String> resultado = new ArrayList<>();
 
@@ -166,7 +184,7 @@ public class DiagnosticoAlmacenamiento implements AutoCloseable {
             long tamano = doc.toJson().getBytes(StandardCharsets.UTF_8).length;
             if (tamano >= ADVERTENCIA_TAMANO_BYTES) {
                 //-----> Documento estatico pesado
-                resultado.add("repo_class_metrics: clase=" + doc.getString("clase")
+                resultado.add("repo_metrics_static: clase=" + doc.getString("clase")
                         + " (~" + redondear(tamano / (1024.0 * 1024.0)) + "MB)");
             }
         }
@@ -174,7 +192,7 @@ public class DiagnosticoAlmacenamiento implements AutoCloseable {
             long tamano = doc.toJson().getBytes(StandardCharsets.UTF_8).length;
             if (tamano >= ADVERTENCIA_TAMANO_BYTES) {
                 //-----> Documento dinamico pesado
-                resultado.add("repo_dynamic_metrics: clase=" + doc.getString("clase")
+                resultado.add("repo_metrics_dynamic: clase=" + doc.getString("clase")
                         + " parte=" + doc.get("parte") + "/" + doc.get("totalPartes")
                         + " (~" + redondear(tamano / (1024.0 * 1024.0)) + "MB)");
             }
@@ -204,6 +222,9 @@ public class DiagnosticoAlmacenamiento implements AutoCloseable {
         System.out.println(" Status: " + reporte.getString("status"));
         if (reporte.containsKey("errorRegistrado")) {
             System.out.println(" Error registrado: " + reporte.get("errorRegistrado"));
+        }
+        if (reporte.containsKey("razonSinDatosDinamicos")) {
+            System.out.println(" [SOLO ESTATICO] Razon sin datos dinamicos: " + reporte.get("razonSinDatosDinamicos"));
         }
 
         Document estatica = reporte.get("estatica", Document.class);

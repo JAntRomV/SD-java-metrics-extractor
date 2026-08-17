@@ -69,6 +69,7 @@ public class OrquestadorRepos {
 
             int exitosos = 0;
             int fallidos = 0;
+            int soloEstaticos = 0; //-----> 🔌 NUEVO: repos con estatica completa pero sin datos dinamicos
 
             for (Document repo : pendientes) {
                 String idRepo = repo.getString("_id");
@@ -118,12 +119,19 @@ public class OrquestadorRepos {
                             dinamicoDoc -> almacen.agregarDinamicoAMetricas(idRepo, dinamicoDoc)
                     );
 
+                    //-----> 🔌 MODIFICADO: si la fase estatica ya se completo (clasesSubidas > 0,
+                    //-----> confirmado arriba) pero la dinamica no genero ningun documento, ya NO
+                    //-----> se trata como fallo total. Se marca como "solo estatico completo" para
+                    //-----> no perder el rastro de que la parte estatica si funciono, y sin pisar
+                    //-----> metrics.estaticas (ver AlmacenMetricasMongo.marcarSoloEstaticoCompleto).
                     if (documentosDinamicosSubidos == 0) {
-                        String detalle = "El analisis dinamico no genero Benchmarks.csv ni cronometro_caminos.csv en: "
-                                + carpetaDinamicos + " (revisar si la compilacion del proyecto fallo)";
-                        System.err.println("-----> " + idRepo + ": " + detalle);
-                        almacen.guardarMetricas(idRepo, new Document("error", detalle), "metrics_failed");
-                        fallidos++;
+                        String razon = "El analisis dinamico no genero Benchmarks.csv ni cronometro_caminos.csv en: "
+                                + carpetaDinamicos + " (posible catalogo de metodos vacio, sin metodos aprobados, "
+                                + "o fallo de compilacion del proyecto; revisar _escaneo_resumen.txt, "
+                                + "_clases_descartadas.log y _caminos_resumen.txt dentro de esa carpeta)";
+                        System.err.println("-----> " + idRepo + ": " + razon);
+                        almacen.marcarSoloEstaticoCompleto(idRepo, razon);
+                        soloEstaticos++;
                         continue;
                     }
 
@@ -157,7 +165,7 @@ public class OrquestadorRepos {
 
             System.out.println("\n==========================================================");
             System.out.println(" PROCESO FINALIZADO");
-            System.out.println(" Exitosos: " + exitosos + "  |  Fallidos: " + fallidos);
+            System.out.println(" Exitosos: " + exitosos + "  |  Solo estaticos: " + soloEstaticos + "  |  Fallidos: " + fallidos);
             System.out.printf(" Espacio total usado en repo_catalog: %.2f MB%n", almacen.obtenerTamanoColeccionEnMB());
             System.out.println("==========================================================");
         }

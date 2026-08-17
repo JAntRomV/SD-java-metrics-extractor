@@ -101,27 +101,42 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         coleccion.updateOne(filtro, actualizacion);
     }
 
-    //-----> Guarda o actualiza una clase estatica
+    //-----> Guarda o actualiza una clase estatica, con _id determinístico "repoId_clase"
+    //-----> 🔌 MODIFICADO: antes se dejaba que Mongo generara un ObjectId random y se
+    //-----> distinguia el documento via filtro (repoId + clase). Ahora el _id es
+    //-----> compuesto y determinístico para poder enlazar directo con repo_catalog._id
+    //-----> y para que el upsert sea mas barato (busca por _id, que ya esta indexado).
     public void agregarClaseAMetricas(String idRepo, Document claseDoc) {
-        Document documentoClase = new Document("repoId", idRepo).append("clase", claseDoc.getString("clase"));
-        documentoClase.putAll(claseDoc);
+        String clase = claseDoc.getString("clase");
+        String id = idRepo + "_" + clase;
 
-        Bson filtro = Filters.and(Filters.eq("repoId", idRepo), Filters.eq("clase", claseDoc.getString("clase")));
+        Document documentoClase = new Document("_id", id)
+                .append("repoId", idRepo)
+                .append("clase", clase);
+        documentoClase.putAll(claseDoc);
+        documentoClase.put("_id", id); //-----> asegura que el _id compuesto no se pise con lo que traiga claseDoc
+
+        Bson filtro = Filters.eq("_id", id);
         coleccionClases.replaceOne(filtro, documentoClase, new ReplaceOptions().upsert(true));
     }
 
-    //-----> Guarda o actualiza una parte dinamica
+    //-----> Guarda o actualiza una parte dinamica, con _id determinístico "repoId_clase_parte"
+    //-----> 🔌 MODIFICADO: mismo cambio que en agregarClaseAMetricas, pero agregando
+    //-----> "parte" al _id compuesto porque una misma clase puede tener varios
+    //-----> documentos dinamicos (uno por parte/fragmento).
     public void agregarDinamicoAMetricas(String idRepo, Document dinamicoDoc) {
-        Document documento = new Document("repoId", idRepo)
-                .append("clase", dinamicoDoc.getString("clase"))
-                .append("parte", dinamicoDoc.getInteger("parte", 1));
-        documento.putAll(dinamicoDoc);
+        String clase = dinamicoDoc.getString("clase");
+        int parte = dinamicoDoc.getInteger("parte", 1);
+        String id = idRepo + "_" + clase + "_" + parte;
 
-        Bson filtro = Filters.and(
-                Filters.eq("repoId", idRepo),
-                Filters.eq("clase", dinamicoDoc.getString("clase")),
-                Filters.eq("parte", dinamicoDoc.getInteger("parte", 1))
-        );
+        Document documento = new Document("_id", id)
+                .append("repoId", idRepo)
+                .append("clase", clase)
+                .append("parte", parte);
+        documento.putAll(dinamicoDoc);
+        documento.put("_id", id); //-----> asegura que el _id compuesto no se pise con lo que traiga dinamicoDoc
+
+        Bson filtro = Filters.eq("_id", id);
         coleccionDinamicas.replaceOne(filtro, documento, new ReplaceOptions().upsert(true));
     }
 
@@ -129,6 +144,21 @@ public class AlmacenMetricasMongo implements AutoCloseable {
     public void actualizarEstadoParcial(String idRepo, String tipo, String valor) {
         Bson filtro = Filters.eq("_id", idRepo);
         Bson actualizacion = Updates.set("metricsStatus." + tipo, valor);
+        coleccion.updateOne(filtro, actualizacion);
+    }
+
+    //-----> 🔌 NUEVO: marca el repo como "solo estatico completo": la fase
+    //-----> estatica termino bien pero la dinamica no genero datos (catalogo
+    //-----> vacio / sin metodos aprobados / Benchmarks.csv sin filas).
+    //-----> A diferencia de guardarMetricas(), esto NO pisa "metrics" completo
+    //-----> -por lo tanto no borra metrics.estaticas.totalClases que ya se
+    //-----> habia guardado bien-, solo actualiza el status y anota la razon.
+    public void marcarSoloEstaticoCompleto(String idRepo, String razonSinDatosDinamicos) {
+        Bson filtro = Filters.eq("_id", idRepo);
+        Bson actualizacion = Updates.combine(
+                Updates.set("status", "metrics_static_only"),
+                Updates.set("metrics.dinamicas.razonSinDatos", razonSinDatosDinamicos)
+        );
         coleccion.updateOne(filtro, actualizacion);
     }
 
