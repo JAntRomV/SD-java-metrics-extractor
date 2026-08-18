@@ -32,9 +32,15 @@ public class MetricsController {
     //-----> manda (ej. POST /api/metrics/run?repo=owner/nombre), solo se
     //-----> procesa ESE repo. Si no se manda, se comporta igual que antes:
     //-----> procesa todos los repos pendientes del catalogo.
+    //-----> 🔌 MODIFICADO: se agrega name="repo" explicito. Sin esto, Spring
+    //-----> intenta averiguar el nombre del parametro leyendo el bytecode
+    //-----> compilado, lo cual solo funciona si Maven compilo con la bandera
+    //-----> -parameters. Como no era el caso aqui, CADA peticion a este
+    //-----> endpoint truena con IllegalArgumentException antes de ejecutar
+    //-----> una sola linea del metodo -ni siquiera llega a tocar Mongo-.
     @PostMapping("/api/metrics/run")
     public ResponseEntity<Map<String, Object>> ejecutar(
-            @RequestParam(required = false) String repo) {
+            @RequestParam(name = "repo", required = false) String repo) {
 
         if (!corriendo.compareAndSet(false, true)) {
             Map<String, Object> cuerpo = new HashMap<>();
@@ -110,8 +116,12 @@ public class MetricsController {
     }
 
     //-----> 🔌 NUEVO: detalle puntual de un solo repo
+    //-----> 🔌 MODIFICADO: mismo fix que en ejecutar() -- se agrega name="id"
+    //-----> explicito para no depender de que Maven haya compilado con -parameters.
+    //-----> Esto es lo que causaba el error 500 (Whitelabel Error Page) al abrir
+    //-----> /api/metrics/repo?id=... directamente en el navegador.
     @GetMapping("/api/metrics/repo")
-    public ResponseEntity<?> obtenerRepo(@RequestParam String id) {
+    public ResponseEntity<?> obtenerRepo(@RequestParam(name = "id") String id) {
         ConfiguracionMongo config = ConfiguracionMongo.desdeVariablesDeEntorno();
         try (AlmacenMetricasMongo almacen = new AlmacenMetricasMongo(config)) {
             Document repoEncontrado = almacen.obtenerRepositorioPorId(id);
