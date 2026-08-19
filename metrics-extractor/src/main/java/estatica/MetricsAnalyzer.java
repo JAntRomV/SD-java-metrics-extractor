@@ -12,7 +12,13 @@ import java.util.Set;
 
 // ----> Esta clase recorre todo el código fuente en Java para contar variables, palabras clave, decisiones y métodos
 public class MetricsAnalyzer extends VoidVisitorAdapter<Void> {
-    private final ProjectMetrics projectMetrics;
+    // ----> 🔌 MODIFICADO: ya NO es "final". Antes este ProjectMetrics vivia
+    // ----> durante TODO el analisis del proyecto y acumulaba las metricas de
+    // ----> cada clase (miles, en repos grandes), sin liberarse hasta el final.
+    // ----> Ahora ProcesadorMetricas lo reinicia archivo por archivo mediante
+    // ----> reiniciarReporte(), para que solo se mantenga en memoria el reporte
+    // ----> de la clase que se esta analizando en ese momento.
+    private ProjectMetrics projectMetrics;
 
     // ----> Clave especial para restar líneas de código cuando un método tiene sub-métodos adentro
     public static final DataKey<Integer> LINEAS_PODADAS = new DataKey<Integer>() {};
@@ -23,6 +29,15 @@ public class MetricsAnalyzer extends VoidVisitorAdapter<Void> {
     // ----> Constructor: recibe el reporte del proyecto para ir guardando los hallazgos
     public MetricsAnalyzer(ProjectMetrics projectMetrics) {
         this.projectMetrics = projectMetrics;
+    }
+
+    // ----> 🔌 NUEVO: reemplaza el ProjectMetrics interno por uno nuevo (vacio).
+    // ----> Se llama una vez por cada archivo .java, ANTES de analizarlo, para
+    // ----> que las metricas de esa clase se puedan exportar y descartar de
+    // ----> inmediato, en vez de quedarse acumuladas junto con las de todo el
+    // ----> resto del proyecto.
+    public void reiniciarReporte(ProjectMetrics nuevoReporte) {
+        this.projectMetrics = nuevoReporte;
     }
 
     // ----> Asigna el archivo que se está leyendo en el momento

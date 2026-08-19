@@ -61,12 +61,20 @@ public class ProcesadorMetricas {
 
         System.out.println("\n-> Analizando proyecto: " + nombreDelProyectoFound.toUpperCase());
 
-        ProjectMetrics reporteGlobal = new ProjectMetrics(nombreDelProyectoFound);
-
-        MetricsAnalyzer analizador = new MetricsAnalyzer(reporteGlobal);
+        // ----> 🔌 MODIFICADO: antes aqui se creaba UN SOLO ProjectMetrics
+        // ----> ("reporteGlobal") que acumulaba las metricas de TODAS las clases
+        // ----> del proyecto hasta el final (ver MetricsExporter.export() mas
+        // ----> abajo, que ya no se llama asi). En repos grandes (~4000 archivos)
+        // ----> eso hacia crecer la memoria sin limite y tumbaba el proceso por
+        // ----> OOM del contenedor antes de alcanzar a exportar nada. Ahora el
+        // ----> analizador se reinicia con un ProjectMetrics chiquito (una sola
+        // ----> clase) DENTRO del loop, y cada clase se exporta y se descarta de
+        // ----> inmediato -ver reporteArchivo mas abajo-.
+        MetricsAnalyzer analizador = new MetricsAnalyzer(new ProjectMetrics(nombreDelProyectoFound));
 
         List<String> archivosExitosos = new ArrayList<>();
         List<String> archivosSaltados = new ArrayList<>();
+        int totalArchivosJsonGenerados = 0; // ----> 🔌 NUEVO: cuenta cuantos JSON de metricas se generaron en total
 
         try {
             // ----> Busca todos los archivos que terminen en .java dentro de las subcarpetas
@@ -83,6 +91,13 @@ public class ProcesadorMetricas {
                 try {
                     analizador.setCurrentFileName(archivo.getName());
 
+                    // ----> 🔌 NUEVO: reporte "chiquito", propio de este archivo. Aqui es
+                    // ----> donde MetricsAnalyzer va a ir guardando las metricas de esta
+                    // ----> clase (y de sus sub-metodos podados) EN VEZ de guardarlas en
+                    // ----> un reporte compartido de todo el proyecto.
+                    ProjectMetrics reporteArchivo = new ProjectMetrics(nombreDelProyectoFound);
+                    analizador.reiniciarReporte(reporteArchivo);
+
                     // ----> Lee el archivo y genera el árbol sintáctico (AST)
                     ParseResult<CompilationUnit> resultado = parserConfigurado.parse(archivo);
 
@@ -97,6 +112,14 @@ public class ProcesadorMetricas {
 
                     // ----> Ejecuta el analizador de métricas
                     analizador.visit(cu, null);
+
+                    // ----> 🔌 NUEVO: exporta el JSON de metricas de ESTA clase de
+                    // ----> inmediato (igual que ya se hacia con el JSON de caminos un
+                    // ----> poco mas abajo), en vez de esperar a tener todo el proyecto
+                    // ----> acumulado. Asi "reporteArchivo" puede liberarse de memoria
+                    // ----> tan pronto termina esta vuelta del for -no se queda vivo
+                    // ----> hasta el final del proyecto completo-.
+                    totalArchivosJsonGenerados += MetricsExporter.exportarProyecto(reporteArchivo, carpetaResultados);
 
                     // ----> Extrae los caminos del AST y genera su archivo JSON
                     ArbolCaminoExtractor extractorArbol = new ArbolCaminoExtractor();
@@ -123,11 +146,13 @@ public class ProcesadorMetricas {
                 }
             }
 
-            // ----> Exporta todas las métricas de la clase al JSON final
-            List<ProjectMetrics> listaReportes = new ArrayList<>();
-            listaReportes.add(reporteGlobal);
-
-            MetricsExporter.export(listaReportes, carpetaResultados);
+            // ----> 🔌 MODIFICADO: ya NO se exporta nada aqui al final -cada clase ya
+            // ----> se exporto de inmediato dentro del for, ver "totalArchivosJsonGenerados"
+            // ----> mas arriba-. Solo se imprime el mismo mensaje resumen que antes
+            // ----> generaba MetricsExporter.export(), pero usando el contador que se
+            // ----> fue acumulando archivo por archivo.
+            System.out.println("Se genero: " + totalArchivosJsonGenerados
+                    + " archivo(s) con exito en: " + new File(carpetaResultados).getAbsolutePath());
 
             System.out.println("\n------------------------------------------------");
             System.out.println(" RESUMEN DE PROCESAMIENTO (" + nombreDelProyectoFound.toUpperCase() + "):");
@@ -153,17 +178,29 @@ public class ProcesadorMetricas {
     }
 
     // ----> Función recursiva para buscar archivos .java entrando a todas las subcarpetas del proyecto
+    // ----> 🔌 MODIFICADO: ahora descarta archivos de test (*Test.java, *Tests.java,
+    // ----> *IT.java) antes de agregarlos a la lista. Reduce el numero de archivos
+    // ----> procesados (memoria y tiempo) sin afectar el analisis del codigo de
+    // ----> produccion -es codigo que no aporta al analisis de calidad/complejidad
+    // ----> que persigue la tesis-.
     private void buscarArchivosJava(File directorio, List<File> listaArchivos) {
         File[] archivosYCarpetas = directorio.listFiles();
         if (archivosYCarpetas != null) {
             for (File elemento : archivosYCarpetas) {
                 if (elemento.isDirectory()) {
                     buscarArchivosJava(elemento, listaArchivos);
-                } else if (elemento.getName().endsWith(".java")) {
+                } else if (elemento.getName().endsWith(".java") && !esArchivoDeTest(elemento.getName())) {
                     listaArchivos.add(elemento);
                 }
             }
         }
+    }
+
+    // ----> 🔌 NUEVO: detecta si un nombre de archivo corresponde a una clase de test
+    private boolean esArchivoDeTest(String nombreArchivo) {
+        return nombreArchivo.endsWith("Test.java")
+                || nombreArchivo.endsWith("Tests.java")
+                || nombreArchivo.endsWith("IT.java");
     }
 
     // ----> Busca métodos definidos dentro de otros métodos (sub-métodos), los extrae y ajusta el conteo de líneas

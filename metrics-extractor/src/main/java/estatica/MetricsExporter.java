@@ -9,30 +9,47 @@ import java.util.List;
 public class MetricsExporter {
 
     // ----> Método principal que recorre los proyectos y manda a guardar los archivos
+    // ----> 🔌 MODIFICADO: ahora delega en exportarProyecto() por cada proyecto de
+    // ----> la lista. Se conserva este metodo para no romper a quien ya lo llamaba
+    // ----> con una lista completa, pero ProcesadorMetricas ya NO lo usa asi -ver
+    // ----> exportarProyecto() abajo, que se llama una vez POR ARCHIVO.
     public static void export(List<ProjectMetrics> reports, String outputFolder) {
-        File baseFolder = new File(outputFolder);
-        if (!baseFolder.exists()) baseFolder.mkdirs();
-
         int totalArchivos = 0;
-
         for (ProjectMetrics project : reports) {
-            File projectFolder = new File(baseFolder, sanitize(project.getProjectName()));
-            if (!projectFolder.exists()) projectFolder.mkdirs();
-
-            for (String className : project.getClassNames()) {
-                List<MethodMetrics> methods = project.getMethodsOf(className);
-                String fileName = project.getFileNameOf(className);
-
-                if (methods.isEmpty()) continue;
-
-                // ----> Genera el JSON de métricas para la clase
-                writeJson(className, fileName, methods, projectFolder);
-                totalArchivos++;
-            }
+            totalArchivos += exportarProyecto(project, outputFolder);
         }
 
         System.out.println("Se genero: " + totalArchivos
-                + " archivo(s) con exito en: " + baseFolder.getAbsolutePath());
+                + " archivo(s) con exito en: " + new File(outputFolder).getAbsolutePath());
+    }
+
+    // ----> 🔌 NUEVO: exporta UN SOLO ProjectMetrics (ej. el de una sola clase, o
+    // ----> el de un solo archivo) y devuelve cuantos JSON genero. Es la pieza
+    // ----> clave del fix de memoria: en vez de esperar a tener todo el proyecto
+    // ----> acumulado para exportar todo junto al final (export() de arriba),
+    // ----> ProcesadorMetricas llama a este metodo justo despues de analizar CADA
+    // ----> archivo, con un ProjectMetrics chiquito que solo trae esa clase.
+    public static int exportarProyecto(ProjectMetrics project, String outputFolder) {
+        File baseFolder = new File(outputFolder);
+        if (!baseFolder.exists()) baseFolder.mkdirs();
+
+        File projectFolder = new File(baseFolder, sanitize(project.getProjectName()));
+        if (!projectFolder.exists()) projectFolder.mkdirs();
+
+        int archivosGenerados = 0;
+
+        for (String className : project.getClassNames()) {
+            List<MethodMetrics> methods = project.getMethodsOf(className);
+            String fileName = project.getFileNameOf(className);
+
+            if (methods.isEmpty()) continue;
+
+            // ----> Genera el JSON de métricas para la clase
+            writeJson(className, fileName, methods, projectFolder);
+            archivosGenerados++;
+        }
+
+        return archivosGenerados;
     }
 
     // ----> Construye físicamente el archivo JSON de métricas escribiendo línea por línea
