@@ -107,7 +107,7 @@ public class CompiladorProyecto {
             }
 
             //-----> Ejecuta el proceso con limite de tiempo
-            ResultadoProceso resultadoProceso = ejecutarProceso(pb, "   [compilacion] ", 15, TimeUnit.MINUTES);
+            ResultadoProceso resultadoProceso = ejecutarProceso(pb, "   [compilacion] ", 30, TimeUnit.MINUTES);
 
             if (!resultadoProceso.termino) {
                 return new ResultadoCompilacion(false, null, "La compilacion tardo mas de 15 minutos, se cancelo.", null);
