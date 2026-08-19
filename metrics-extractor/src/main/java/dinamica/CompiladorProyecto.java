@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -64,10 +65,23 @@ public class CompiladorProyecto {
                 File gradlew = new File(raiz, "gradlew");
                 String ejecutable = gradlew.exists() ? "./gradlew" : "gradle";
 
+                //-----> 🔌 MODIFICADO: se agrega "--max-workers=1". Aunque ya se
+                //-----> usaba "--no-daemon" (evita el Build Daemon persistente),
+                //-----> Gradle sigue pudiendo forkear procesos "worker" separados
+                //-----> para compilar en paralelo (workers de compilacion, que
+                //-----> usan la MISMA infraestructura interna de sockets que el
+                //-----> Build Daemon -de ahi los mensajes "DefaultDaemonConnection"
+                //-----> en el log aunque tecnicamente no sea el Build Daemon-). En
+                //-----> un contenedor de 512MB, cada worker forkeado es una JVM
+                //-----> adicional compitiendo por memoria junto con la app Spring
+                //-----> Boot y el propio proceso "gradlew --no-daemon". Forzar a 1
+                //-----> solo worker evita esa multiplicacion y es la causa mas
+                //-----> probable del OOM que tumbaba la compilacion a medias.
                 comando = new String[]{
                         ejecutable, "compileJava",
                         "--dependency-verification=off",
                         "--no-daemon",
+                        "--max-workers=1",
                         "-x", "test"
                 };
             } else {
@@ -80,6 +94,17 @@ public class CompiladorProyecto {
             ProcessBuilder pb = new ProcessBuilder(comando);
             pb.directory(raiz);
             pb.redirectErrorStream(true);
+
+            //-----> 🔌 NUEVO: acota la memoria del proceso hijo (y de cualquier
+            //-----> JVM que el propio Gradle llegue a forkear adentro, ej. si
+            //-----> algo ignora --no-daemon). Sin esto, cada JVM hija puede
+            //-----> reclamar hasta 1/4 de la RAM del contenedor por defecto,
+            //-----> lo cual en un contenedor de 512MB es demasiado si hay mas
+            //-----> de una JVM viva a la vez (la app Spring Boot + el proceso
+            //-----> de compilacion). Ver limitarMemoriaProcesoHijo() mas abajo.
+            if (gradleFile.exists() || gradleKtsFile.exists()) {
+                limitarMemoriaProcesoHijo(pb);
+            }
 
             //-----> Ejecuta el proceso con limite de tiempo
             ResultadoProceso resultadoProceso = ejecutarProceso(pb, "   [compilacion] ", 15, TimeUnit.MINUTES);
@@ -126,6 +151,20 @@ public class CompiladorProyecto {
             this.termino = termino;
             this.codigoSalida = codigoSalida;
         }
+    }
+
+    //-----> 🔌 NUEVO: acota la memoria de cualquier JVM que el proceso Gradle
+    //-----> hijo llegue a levantar (el propio cliente "gradlew --no-daemon", y
+    //-----> por seguridad tambien GRADLE_OPTS/JAVA_OPTS por si algun sub-paso
+    //-----> del build ignora --no-daemon y termina levantando una JVM extra).
+    //-----> Los valores son conservadores pensando en un contenedor de 512MB
+    //-----> total (compartido con la app Spring Boot) -- si el plan del
+    //-----> contenedor cambia, hay que ajustar estos numeros.
+    private static void limitarMemoriaProcesoHijo(ProcessBuilder pb) {
+        String opcionesMemoria = "-Xmx256m -XX:MaxMetaspaceSize=128m";
+        Map<String, String> entorno = pb.environment();
+        entorno.put("GRADLE_OPTS", opcionesMemoria);
+        entorno.put("JAVA_OPTS", opcionesMemoria);
     }
 
     //-----> Corre procesos externos con hilo lector y timeout
@@ -313,14 +352,26 @@ public class CompiladorProyecto {
             File gradlew = new File(raiz, "gradlew");
             String ejecutable = gradlew.exists() ? "./gradlew" : "gradle";
 
-            //-----> Ejecuta tarea para evaluar dependencias
-            String[] comando = {ejecutable, "--init-script", initScript.getAbsolutePath(), "-q", "help"};
+            //-----> 🔌 MODIFICADO: antes este comando NO tenia "--no-daemon", a
+            //-----> diferencia del comando principal de compilacion. Eso podia
+            //-----> levantar un Build Daemon REAL y persistente -Gradle reutiliza
+            //-----> daemons compatibles entre invocaciones por diseno-, que se
+            //-----> queda vivo de fondo y puede acumular memoria repo tras repo
+            //-----> a lo largo del lote completo que corre OrquestadorRepos, sin
+            //-----> que nada lo libere entre un repo y el siguiente. Se agrega
+            //-----> tambien "--max-workers=1" por la misma razon que en el
+            //-----> comando de compilacion (ver comentario en compilar()).
+            String[] comando = {
+                    ejecutable, "--init-script", initScript.getAbsolutePath(),
+                    "-q", "--no-daemon", "--max-workers=1", "help"
+            };
 
             System.out.println("-----> Ejecutando: " + String.join(" ", comando) + " (en " + raiz.getAbsolutePath() + ")");
 
             ProcessBuilder pb = new ProcessBuilder(comando);
             pb.directory(raiz);
             pb.redirectErrorStream(true);
+            limitarMemoriaProcesoHijo(pb); //-----> 🔌 NUEVO: mismo limite de memoria que el comando principal
 
             ResultadoProceso resultadoProceso = ejecutarProceso(pb, "   [classpath-gradle] ", 5, TimeUnit.MINUTES);
 

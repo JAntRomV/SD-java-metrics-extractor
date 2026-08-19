@@ -69,7 +69,13 @@ public class DiagnosticoAlmacenamiento implements AutoCloseable {
         int clasesEsperadas = metricsEstaticas != null ? metricsEstaticas.getInteger("totalClases", 0) : 0;
 
         //-----> Conteo de clases estaticas
-        long clasesReales = coleccionClases.countDocuments(Filters.eq("repoId", idRepo));
+        //-----> 🔌 MODIFICADO: repo_metrics_static ahora tiene dos tipos de
+        //-----> documentos por clase -el doc base (metricasJson) y N fragmentos de
+        //-----> caminos, distinguibles porque los fragmentos traen "parte"-. Sin
+        //-----> este filtro, este conteo mezclaba ambos e inflaba
+        //-----> "clasesEncontradasEnMongo" con los fragmentos.
+        long clasesReales = coleccionClases.countDocuments(
+                Filters.and(Filters.eq("repoId", idRepo), Filters.exists("parte", false)));
         double espacioClasesMB = estimarEspacioRepoMB(coleccionClases, idRepo);
 
         Document diagnosticoEstatico = new Document()
