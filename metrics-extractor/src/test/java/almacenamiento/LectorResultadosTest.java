@@ -19,21 +19,69 @@ class LectorResultadosTest {
     // ======================= procesarClasesUnaAUna =======================
 
     @Test
-    void agrupaMetricasJsonYCaminosBajoLaMismaClase(@TempDir Path tempDir) throws Exception {
+    void agrupaMetricasJsonYFragmentaLosCaminosBajoLaMismaClase(@TempDir Path tempDir) throws Exception {
         Files.writeString(tempDir.resolve("FooMetricas.json"), "{\"total\":5}");
-        Files.writeString(tempDir.resolve("Foo_caminos.json"), "{\"caminos\":1}");
+        //-----> 🔌 MODIFICADO: el JSON de caminos real trae "metodos": [{ metodo, caminos: [...] }]
+        Files.writeString(tempDir.resolve("Foo_caminos.json"),
+                "{\"metodos\":[{\"metodo\":\"m1\",\"caminos\":[{\"camino_id\":1,\"texto\":\"a\",\"serie_numerica\":[1]}]}]}");
 
-        List<Document> recibidos = new ArrayList<>();
-        int total = lector.procesarClasesUnaAUna(tempDir.toFile(), recibidos::add);
+        List<Document> clases = new ArrayList<>();
+        List<Document> caminos = new ArrayList<>();
+        int total = lector.procesarClasesUnaAUna(tempDir.toFile(), clases::add, caminos::add);
 
         assertEquals(1, total);
-        assertEquals(1, recibidos.size());
+        assertEquals(1, clases.size());
 
-        Document doc = recibidos.get(0);
+        Document doc = clases.get(0);
         assertEquals("Foo", doc.getString("clase"));
         assertInstanceOf(Document.class, doc.get("metricasJson"));
         assertEquals(5, ((Document) doc.get("metricasJson")).getInteger("total"));
-        assertNotNull(doc.get("caminos"));
+        //-----> 🔌 MODIFICADO: los caminos ya NO van embebidos en el doc de la clase
+        assertFalse(doc.containsKey("caminos"));
+
+        //-----> en cambio, llegan aplanados y fragmentados por el segundo consumidor
+        assertEquals(1, caminos.size());
+        Document parte = caminos.get(0);
+        assertEquals("Foo", parte.getString("clase"));
+        assertEquals(1, parte.getInteger("parte"));
+        assertEquals(1, parte.getInteger("totalPartes"));
+
+        List<Document> aplanado = parte.getList("caminos", Document.class);
+        assertEquals(1, aplanado.size());
+        assertEquals("m1", aplanado.get(0).getString("metodo"));
+        assertEquals(1, aplanado.get(0).getInteger("camino_id"));
+        assertEquals("a", aplanado.get(0).getString("texto"));
+    }
+
+    @Test
+    void fragmentaLosCaminosEnVariasPartesCuandoSuperaElLimite(@TempDir Path tempDir) throws Exception {
+        Files.writeString(tempDir.resolve("GrandeMetricas.json"), "{\"total\":1}");
+
+        //-----> 301 caminos de un mismo metodo, limite es 300 por parte -> 2 partes
+        StringBuilder caminosJson = new StringBuilder("{\"metodos\":[{\"metodo\":\"m1\",\"caminos\":[");
+        for (int i = 0; i < 301; i++) {
+            if (i > 0) caminosJson.append(",");
+            caminosJson.append("{\"camino_id\":").append(i)
+                    .append(",\"texto\":\"c").append(i).append("\",\"serie_numerica\":[]}");
+        }
+        caminosJson.append("]}]}");
+        Files.writeString(tempDir.resolve("Grande_caminos.json"), caminosJson.toString());
+
+        List<Document> clases = new ArrayList<>();
+        List<Document> caminos = new ArrayList<>();
+        lector.procesarClasesUnaAUna(tempDir.toFile(), clases::add, caminos::add);
+
+        assertEquals(2, caminos.size());
+        caminos.sort((a, b) -> a.getInteger("parte") - b.getInteger("parte"));
+
+        assertEquals(1, caminos.get(0).getInteger("parte"));
+        assertEquals(2, caminos.get(0).getInteger("totalPartes"));
+        assertEquals(2, caminos.get(1).getInteger("parte"));
+        assertEquals(2, caminos.get(1).getInteger("totalPartes"));
+
+        int sumaCaminos = caminos.get(0).getList("caminos", Document.class).size()
+                + caminos.get(1).getList("caminos", Document.class).size();
+        assertEquals(301, sumaCaminos);
     }
 
     @Test
@@ -41,9 +89,11 @@ class LectorResultadosTest {
         Files.writeString(tempDir.resolve("BarMetricas.json"), "{\"total\":1}");
 
         List<Document> recibidos = new ArrayList<>();
-        lector.procesarClasesUnaAUna(tempDir.toFile(), recibidos::add);
+        List<Document> caminos = new ArrayList<>();
+        lector.procesarClasesUnaAUna(tempDir.toFile(), recibidos::add, caminos::add);
 
         assertFalse(recibidos.get(0).containsKey("caminos"));
+        assertTrue(caminos.isEmpty());
     }
 
     @Test
@@ -52,7 +102,7 @@ class LectorResultadosTest {
         Files.writeString(tempDir.resolve("BazMetricas.json"), contenidoInvalido);
 
         List<Document> recibidos = new ArrayList<>();
-        lector.procesarClasesUnaAUna(tempDir.toFile(), recibidos::add);
+        lector.procesarClasesUnaAUna(tempDir.toFile(), recibidos::add, caminoParte -> fail("no deberia llamarse"));
 
         assertEquals(contenidoInvalido, recibidos.get(0).get("metricasJson"));
     }
@@ -63,7 +113,7 @@ class LectorResultadosTest {
         Files.writeString(tempDir.resolve("notas.json"), "{}");
 
         List<Document> recibidos = new ArrayList<>();
-        int total = lector.procesarClasesUnaAUna(tempDir.toFile(), recibidos::add);
+        int total = lector.procesarClasesUnaAUna(tempDir.toFile(), recibidos::add, caminoParte -> fail("no deberia llamarse"));
 
         assertEquals(0, total);
         assertTrue(recibidos.isEmpty());
@@ -72,12 +122,14 @@ class LectorResultadosTest {
     @Test
     void carpetaInexistenteORetornaCeroSinLlamarAlConsumidor(@TempDir Path tempDir) throws Exception {
         File carpetaFalsa = tempDir.resolve("no_existe").toFile();
-        assertEquals(0, lector.procesarClasesUnaAUna(carpetaFalsa, doc -> fail("no deberia llamarse")));
+        assertEquals(0, lector.procesarClasesUnaAUna(carpetaFalsa,
+                doc -> fail("no deberia llamarse"), caminoParte -> fail("no deberia llamarse")));
     }
 
     @Test
     void carpetaNulaRetornaCeroSinLlamarAlConsumidor() throws Exception {
-        assertEquals(0, lector.procesarClasesUnaAUna(null, doc -> fail("no deberia llamarse")));
+        assertEquals(0, lector.procesarClasesUnaAUna(null,
+                doc -> fail("no deberia llamarse"), caminoParte -> fail("no deberia llamarse")));
     }
 
     // ================== procesarDinamicosPorClaseUnaAUna ==================

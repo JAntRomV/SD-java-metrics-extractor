@@ -117,6 +117,11 @@ public class MetricsExporter {
 
                 writer.println("    {");
                 writer.println("      \"metodo\": \"" + esc(resultadoMetodo.nombreMetodo) + "\",");
+                //-----> 🔌 NUEVO: si ArbolCaminoExtractor corto la generacion de este
+                //-----> metodo por alcanzar el tope de caminos, se deja constancia
+                //-----> explicita aqui en vez de que parezca que el metodo solo tenia
+                //-----> pocos caminos.
+                writer.println("      \"truncado\": " + resultadoMetodo.truncado + ",");
                 writer.println("      \"caminos\": [");
 
                 // ----> Escribe cada camino del AST con su texto y su serie numérica

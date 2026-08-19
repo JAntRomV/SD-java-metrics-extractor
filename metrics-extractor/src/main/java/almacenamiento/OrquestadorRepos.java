@@ -45,11 +45,18 @@ public class OrquestadorRepos {
             List<Document> pendientes;
 
             if (repoUnico != null && !repoUnico.isBlank()) {
-                //-----> 🔌 NUEVO: modo "un solo repo"
+                //-----> 🔌 MODIFICADO: antes esto imprimia el error a consola y hacia
+                //-----> 'return' en silencio -sin lanzar excepcion-, lo que hacia que
+                //-----> MetricsController (y cualquier llamador) pensara que el proceso
+                //-----> "termino sin errores" aunque en realidad no se toco absolutamente
+                //-----> nada en Mongo (ni siquiera se marco como fallido). Ahora se lanza
+                //-----> una excepcion explicita para que el error si se reporte.
                 Document repoEncontrado = almacen.obtenerRepositorioPorId(repoUnico);
                 if (repoEncontrado == null) {
-                    System.err.println("-----> No se encontro el repo '" + repoUnico + "' en el catalogo.");
-                    return;
+                    throw new IllegalArgumentException(
+                            "No se encontro el repo '" + repoUnico + "' en el catalogo "
+                            + "(revisa que el _id sea EXACTO, incluyendo mayusculas/minusculas "
+                            + "y sin espacios de mas -copialo tal cual de la lista de repos-).");
                 }
                 pendientes = new ArrayList<>();
                 pendientes.add(repoEncontrado);
@@ -96,9 +103,12 @@ public class OrquestadorRepos {
                     almacen.inicializarMetricasVacias(idRepo);
 
                     //-----> Subida de metricas estaticas
+                    //-----> 🔌 MODIFICADO: se agrega el segundo consumidor para los
+                    //-----> fragmentos de caminos (ver LectorResultados/AlmacenMetricasMongo).
                     int clasesSubidas = lector.procesarClasesUnaAUna(
                             new File(carpetaEstaticos),
-                            claseDoc -> almacen.agregarClaseAMetricas(idRepo, claseDoc)
+                            claseDoc -> almacen.agregarClaseAMetricas(idRepo, claseDoc),
+                            caminoParteDoc -> almacen.agregarCaminosAMetricas(idRepo, caminoParteDoc)
                     );
 
                     if (clasesSubidas == 0) {

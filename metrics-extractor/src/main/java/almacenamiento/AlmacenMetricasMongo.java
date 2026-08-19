@@ -140,6 +140,30 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         coleccionDinamicas.replaceOne(filtro, documento, new ReplaceOptions().upsert(true));
     }
 
+    //-----> 🔌 NUEVO: guarda un fragmento de caminos estaticos de una clase, con
+    //-----> _id determinístico "repoId_clase_caminos_parte". Antes el array
+    //-----> completo de caminos (raiz-a-hoja de cada metodo) se guardaba embebido
+    //-----> dentro del documento base de la clase (repoId_clase), lo que hacia que
+    //-----> ese documento pesara cientos de KB para clases con muchos metodos o
+    //-----> ramas. Va en la MISMA coleccion que la clase base (repo_metrics_static)
+    //-----> pero como documentos separados, igual que el patron ya usado para las
+    //-----> metricas dinamicas.
+    public void agregarCaminosAMetricas(String idRepo, Document caminoParteDoc) {
+        String clase = caminoParteDoc.getString("clase");
+        int parte = caminoParteDoc.getInteger("parte", 1);
+        String id = idRepo + "_" + clase + "_caminos_" + parte;
+
+        Document documento = new Document("_id", id)
+                .append("repoId", idRepo)
+                .append("clase", clase)
+                .append("parte", parte);
+        documento.putAll(caminoParteDoc);
+        documento.put("_id", id);
+
+        Bson filtro = Filters.eq("_id", id);
+        coleccionClases.replaceOne(filtro, documento, new ReplaceOptions().upsert(true));
+    }
+
     //-----> Actualiza el estado estatico o dinamico
     public void actualizarEstadoParcial(String idRepo, String tipo, String valor) {
         Bson filtro = Filters.eq("_id", idRepo);

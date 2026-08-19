@@ -22,10 +22,24 @@ public class LectorResultados {
     //-----> Límite máximo de filas guardadas por subdocumento de métricas dinámicas.
     private static final int MAX_FILAS_POR_PARTE = 15;
 
+    //-----> 🔌 NUEVO: límite máximo de caminos (aplanados across todos los métodos
+    //-----> de la clase) guardados por subdocumento estático. Antes el array
+    //-----> completo de caminos de una clase se guardaba embebido en un solo
+    //-----> Document -para clases con muchos métodos/ramas eso podía pesar
+    //-----> cientos de KB por documento en repo_metrics_static-.
+    private static final int MAX_CAMINOS_POR_PARTE = 300;
+
     //-----> Interfaz funcional para transmitir documentos estáticos procesados.
     @FunctionalInterface
     public interface ConsumidorClase {
         void aceptar(Document claseDoc) throws Exception;
+    }
+
+    //-----> 🔌 NUEVO: interfaz funcional para transmitir fragmentos de caminos
+    //-----> de una clase, ya separados del documento base de metricasJson.
+    @FunctionalInterface
+    public interface ConsumidorCaminoParte {
+        void aceptar(Document caminoParteDoc) throws Exception;
     }
 
     //-----> Interfaz funcional para transmitir documentos dinámicos fragmentados.
@@ -35,7 +49,10 @@ public class LectorResultados {
     }
 
     //-----> Procesa secuencialmente los JSON estáticos generados por cada clase.
-    public int procesarClasesUnaAUna(File carpetaEstaticos, ConsumidorClase consumidor) throws Exception {
+    //-----> 🔌 MODIFICADO: ahora recibe un segundo consumidor para los caminos,
+    //-----> que ya NO van embebidos dentro del Document de la clase -se fragmentan
+    //-----> y se entregan por separado, ver aplanarCaminos()-.
+    public int procesarClasesUnaAUna(File carpetaEstaticos, ConsumidorClase consumidor, ConsumidorCaminoParte consumidorCaminos) throws Exception {
         if (carpetaEstaticos == null || !carpetaEstaticos.exists()) return 0;
 
         File[] archivos = carpetaEstaticos.listFiles();
@@ -64,15 +81,56 @@ public class LectorResultados {
             if (archivosDeClase.containsKey("metricasJson")) {
                 claseDoc.put("metricasJson", leerJson(archivosDeClase.get("metricasJson")));
             }
-            if (archivosDeClase.containsKey("caminos")) {
-                claseDoc.put("caminos", leerJson(archivosDeClase.get("caminos")));
-            }
 
             consumidor.aceptar(claseDoc);
             total++;
+
+            //-----> 🔌 NUEVO: los caminos se leen, se aplanan (metodo + camino) y
+            //-----> se fragmentan en partes de MAX_CAMINOS_POR_PARTE, en vez de
+            //-----> ir embebidos completos dentro de claseDoc.
+            if (archivosDeClase.containsKey("caminos")) {
+                Object caminosParseados = leerJson(archivosDeClase.get("caminos"));
+                List<Document> aplanado = aplanarCaminos(caminosParseados);
+
+                if (!aplanado.isEmpty()) {
+                    int totalPartes = Math.max(1, (int) Math.ceil(aplanado.size() / (double) MAX_CAMINOS_POR_PARTE));
+                    for (int i = 0; i < totalPartes; i++) {
+                        int inicio = i * MAX_CAMINOS_POR_PARTE;
+                        int fin = Math.min(inicio + MAX_CAMINOS_POR_PARTE, aplanado.size());
+
+                        Document parteDoc = new Document("clase", claseBase)
+                                .append("parte", i + 1)
+                                .append("totalPartes", totalPartes)
+                                .append("caminos", new ArrayList<>(aplanado.subList(inicio, fin)));
+
+                        consumidorCaminos.aceptar(parteDoc);
+                    }
+                }
+            }
         }
 
         return total;
+    }
+
+    //-----> 🔌 NUEVO: aplana el JSON de caminos (agrupado por metodo) en una sola
+    //-----> lista donde cada entrada trae su propio "metodo", para poder repartirla
+    //-----> en partes de tamaño parejo sin importar cuantos metodos tenia la clase.
+    private List<Document> aplanarCaminos(Object caminosJson) {
+        List<Document> aplanado = new ArrayList<>();
+        if (!(caminosJson instanceof Document)) return aplanado; //-----> JSON crudo sin parsear, no se puede fragmentar
+
+        Document doc = (Document) caminosJson;
+        List<Document> metodos = doc.getList("metodos", Document.class, new ArrayList<>());
+        for (Document metodoDoc : metodos) {
+            String nombreMetodo = metodoDoc.getString("metodo");
+            List<Document> caminos = metodoDoc.getList("caminos", Document.class, new ArrayList<>());
+            for (Document camino : caminos) {
+                Document entradaAplanada = new Document("metodo", nombreMetodo);
+                entradaAplanada.putAll(camino); //-----> camino_id, texto, serie_numerica
+                aplanado.add(entradaAplanada);
+            }
+        }
+        return aplanado;
     }
 
     //-----> Agrupa archivos escaneados por nombre de clase asociada.

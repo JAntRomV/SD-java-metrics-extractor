@@ -17,6 +17,9 @@ public class ArbolCaminoExtractor {
         public String nombreMetodo;
         public List<String> vectorTexto = new ArrayList<>();
         public List<List<Integer>> vectorNumerico = new ArrayList<>();
+        //-----> 🔌 NUEVO: marca si se alcanzo el limite de caminos y se dejaron
+        //-----> de generar mas (ver MAX_CAMINOS_POR_METODO abajo).
+        public boolean truncado = false;
     }
 
     //-----> Guarda resultados de una clase
@@ -27,6 +30,15 @@ public class ArbolCaminoExtractor {
 
     private int contadorGlobal = 1;
     private Map<Node, Integer> numeracionNodos = new IdentityHashMap<>();
+
+    //-----> 🔌 NUEVO: tope de caminos raiz-a-hoja que se generan por metodo.
+    //-----> Sin este limite, un metodo con varios if/else anidados puede generar
+    //-----> una explosion combinatoria de caminos (crece potencialmente 2^n con
+    //-----> el numero de decisiones), llenando la memoria del proceso antes de
+    //-----> que nada se llegue a guardar en disco o en Mongo -esto era la causa
+    //-----> raiz de los OOM que tumbaban el contenedor a media generacion de
+    //-----> [CAMINO JSON]-.
+    private static final int MAX_CAMINOS_POR_METODO = 500;
 
     //-----> Procesa metodos de la clase y extrae caminos
     public ResultadoClase procesarClase(CompilationUnit cu, String nombreArchivo) {
@@ -64,6 +76,13 @@ public class ArbolCaminoExtractor {
 
     //-----> Genera los caminos recursivamente por nodos
     private void generarCaminos(Node nodo, List<String> txtCamino, List<Integer> numCamino, ResultadoMetodo res) {
+        //-----> 🔌 NUEVO: corta la recursion en cuanto se alcanza el tope, en vez
+        //-----> de seguir explorando ramas y acumulando mas caminos en memoria.
+        if (res.vectorTexto.size() >= MAX_CAMINOS_POR_METODO) {
+            res.truncado = true;
+            return;
+        }
+
         int numeroAsignado = numeracionNodos.getOrDefault(nodo, 0);
 
         if (nodo instanceof IfStmt) {
@@ -78,6 +97,13 @@ public class ArbolCaminoExtractor {
             txtSi.add("condicion_sisi");
 
             generarCaminos(condicional.getThenStmt(), txtSi, numSi, res);
+
+            //-----> 🔌 NUEVO: si ya se llego al tope explorando la rama "si", no
+            //-----> vale la pena explorar tambien la rama "no".
+            if (res.vectorTexto.size() >= MAX_CAMINOS_POR_METODO) {
+                res.truncado = true;
+                return;
+            }
 
             if (condicional.getElseStmt().isPresent()) {
                 List<String> txtNo = new ArrayList<>(txtCamino);
