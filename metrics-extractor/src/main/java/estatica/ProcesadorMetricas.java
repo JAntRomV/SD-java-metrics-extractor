@@ -178,12 +178,21 @@ public class ProcesadorMetricas {
     }
 
     // ----> Función recursiva para buscar archivos .java entrando a todas las subcarpetas del proyecto
-    // ----> 🔌 MODIFICADO: ahora descarta archivos de test (*Test.java, *Tests.java,
-    // ----> *IT.java) antes de agregarlos a la lista. Reduce el numero de archivos
-    // ----> procesados (memoria y tiempo) sin afectar el analisis del codigo de
-    // ----> produccion -es codigo que no aporta al analisis de calidad/complejidad
-    // ----> que persigue la tesis-.
+    // ----> 🔌 MODIFICADO: ademas del filtro por nombre de archivo (*Test.java,
+    // ----> *Tests.java, *IT.java), ahora NO ENTRA a carpetas llamadas "test"
+    // ----> (el layout estandar de Maven/Gradle: src/test/java/...). Esto es
+    // ----> necesario porque el filtro por nombre solo cubre la convencion de
+    // ----> SUFIJO (ClaseTest.java) -en repos que usan la convencion de
+    // ----> PREFIJO (TestClase.java, comun en estilo JUnit3) o que tienen
+    // ----> clases de apoyo para test (MockAlgo.java) esos archivos NO
+    // ----> terminaban filtrandose y se seguian analizando por completo. Podar
+    // ----> la carpeta entera es ademas mas eficiente: ni siquiera se listan
+    // ----> sus archivos, en vez de listarlos y descartarlos uno por uno.
     private void buscarArchivosJava(File directorio, List<File> listaArchivos) {
+        if (esCarpetaDeTest(directorio)) {
+            return;
+        }
+
         File[] archivosYCarpetas = directorio.listFiles();
         if (archivosYCarpetas != null) {
             for (File elemento : archivosYCarpetas) {
@@ -194,6 +203,17 @@ public class ProcesadorMetricas {
                 }
             }
         }
+    }
+
+    // ----> 🔌 NUEVO: detecta carpetas raiz de codigo de test segun la
+    // ----> convencion estandar de Maven/Gradle (src/test/java, src/test/kotlin,
+    // ----> src/testFixtures/..., etc.) para podar toda la subrama de una vez.
+    private boolean esCarpetaDeTest(File directorio) {
+        String nombre = directorio.getName().toLowerCase();
+        return nombre.equals("test")
+                || nombre.equals("tests")
+                || nombre.equals("testfixtures")
+                || nombre.equals("androidtest");
     }
 
     // ----> 🔌 NUEVO: detecta si un nombre de archivo corresponde a una clase de test
