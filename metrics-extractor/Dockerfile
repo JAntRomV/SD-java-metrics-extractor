@@ -19,9 +19,19 @@ RUN mvn -B -DskipTests package
 # instale Maven iba a seguir fallando por falta de compilador. Ademas, el
 # paquete "maven" de apt de por si depende de tener un JDK instalado -sin
 # esto tambien terminaria bajando su propio JDK por separado-, asi que usar
-# el JDK de Temurin (el mismo vendor/version que la Etapa 1) es mas
-# consistente que dejar que apt resuelva "cualquier JDK por defecto".
-FROM eclipse-temurin:17-jdk
+# el JDK de Temurin es mas consistente que dejar que apt resuelva "cualquier
+# JDK por defecto".
+# 🔌 MODIFICADO: de "17-jdk" a "21-jdk". Repos del catalogo que declaran
+# --release 21 (o mas nuevo que el JDK instalado) tronaban en
+# CompiladorProyecto con "release version 21 not supported" -un JDK no
+# puede compilar apuntando a una version de Java mas nueva que el mismo-.
+# Subir a JDK 21 es retrocompatible con este propio proyecto (metrics-api.jar
+# se compila en la Etapa 1 apuntando a Java 17, y un runtime 21 lo ejecuta
+# sin problema), y amplia el rango de repos externos que se pueden compilar
+# dinamicamente. Sigue sin ser universal: cualquier repo que pida una
+# version aun mas nueva que 21 seguira cayendo al fallback de "solo
+# estatico" -eso ya lo maneja bien OrquestadorRepos-.
+FROM eclipse-temurin:21-jdk
 WORKDIR /app
 
 # git es obligatorio: OrquestadorRepos hace "git clone" de cada repo del
