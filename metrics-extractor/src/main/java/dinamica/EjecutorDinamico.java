@@ -63,8 +63,8 @@ public class EjecutorDinamico {
         int iterations = Integer.parseInt(params.getOrDefault("I", "10"));
         int warmupIterations = Integer.parseInt(params.getOrDefault("WI", "2"));
         int forks = Integer.parseInt(params.getOrDefault("F", "1"));
-        int minHeap = Integer.parseInt(params.getOrDefault("MINH", "2048"));
-        int maxHeap = Integer.parseInt(params.getOrDefault("MAXH", "2048"));
+        int minHeap = Integer.parseInt(params.getOrDefault("MINH", "64"));
+        int maxHeap = Integer.parseInt(params.getOrDefault("MAXH", "168"));
 
         String carpetaResultados = params.getOrDefault("salida", "resultados_dinamicos");
         Files.createDirectories(Paths.get(carpetaResultados));
