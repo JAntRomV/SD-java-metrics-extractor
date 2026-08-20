@@ -84,10 +84,14 @@ public class CompiladorProyecto {
             pb.directory(raiz);
             pb.redirectErrorStream(true);
 
-            //-----> Aplica límites de memoria a Gradle
-            if (gradleFile.exists() || gradleKtsFile.exists()) {
-                limitarMemoriaProcesoHijo(pb);
-            }
+            //-----> 🔌 MODIFICADO: antes esto solo se aplicaba a Gradle. La rama
+            //-----> de Maven ("mvn compile") no tenia NINGUN limite de memoria
+            //-----> -ni MAVEN_OPTS ni nada-, asi que quedaba expuesta al mismo
+            //-----> riesgo de OOM del contenedor que ya se habia resuelto para
+            //-----> Gradle (el proceso "mvn" hijo tambien es una JVM completa
+            //-----> compitiendo por los mismos 512MB junto con la app Spring
+            //-----> Boot). Ahora se aplica siempre, sin importar la herramienta.
+            limitarMemoriaProcesoHijo(pb);
 
             //-----> Corre la compilación con tiempo máximo
             ResultadoProceso resultadoProceso = ejecutarProceso(pb, "   [compilacion] ", 60, TimeUnit.MINUTES);
@@ -137,10 +141,17 @@ public class CompiladorProyecto {
     }
 
     //-----> Ajusta variables de entorno de memoria para JVM
+    //-----> 🔌 MODIFICADO: se agrega MAVEN_OPTS y se baja el heap de 256m a
+    //-----> 160m. La app principal usa hasta 50% del contenedor (ver
+    //-----> Dockerfile); antes con 70% + 256m aqui, la SUMA de los dos techos
+    //-----> de heap ya superaba los 512MB totales del contenedor -esa suma,
+    //-----> no un limite faltante, era la causa real del OOM silencioso
+    //-----> durante la compilacion-. Con 50%+160m queda margen real.
     private static void limitarMemoriaProcesoHijo(ProcessBuilder pb) {
-        String opcionesMemoria = "-Xmx256m -XX:MaxMetaspaceSize=128m";
+        String opcionesMemoria = "-Xmx160m -XX:MaxMetaspaceSize=96m";
         Map<String, String> entorno = pb.environment();
         entorno.put("GRADLE_OPTS", opcionesMemoria);
+        entorno.put("MAVEN_OPTS", opcionesMemoria);
         entorno.put("JAVA_OPTS", opcionesMemoria);
     }
 
@@ -280,6 +291,7 @@ public class CompiladorProyecto {
             ProcessBuilder pb = new ProcessBuilder(comandoClasspath);
             pb.directory(raiz);
             pb.redirectErrorStream(true);
+            limitarMemoriaProcesoHijo(pb); //-----> 🔌 NUEVO: esta invocacion de mvn no tenia limite de memoria
 
             ResultadoProceso resultadoProceso = ejecutarProceso(pb, "   [classpath] ", 5, TimeUnit.MINUTES);
 
