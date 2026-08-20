@@ -5,7 +5,7 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
-//-----> Carga y valida la configuración necesaria para conectar a MongoDB Atlas.
+//-----> Lee credenciales y colecciones de MongoDB
 public class ConfiguracionMongo {
 
     public final String uri;
@@ -14,7 +14,7 @@ public class ConfiguracionMongo {
     public final String coleccionClases;
     public final String coleccionDinamicas;
 
-    //-----> Constructor privado con parámetros directos de configuración.
+    //-----> Constructor con las variables directas
     private ConfiguracionMongo(String uri, String baseDatos, String coleccion, String coleccionClases, String coleccionDinamicas) {
         this.uri = uri;
         this.baseDatos = baseDatos;
@@ -23,7 +23,7 @@ public class ConfiguracionMongo {
         this.coleccionDinamicas = coleccionDinamicas;
     }
 
-    //-----> Construye una instancia leyendo variables de entorno y/o archivo .env.
+    //-----> Carga variables desde el entorno o .env
     public static ConfiguracionMongo desdeVariablesDeEntorno() {
         Map<String, String> valores = combinarEntornoYArchivoEnv();
 
@@ -37,14 +37,14 @@ public class ConfiguracionMongo {
         return new ConfiguracionMongo(uri, baseDatos, coleccion, coleccionClases, coleccionDinamicas);
     }
 
-    //-----> Mezcla variables del sistema operativo con las definidas en archivo .env.
+    //-----> Une variables del sistema con el .env
     private static Map<String, String> combinarEntornoYArchivoEnv() {
         Map<String, String> resultado = new HashMap<>(leerArchivoEnvSiExiste());
         resultado.putAll(System.getenv());
         return resultado;
     }
 
-    //-----> Parsea un archivo local .env en búsqueda de pares clave=valor.
+    //-----> Lee claves y valores del archivo .env
     private static Map<String, String> leerArchivoEnvSiExiste() {
         Map<String, String> valores = new HashMap<>();
         File archivoEnv = new File(".env");
@@ -76,7 +76,7 @@ public class ConfiguracionMongo {
         return valores;
     }
 
-    //-----> Valida que una variable requerida no sea nula ni vacía.
+    //-----> Revisa que la variable no este vacia
     private static String obtenerObligatoria(Map<String, String> valores, String nombreVariable) {
         String valor = valores.get(nombreVariable);
         if (valor == null || valor.isBlank()) {
@@ -86,7 +86,7 @@ public class ConfiguracionMongo {
         return valor;
     }
 
-    //-----> Devuelve la URI de conexión a la base de datos.
+    //-----> Retorna la URI de conexion
     public String construirUri() {
         return uri;
     }

@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-//-----> Encargado de configurar y ejecutar las pruebas de rendimiento (Fase 1) usando JMH
+//-----> Administra las pruebas de rendimiento con JMH (Fase 1)
 public class EjecutorDinamico {
 
     private static final String INCLUDE_METODO_BENCHMARK =
@@ -34,7 +34,7 @@ public class EjecutorDinamico {
 
         String classpathParaCargar = params.getOrDefault("classpath", rutaClases);
 
-        //-----> Compila el proyecto en caso de pasarse la ruta original del codigo
+        //-----> Compilación previa si pasa ruta de proyecto
         if (rutaProyecto != null) {
             System.out.println("-----> Se recibio --proyecto, intentando compilar automaticamente...");
             CompiladorProyecto.ResultadoCompilacion resultado = CompiladorProyecto.compilar(rutaProyecto, true);
@@ -54,7 +54,7 @@ public class EjecutorDinamico {
             return;
         }
 
-        //-----> Lectura de parametros de configuracion de lotes y memoria para JMH
+        //-----> Configuración de ejecuciones y lotes de pruebas
         String rutaCatalogo = params.getOrDefault("catalogo", "catalogo_metodos.txt");
 
         int batchSize = Integer.parseInt(params.getOrDefault("batchSize", "50"));
@@ -69,7 +69,7 @@ public class EjecutorDinamico {
         String carpetaResultados = params.getOrDefault("salida", "resultados_dinamicos");
         Files.createDirectories(Paths.get(carpetaResultados));
 
-        //-----> Obtiene la lista de metodos a evaluar a partir del catalogo
+        //-----> Lee los métodos a probar desde el catálogo
         List<String> catalogo = obtenerCatalogo(rutaClases, classpathParaCargar, rutaCatalogo, carpetaResultados);
 
         int totalLotes = (int) Math.ceil(catalogo.size() / (double) batchSize);
@@ -80,7 +80,7 @@ public class EjecutorDinamico {
             return;
         }
 
-        //-----> Extrae unicamente el subconjunto de metodos correspondiente al lote actual
+        //-----> Aísla el lote correspondiente para medir
         int inicio = batchIndex * batchSize;
         int fin = Math.min(inicio + batchSize, catalogo.size());
         List<String> loteActual = catalogo.subList(inicio, fin);
@@ -89,7 +89,7 @@ public class EjecutorDinamico {
 
         String resultCSV = carpetaResultados + "/Benchmarks.csv";
 
-        //-----> Construccion de la configuracion de pruebas dinamicas en JMH
+        //-----> Parámetros de ejecución para las pruebas de JMH
         Options opt = new OptionsBuilder()
             .include(INCLUDE_METODO_BENCHMARK)
             .param("rutaClases", classpathParaCargar)
@@ -109,16 +109,16 @@ public class EjecutorDinamico {
             .timeUnit(java.util.concurrent.TimeUnit.NANOSECONDS)
             .build();
 
-        //-----> Ejecuta el motor Runner de JMH
+        //-----> Ejecuta el motor de pruebas de JMH
         new Runner(opt).run();
 
-        //-----> Anexa las metricas detalladas de tiempo por iteracion en el CSV general
+        //-----> Combina registros de iteraciones individuales
         fusionarTiemposIteracionEnBenchmarks(carpetaResultados, resultCSV);
 
         System.out.println("-----> Fase 1 terminada con exito. Resultados en: " + resultCSV);
     }
 
-    //-----> Combina logs temporales de tiempo con las metricas globales recopiladas por JMH
+    //-----> Unifica tiempos por iteración con resultados globales
     private static void fusionarTiemposIteracionEnBenchmarks(String carpetaResultados, String rutaBenchmarksCsv) throws Exception {
         File carpetaTemp = new File(carpetaResultados, "_temp_inicios_iteracion");
         Map<String, List<Long>> duracionesPorMetodo = leerDuracionesPorMetodo(carpetaTemp);
@@ -166,7 +166,7 @@ public class EjecutorDinamico {
         System.out.println("-----> Tiempos por iteracion fusionados dentro de: " + rutaBenchmarksCsv);
     }
 
-    //-----> Extrae los tiempos acumulados desde los archivos CSV temporales
+    //-----> Extrae tiempos de archivos temporales
     private static Map<String, List<Long>> leerDuracionesPorMetodo(File carpetaTemp) throws Exception {
         Map<String, List<Long>> resultado = new HashMap<>();
         if (!carpetaTemp.exists()) return resultado;
@@ -211,7 +211,7 @@ public class EjecutorDinamico {
         return resultado;
     }
 
-    //-----> Busca la posicion de una columna específica dentro del arreglo de encabezados
+    //-----> Busca la posición de una columna
     private static int indiceDeColumna(String[] encabezado, String nombre) {
         for (int i = 0; i < encabezado.length; i++) {
             if (encabezado[i].trim().equalsIgnoreCase(nombre)) return i;
@@ -219,7 +219,7 @@ public class EjecutorDinamico {
         return -1;
     }
 
-    //-----> Parsea una linea CSV respetando campos entre comillas
+    //-----> Divide líneas CSV respetando comillas
     private static String[] parsearLineaCsv(String linea) {
         List<String> campos = new ArrayList<>();
         for (String parte : linea.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)")) {
@@ -232,7 +232,7 @@ public class EjecutorDinamico {
         return campos.toArray(new String[0]);
     }
 
-    //-----> Carga un catalogo existente o escanea los archivos .class para construir uno nuevo
+    //-----> Obtiene el catálogo o escanea las clases
     private static List<String> obtenerCatalogo(String rutaClases, String classpathParaCargar, String rutaCatalogo, String carpetaResultados) throws Exception {
         File archivoCatalogo = new File(rutaCatalogo);
 
@@ -245,10 +245,7 @@ public class EjecutorDinamico {
         EscaneadorMetodos escaner = new EscaneadorMetodos();
         List<EscaneadorMetodos.MetodoObjetivo> metodos = escaner.escanear(rutaClases, classpathParaCargar);
         escaner.guardarResumen(carpetaResultados + "/_escaneo_resumen.txt");
-        //-----> 🔌 NUEVO: antes se calculaba pero nadie lo guardaba. Deja constancia
-        //-----> exacta de por que se descarto cada clase (constructor con parametros,
-        //-----> clase abstracta, excepcion al instanciar, etc.), util para diagnosticar
-        //-----> repos que terminan con el catalogo de metodos vacio.
+        //-----> Almacena detalle de clases descartadas
         escaner.guardarClasesDescartadas(carpetaResultados + "/_clases_descartadas.log");
 
         List<String> catalogo = new ArrayList<>();
@@ -260,7 +257,7 @@ public class EjecutorDinamico {
         return catalogo;
     }
 
-    //-----> Extrae los argumentos ingresados por la terminal a un diccionario
+    //-----> Convierte banderas en mapa de valores
     private static Map<String, String> getParams(String[] args) {
         Map<String, String> params = new HashMap<>();
         for (String arg : args) {

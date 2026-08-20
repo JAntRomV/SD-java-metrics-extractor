@@ -11,7 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-//-----> Estructura de almacenamiento temporal para calcular diferencias de nanosegundos y timestamps
+//-----> Registra y calcula diferencias de tiempo
 public class TimeLogger {
 
     private final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS.AAAA.nnnnnnnnn");
@@ -25,7 +25,7 @@ public class TimeLogger {
 
     public TimeLogger() {}
 
-    //-----> Inicializa el logger guardando el punto de referencia de tiempo inicial
+    //-----> Inicializa la lista y la marca inicial
     public TimeLogger(String className, int paramN) {
         this.className = className;
         this.paramN = paramN;
@@ -37,7 +37,7 @@ public class TimeLogger {
         logTime(etiqueta, false);
     }
 
-    //-----> Calcula deltas de tiempo desde el ultimo punto registrado y agrega una nueva fila a los registros
+    //-----> Mide la diferencia de tiempo y la guarda
     public void logTime(String etiqueta, boolean isNewIteration) {
         if (this._prevTimes != null) {
             if (isNewIteration) {
@@ -69,7 +69,7 @@ public class TimeLogger {
         }
     }
 
-    //-----> Vuelca la matriz de registros en el archivo CSV especificado
+    //-----> Escribe los registros almacenados en CSV
     public void toCSV(String rutaArchivo) throws IOException {
         if (!LOGS.isEmpty()) {
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(rutaArchivo))) {

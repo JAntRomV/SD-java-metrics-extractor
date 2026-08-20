@@ -8,17 +8,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-//-----> Clase principal para ejecutar el analisis estatico y dinamico en un solo proceso
+//-----> Ejecuta el análisis estático y dinámico completo
 public class AnalizadorUnificado {
 
     public static void main(String[] args) throws Exception {
-        //-----> Parsea los argumentos ingresados por consola
+        //-----> Obtiene parámetros de entrada
         Map<String, String> params = parseArgs(args);
 
         String rutaProyecto = params.get("proyecto");
         String carpetaSalida = params.getOrDefault("salida", "resultados");
 
-        //-----> Valida que se haya ingresado la ruta del proyecto obligatoria
+        //-----> Revisa la ruta obligatoria del proyecto
         if (rutaProyecto == null) {
             System.err.println("Uso: java -cp ... integracion.AnalizadorUnificado --proyecto:/ruta [--salida:resultados]");
             System.err.println("     (tambien acepta los parametros de dinamica: --batchSize --batchIndex --I --WI --F --classpath ...)");
@@ -30,17 +30,17 @@ public class AnalizadorUnificado {
         System.out.println(" Proyecto: " + rutaProyecto);
         System.out.println("==========================================================");
 
-        //-----> Define las subcarpetas de salida para los dos tipos de analisis
+        //-----> Configura rutas de salida para cada análisis
         String salidaEstatica = carpetaSalida + "/resultados_estaticos";
         String salidaDinamica = carpetaSalida + "/resultados_dinamicos";
 
-        //-----> Ejecuta la fase de analisis estatico
+        //-----> Corre el análisis estático
         System.out.println("\n----------------------------------------------------------");
         System.out.println("-----> METRICAS ESTATICAS");
         System.out.println("----------------------------------------------------------");
         new ProcesadorMetricas().analizarUnProyecto(rutaProyecto, salidaEstatica);
 
-        //-----> Ejecuta la fase de analisis dinamico
+        //-----> Corre el análisis dinámico
         System.out.println("\n----------------------------------------------------------");
         System.out.println("-----> METRICAS DINAMICAS");
         System.out.println("----------------------------------------------------------");
@@ -55,7 +55,7 @@ public class AnalizadorUnificado {
         System.out.println("==========================================================");
     }
 
-    //-----> Reemplaza o agrega el parametro --salida en los argumentos para el modulo dinamico
+    //-----> Modifica la carpeta de salida en los argumentos
     private static String[] conSalidaOverride(String[] argsOriginales, String nuevaSalida) {
         List<String> resultado = new ArrayList<>();
         boolean reemplazado = false;
@@ -73,7 +73,7 @@ public class AnalizadorUnificado {
         return resultado.toArray(new String[0]);
     }
 
-    //-----> Convierte el arreglo de argumentos (--clave:valor) a un Mapa
+    //-----> Convierte arreglos de argumentos a mapa clave-valor
     private static Map<String, String> parseArgs(String[] args) {
         Map<String, String> map = new HashMap<>();
         for (String arg : args) {

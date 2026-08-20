@@ -1,42 +1,42 @@
 package estatica;
-//________________________/Calcula Halstead\_______________
+
+//-----> Calculadora de metricas Halstead
 public class HalsteadCalculator {
 
-//----->Calcular el Vocabulario
+    //-----> Vocabulario Halstead (n1 + n2)
     public static int calculateVocabulary(int n1, int n2) {
         return n1 + n2;
     }
 
-//----->Calcular la Longitud
+    //-----> Longitud Halstead (N1 + N2)
     public static int calculateLength(int N1, int N2) {
         return N1 + N2;
     }
 
-//----->Calcular el Volumen
+    //-----> Volumen Halstead
     public static double calculateVolume(int length, int vocabulary) {
         if (vocabulary <= 0) return 0.0;
-//-- En Java no hay log2 directo, por eso dividimos el logaritmo natural entre logaritmo de 2
         double log2n = Math.log(vocabulary) / Math.log(2);
         return length * log2n;
     }
 
-//----->Calcular la Dificultad
+    //-----> Dificultad Halstead
     public static double calculateDifficulty(int n1, int n2, int N2) {
         if (n2 == 0) return 0.0;
         return ((double) n1 / 2.0) * ((double) N2 / (double) n2);
     }
 
-//----->Calcular el Esfuerzo (Dificultad * Volumen)
+    //-----> Esfuerzo de implementacion
     public static double calculateEffort(double difficulty, double volume) {
         return difficulty * volume;
     }
 
-//----->Calcular el Tiempo estimado
+    //-----> Tiempo estimado en segundos
     public static double calculateTime(double effort) {
         return effort / 18.0;
     }
 
-//----->Calcular los Bugs estimados 
+    //-----> Estimacion de errores/bugs
     public static double calculateBugs(double volume) {
         return volume / 3000.0;
     }

@@ -1,6 +1,6 @@
 package dinamica;
 
-//-----> Molde para guardar el resultado de rendimiento (tiempo y memoria) de un método
+//-----> Guarda datos de tiempo y memoria de un método
 public class ResultadoDinamico {
 
     private final String fileName;
@@ -27,7 +27,7 @@ public class ResultadoDinamico {
         this.memoriaAsignadaBytes = memoriaAsignadaBytes;
     }
 
-    // Clave estándar en formato Clase#Metodo
+    //-----> Genera identificador formato Clase#Metodo
     public String getLlaveUnion() {
         return className + "#" + methodName;
     }

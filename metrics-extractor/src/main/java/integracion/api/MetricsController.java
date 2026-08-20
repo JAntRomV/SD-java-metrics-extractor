@@ -18,30 +18,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-//-----> Expone tu framework de metricas (estatico + dinamico) como API REST
+//-----> Controlador principal de endpoints REST
 @RestController
 public class MetricsController {
 
-    //-----> Bandera en memoria: evita lanzar dos lotes de procesamiento al mismo tiempo
+    //-----> Estado y control del proceso activo
     private final AtomicBoolean corriendo = new AtomicBoolean(false);
     private volatile String ultimoInicio = null;
     private volatile String ultimoResultado = "sin ejecuciones todavia";
 
-    //-----> Dispara el analisis en un hilo aparte y responde de inmediato.
-    //-----> 🔌 MODIFICADO: ahora acepta un parametro opcional "repo". Si se
-    //-----> manda (ej. POST /api/metrics/run?repo=owner/nombre), solo se
-    //-----> procesa ESE repo. Si no se manda, se comporta igual que antes:
-    //-----> procesa todos los repos pendientes del catalogo.
-    //-----> 🔌 MODIFICADO: se agrega name="repo" explicito. Sin esto, Spring
-    //-----> intenta averiguar el nombre del parametro leyendo el bytecode
-    //-----> compilado, lo cual solo funciona si Maven compilo con la bandera
-    //-----> -parameters. Como no era el caso aqui, CADA peticion a este
-    //-----> endpoint truena con IllegalArgumentException antes de ejecutar
-    //-----> una sola linea del metodo -ni siquiera llega a tocar Mongo-.
+    //-----> Inicia el analisis en segundo plano
     @PostMapping("/api/metrics/run")
     public ResponseEntity<Map<String, Object>> ejecutar(
             @RequestParam(name = "repo", required = false) String repo) {
 
+        //-----> Evita ejecuciones simultaneas
         if (!corriendo.compareAndSet(false, true)) {
             Map<String, Object> cuerpo = new HashMap<>();
             cuerpo.put("iniciado", false);
@@ -49,9 +40,11 @@ public class MetricsController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(cuerpo);
         }
 
+        //-----> Registra inicio de ejecucion
         ultimoInicio = Instant.now().toString();
         ultimoResultado = "en progreso";
 
+        //-----> Crea y dispara hilo de trabajo
         Thread hiloAnalisis = new Thread(() -> {
             try {
                 Map<String, String> params = new HashMap<>();
@@ -68,6 +61,7 @@ public class MetricsController {
         }, "metrics-run-thread");
         hiloAnalisis.start();
 
+        //-----> Respuesta confirmando el arranque
         Map<String, Object> cuerpo = new HashMap<>();
         cuerpo.put("iniciado", true);
         cuerpo.put("mensaje", (repo != null && !repo.isBlank())
@@ -76,7 +70,7 @@ public class MetricsController {
         return ResponseEntity.accepted().body(cuerpo);
     }
 
-    //-----> Consulta rapida en memoria, no toca Mongo
+    //-----> Consulta el estado actual de la ejecucion
     @GetMapping("/api/metrics/status")
     public Map<String, Object> status() {
         Map<String, Object> cuerpo = new HashMap<>();
@@ -86,7 +80,7 @@ public class MetricsController {
         return cuerpo;
     }
 
-    //-----> Reutiliza DiagnosticoAlmacenamiento.resumenGeneral() que ya tenias armado
+    //-----> Consulta el resumen general guardado en Mongo
     @GetMapping("/api/metrics/summary")
     public ResponseEntity<?> summary() {
         ConfiguracionMongo config = ConfiguracionMongo.desdeVariablesDeEntorno();
@@ -100,8 +94,7 @@ public class MetricsController {
         }
     }
 
-    //-----> 🔌 NUEVO: lista completa del catalogo (para ver, ej., que repos
-    //-----> estan "en progreso" y en que fase van: estatica/dinamica)
+    //-----> Devuelve la lista completa de repositorios
     @GetMapping("/api/metrics/repos")
     public ResponseEntity<?> listarRepos() {
         ConfiguracionMongo config = ConfiguracionMongo.desdeVariablesDeEntorno();
@@ -115,11 +108,7 @@ public class MetricsController {
         }
     }
 
-    //-----> 🔌 NUEVO: detalle puntual de un solo repo
-    //-----> 🔌 MODIFICADO: mismo fix que en ejecutar() -- se agrega name="id"
-    //-----> explicito para no depender de que Maven haya compilado con -parameters.
-    //-----> Esto es lo que causaba el error 500 (Whitelabel Error Page) al abrir
-    //-----> /api/metrics/repo?id=... directamente en el navegador.
+    //-----> Devuelve los datos de un repositorio por su ID
     @GetMapping("/api/metrics/repo")
     public ResponseEntity<?> obtenerRepo(@RequestParam(name = "id") String id) {
         ConfiguracionMongo config = ConfiguracionMongo.desdeVariablesDeEntorno();
@@ -138,6 +127,7 @@ public class MetricsController {
         }
     }
 
+    //-----> Verifica la disponibilidad del servicio
     @GetMapping("/api/health")
     public Map<String, String> health() {
         return Map.of("status", "ok");

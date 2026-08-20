@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-//-----> Clase anotada con JMH para preparar, aislar y ejecutar la medicion de cada metodo
+//-----> Prepara y ejecuta la medición aislada
 @BenchmarkMode(Mode.SampleTime)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @State(Scope.Benchmark)
@@ -31,7 +31,7 @@ public class MetodoBenchmark {
 
     private TimeLogger _timeLogger;
 
-    //-----> Inicializa la instanciacion del metodo objetivo dinamico antes del benchmark
+    //-----> Carga dinámicamente el método objetivo
     @Setup(Level.Trial)
     public void prepararMetodo() throws Exception {
         String[] partes = metodoObjetivo.split("#");
@@ -54,7 +54,7 @@ public class MetodoBenchmark {
         this._timeLogger = new TimeLogger(metodoObjetivo, 0);
     }
 
-    //-----> Registra el tiempo de partida al iniciar cada iteracion de la prueba
+    //-----> Guarda marca al iniciar cada iteración
     @Setup(Level.Iteration)
     public void marcarInicioIteracion() {
         if (_timeLogger != null) {
@@ -62,7 +62,7 @@ public class MetodoBenchmark {
         }
     }
 
-    //-----> Limpia cargadores de clases y exporta registros acumulados a archivos CSV temporales
+    //-----> Libera recursos y exporta datos temporales
     @TearDown(Level.Trial)
     public void limpiar() throws Exception {
         if (loader != null) {
@@ -78,7 +78,7 @@ public class MetodoBenchmark {
         }
     }
 
-    //-----> Metodo medido por JMH evitando optimizaciones de Dead Code mediante Blackhole
+    //-----> Invoca el método evitando optimización
     @Benchmark
     public void medirMetodo(Blackhole bh) throws Exception {
         Object resultado = metodo.invoke(instancia);

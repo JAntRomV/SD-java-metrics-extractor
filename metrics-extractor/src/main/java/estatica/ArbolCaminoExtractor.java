@@ -9,38 +9,29 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
-//-----> Extrae caminos del AST de una clase Java
+//-----> Extractor de caminos AST
 public class ArbolCaminoExtractor {
 
-    //-----> Guarda resultados de un metodo
+    //-----> Datos de metodos analizados
     public static class ResultadoMetodo {
-        public String nombreMetodo;
-        public List<String> vectorTexto = new ArrayList<>();
-        public List<List<Integer>> vectorNumerico = new ArrayList<>();
-        //-----> 🔌 NUEVO: marca si se alcanzo el limite de caminos y se dejaron
-        //-----> de generar mas (ver MAX_CAMINOS_POR_METODO abajo).
-        public boolean truncado = false;
+        public String nombreMetodo; //-----> Nombre del metodo
+        public List<String> vectorTexto = new ArrayList<>(); //-----> Caminos en texto
+        public List<List<Integer>> vectorNumerico = new ArrayList<>(); //-----> Caminos en numeros
+        public boolean truncado = false; //-----> Indica si supero el limite
     }
 
-    //-----> Guarda resultados de una clase
+    //-----> Datos de clases analizadas
     public static class ResultadoClase {
-        public String nombreClase;
-        public List<ResultadoMetodo> metodos = new ArrayList<>();
+        public String nombreClase; //-----> Nombre de clase
+        public List<ResultadoMetodo> metodos = new ArrayList<>(); //-----> Lista de metodos
     }
 
-    private int contadorGlobal = 1;
-    private Map<Node, Integer> numeracionNodos = new IdentityHashMap<>();
+    private int contadorGlobal = 1; //-----> Contador de nodos
+    private Map<Node, Integer> numeracionNodos = new IdentityHashMap<>(); //-----> Mapa de IDs
 
-    //-----> 🔌 NUEVO: tope de caminos raiz-a-hoja que se generan por metodo.
-    //-----> Sin este limite, un metodo con varios if/else anidados puede generar
-    //-----> una explosion combinatoria de caminos (crece potencialmente 2^n con
-    //-----> el numero de decisiones), llenando la memoria del proceso antes de
-    //-----> que nada se llegue a guardar en disco o en Mongo -esto era la causa
-    //-----> raiz de los OOM que tumbaban el contenedor a media generacion de
-    //-----> [CAMINO JSON]-.
-    private static final int MAX_CAMINOS_POR_METODO = 500;
+    private static final int MAX_CAMINOS_POR_METODO = 500; //-----> Maximo de caminos
 
-    //-----> Procesa metodos de la clase y extrae caminos
+    //-----> Recorre metodos de la clase
     public ResultadoClase procesarClase(CompilationUnit cu, String nombreArchivo) {
         ResultadoClase resultado = new ResultadoClase();
         resultado.nombreClase = nombreArchivo;
@@ -64,7 +55,7 @@ public class ArbolCaminoExtractor {
         return resultado;
     }
 
-    //-----> Asigna un id numerico preorden a cada nodo
+    //-----> Asigna ID preorden a nodos
     private void asignarNumerosPreorden(Node nodo) {
         if (!(nodo instanceof BlockStmt && nodo.getParentNode().isPresent() && nodo.getParentNode().get() instanceof MethodDeclaration)) {
             numeracionNodos.put(nodo, contadorGlobal++);
@@ -74,10 +65,9 @@ public class ArbolCaminoExtractor {
         }
     }
 
-    //-----> Genera los caminos recursivamente por nodos
+    //-----> Genera caminos recursivamente
     private void generarCaminos(Node nodo, List<String> txtCamino, List<Integer> numCamino, ResultadoMetodo res) {
-        //-----> 🔌 NUEVO: corta la recursion en cuanto se alcanza el tope, en vez
-        //-----> de seguir explorando ramas y acumulando mas caminos en memoria.
+        //-----> Corta si supera el limite
         if (res.vectorTexto.size() >= MAX_CAMINOS_POR_METODO) {
             res.truncado = true;
             return;
@@ -85,7 +75,7 @@ public class ArbolCaminoExtractor {
 
         int numeroAsignado = numeracionNodos.getOrDefault(nodo, 0);
 
-        if (nodo instanceof IfStmt) {
+        if (nodo instanceof IfStmt) { //-----> Control de condicional IF
             IfStmt condicional = (IfStmt) nodo;
             String condicion = "if(" + condicional.getCondition().toString().replaceAll("\\s+", "") + ")";
 
@@ -98,14 +88,13 @@ public class ArbolCaminoExtractor {
 
             generarCaminos(condicional.getThenStmt(), txtSi, numSi, res);
 
-            //-----> 🔌 NUEVO: si ya se llego al tope explorando la rama "si", no
-            //-----> vale la pena explorar tambien la rama "no".
+            //-----> Validacion de limite en rama THEN
             if (res.vectorTexto.size() >= MAX_CAMINOS_POR_METODO) {
                 res.truncado = true;
                 return;
             }
 
-            if (condicional.getElseStmt().isPresent()) {
+            if (condicional.getElseStmt().isPresent()) { //-----> Rama ELSE
                 List<String> txtNo = new ArrayList<>(txtCamino);
                 List<Integer> numNo = new ArrayList<>(numCamino);
 
@@ -121,7 +110,6 @@ public class ArbolCaminoExtractor {
 
         String textoNodo = nodo.toString().trim().replaceAll("\\s+", " ").replace("\n", "");
 
-        //-----> Copia listas para no contaminar hermanos
         List<String> txtActual = new ArrayList<>(txtCamino);
         List<Integer> numActual = new ArrayList<>(numCamino);
 
@@ -134,7 +122,7 @@ public class ArbolCaminoExtractor {
         }
 
         List<Node> hijos = nodo.getChildNodes();
-        if (hijos.isEmpty()) {
+        if (hijos.isEmpty()) { //-----> Al llegar a una hoja guarda el camino
             String lineaFinal = String.join("|", txtActual);
 
             if (!res.vectorTexto.contains(lineaFinal) && !lineaFinal.isEmpty()) {

@@ -20,14 +20,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-//-----> Inserta instrucciones de monitoreo (marcar) antes de cada sentencia JavaParser
+//-----> Modifica el AST para inyectar marcas de tiempo
 public class InstrumentadorCaminos {
 
     static {
         StaticJavaParser.getConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.BLEEDING_EDGE);
     }
 
-    //-----> Lee un archivo Java, localiza el método objetivo y le injecta llamadas de rastreo
+    //-----> Inserta instrucciones de registro en el método
     public String instrumentar(String rutaArchivoOriginal, String nombreMetodoObjetivo, String carpetaSalida) throws Exception {
         File archivoOriginal = new File(rutaArchivoOriginal);
         CompilationUnit cu = StaticJavaParser.parse(archivoOriginal);
@@ -40,7 +40,7 @@ public class InstrumentadorCaminos {
 
         boolean metodoObjetivoEncontrado = false;
 
-        //-----> Busca el metodo exacto sin parametros
+        //-----> Localiza el método e inyecta monitoreo
         List<MethodDeclaration> metodos = cu.findAll(MethodDeclaration.class);
         for (MethodDeclaration metodo : metodos) {
             if (metodo.getNameAsString().equals(nombreMetodoObjetivo)
@@ -59,7 +59,7 @@ public class InstrumentadorCaminos {
                     "anotaciones, ej. @Data/@Getter/@ToString) -- no se puede cronometrar por camino.");
         }
 
-        //-----> Guarda el archivo modificado con la instrumentacion
+        //-----> Guarda el archivo instrumentado generado
         File carpeta = new File(carpetaSalida);
         carpeta.mkdirs();
         File archivoInstrumentado = new File(carpeta, nombreClase + ".java");
@@ -68,7 +68,7 @@ public class InstrumentadorCaminos {
         return archivoInstrumentado.getAbsolutePath();
     }
 
-    //-----> Recorre las instrucciones del método e intercala la funcion de registro de tiempo
+    //-----> Intercala llamadas de seguimiento entre instrucciones
     private void instrumentarMetodo(MethodDeclaration metodo, String claseCompleta) {
         BlockStmt cuerpo = metodo.getBody().get();
         List<Statement> instrucciones = cuerpo.findAll(Statement.class).stream()
@@ -82,7 +82,7 @@ public class InstrumentadorCaminos {
             boolean esPrimeraInstruccion = (numeroInstruccion == 1);
             String etiqueta = "INSTR-" + numeroInstruccion;
 
-            //-----> Encapsula la sentencia actual en un bloque agregando 'RegistradorTiempos.marcar()' antes
+            //-----> Empaqueta la sentencia con el registrador
             BlockStmt bloque = new BlockStmt();
             bloque.addStatement(crearLlamadaMarcar(etiqueta, esPrimeraInstruccion));
 
@@ -93,7 +93,7 @@ public class InstrumentadorCaminos {
         }
     }
 
-    //-----> Verifica si un nodo del AST esta contenido dentro de una expresion Lambda
+    //-----> Ignora expresiones dentro de lambdas
     private boolean estaDentroDeLambda(Node nodo) {
         Optional<Node> padre = nodo.getParentNode();
         while (padre.isPresent()) {
@@ -105,7 +105,7 @@ public class InstrumentadorCaminos {
         return false;
     }
 
-    //-----> Genera sintacticamente la sentencia 'RegistradorTiempos.marcar("INSTR-X", boolean)'
+    //-----> Crea la llamada a 'RegistradorTiempos.marcar'
     private ExpressionStmt crearLlamadaMarcar(String etiqueta, boolean esNuevaIteracion) {
         MethodCallExpr llamada = new MethodCallExpr();
         llamada.setScope(StaticJavaParser.parseExpression("dinamica.RegistradorTiempos"));

@@ -4,14 +4,15 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.stmt.ThrowStmt;
 
+//-----> Calculadora del Grafo de Flujo (CFG)
 public class CfgCalculator {
 
-//----->Estructura interna para agrupar los 4 datos del Grafo y poder devolverlos juntos
+    //-----> Resultados del grafo
     public static class CfgResult {
-        public final int nodes;
-        public final int edges;
-        public final int cyclomaticComplexity;
-        public final int unconnectedNodes;
+        public final int nodes; //-----> Cantidad de nodos
+        public final int edges; //-----> Cantidad de aristas
+        public final int cyclomaticComplexity; //-----> Complejidad ciclomática
+        public final int unconnectedNodes; //-----> Nodos desconectados
 
         public CfgResult(int nodes, int edges, int cyclomaticComplexity, int unconnectedNodes) {
             this.nodes = nodes;
@@ -20,19 +21,19 @@ public class CfgCalculator {
             this.unconnectedNodes = unconnectedNodes;
         }
     }
-//----->Calcula los componentes estimados del CFG
-     
+
+    //-----> Estima metricas del CFG
     public static CfgResult estimateCfg(MethodDeclaration md, int decisions) {
-//----->Fórmulas teóricas basadas en métricas de complejidad de McCabe
+        //-----> Formulas de McCabe
         int nodes = 2 + decisions;
         int edges = nodes + decisions;
         int cc    = edges - nodes + 2;
         
-//----->Calcular salidas tempranas (nodos que rompen el flujo normal)
+        //-----> Conteo de salidas anticipadas
         int earlyExits = md.findAll(ReturnStmt.class).size()
                        + md.findAll(ThrowStmt.class).size();
                        
-//----->Estimación de nodos inconexos
+        //-----> Conteo de nodos aislados
         int unconnectedNodes = Math.max(0, earlyExits - 1);
 
         return new CfgResult(nodes, edges, cc, unconnectedNodes);

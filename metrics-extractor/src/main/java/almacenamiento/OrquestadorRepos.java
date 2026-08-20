@@ -15,21 +15,16 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-//-----> Orquestador para procesar repos
+//-----> Procesa y analiza lotes de repositorios
 public class OrquestadorRepos {
 
-    //-----> Punto de entrada por consola: solo parsea argumentos y delega
+    //-----> Lee argumentos y arranca lote
     public static void main(String[] args) throws Exception {
         Map<String, String> params = parseArgs(args);
         ejecutarLote(params);
     }
 
-    //-----> Cuerpo real del proceso, extraido de main() para poder invocarlo
-    //-----> tambien desde MetricsController (API REST).
-    //-----> 🔌 MODIFICADO: si params trae la llave "repo" con un _id valido,
-    //-----> se procesa SOLO ese repo (ignora "limite" en ese caso). Si no
-    //-----> viene, se comporta exactamente igual que antes: procesa todos
-    //-----> los repos pendientes (respetando "limite" si se manda).
+    //-----> Corre el flujo de mineria completo
     public static void ejecutarLote(Map<String, String> params) throws Exception {
 
         String carpetaClones = params.getOrDefault("clones", "repos_clonados");
@@ -45,12 +40,6 @@ public class OrquestadorRepos {
             List<Document> pendientes;
 
             if (repoUnico != null && !repoUnico.isBlank()) {
-                //-----> 🔌 MODIFICADO: antes esto imprimia el error a consola y hacia
-                //-----> 'return' en silencio -sin lanzar excepcion-, lo que hacia que
-                //-----> MetricsController (y cualquier llamador) pensara que el proceso
-                //-----> "termino sin errores" aunque en realidad no se toco absolutamente
-                //-----> nada en Mongo (ni siquiera se marco como fallido). Ahora se lanza
-                //-----> una excepcion explicita para que el error si se reporte.
                 Document repoEncontrado = almacen.obtenerRepositorioPorId(repoUnico);
                 if (repoEncontrado == null) {
                     throw new IllegalArgumentException(
@@ -76,7 +65,7 @@ public class OrquestadorRepos {
 
             int exitosos = 0;
             int fallidos = 0;
-            int soloEstaticos = 0; //-----> 🔌 NUEVO: repos con estatica completa pero sin datos dinamicos
+            int soloEstaticos = 0;
 
             for (Document repo : pendientes) {
                 String idRepo = repo.getString("_id");
@@ -102,9 +91,6 @@ public class OrquestadorRepos {
 
                     almacen.inicializarMetricasVacias(idRepo);
 
-                    //-----> Subida de metricas estaticas
-                    //-----> 🔌 MODIFICADO: se agrega el segundo consumidor para los
-                    //-----> fragmentos de caminos (ver LectorResultados/AlmacenMetricasMongo).
                     int clasesSubidas = lector.procesarClasesUnaAUna(
                             new File(carpetaEstaticos),
                             claseDoc -> almacen.agregarClaseAMetricas(idRepo, claseDoc),
@@ -123,17 +109,11 @@ public class OrquestadorRepos {
                     System.out.println("-----> " + idRepo + ": " + clasesSubidas + " clase(s) subidas.");
                     almacen.actualizarEstadoParcial(idRepo, "static", "complete");
 
-                    //-----> Subida de metricas dinamicas
                     int documentosDinamicosSubidos = lector.procesarDinamicosPorClaseUnaAUna(
                             new File(carpetaDinamicos),
                             dinamicoDoc -> almacen.agregarDinamicoAMetricas(idRepo, dinamicoDoc)
                     );
 
-                    //-----> 🔌 MODIFICADO: si la fase estatica ya se completo (clasesSubidas > 0,
-                    //-----> confirmado arriba) pero la dinamica no genero ningun documento, ya NO
-                    //-----> se trata como fallo total. Se marca como "solo estatico completo" para
-                    //-----> no perder el rastro de que la parte estatica si funciono, y sin pisar
-                    //-----> metrics.estaticas (ver AlmacenMetricasMongo.marcarSoloEstaticoCompleto).
                     if (documentosDinamicosSubidos == 0) {
                         String razon = "El analisis dinamico no genero Benchmarks.csv ni cronometro_caminos.csv en: "
                                 + carpetaDinamicos + " (posible catalogo de metodos vacio, sin metodos aprobados, "
@@ -157,7 +137,6 @@ public class OrquestadorRepos {
                     System.out.printf("-----> Espacio usado en repo_catalog hasta ahora: %.2f MB%n", mbUsados);
 
                 } catch (Throwable e) {
-                    //-----> Manejo de errores globales
                     System.err.println("-----> " + idRepo + ": fallo al procesar -> " + e.getMessage());
                     try {
                         almacen.guardarMetricas(idRepo, new Document("error", String.valueOf(e.getMessage())), "metrics_failed");
@@ -208,10 +187,8 @@ public class OrquestadorRepos {
         pb.redirectErrorStream(true);
         Process proceso = pb.start();
 
-        //-----> Cierra entrada estandar git
         proceso.getOutputStream().close();
 
-        //-----> Hilo para leer log git
         Thread hiloLector = new Thread(() -> {
             try (BufferedReader lector = new BufferedReader(new InputStreamReader(proceso.getInputStream()))) {
                 String linea;
@@ -219,7 +196,6 @@ public class OrquestadorRepos {
                     System.out.println("   [git] " + linea);
                 }
             } catch (Exception ignorado) {
-                //-----> Proceso interrumpido por timeout
             }
         });
         hiloLector.setDaemon(true);
@@ -258,12 +234,12 @@ public class OrquestadorRepos {
         }
     }
 
-    //-----> Sanitiza nombres de carpetas
+    //-----> Reemplaza caracteres invalidos por guiones
     private static String sanitizar(String s) {
         return (s == null || s.isEmpty()) ? "sin_nombre" : s.replaceAll("[^a-zA-Z0-9_\\-]", "_");
     }
 
-    //-----> Parsea parametros de entrada
+    //-----> Convierte arreglo de argumentos en Map
     private static Map<String, String> parseArgs(String[] args) {
         Map<String, String> map = new HashMap<>();
         for (String arg : args) {

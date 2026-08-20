@@ -14,20 +14,20 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-//-----> Compilador automatico para proyectos Java
+//-----> Compila proyectos automáticos en Java
 public class CompiladorProyecto {
 
-    //-----> Lenguajes soportados para clases compiladas
+    //-----> Lenguajes permitidos para buscar clases
     private static final Set<String> LENGUAJES_CONOCIDOS = Set.of("java", "kotlin", "groovy", "scala");
 
-    //-----> Guarda los datos del resultado de compilacion
+    //-----> Almacena la salida del proceso de compilación
     public static class ResultadoCompilacion {
         public final boolean exitoso;
         public final String carpetaClases;
         public final String mensaje;
         public final String classpathCompleto;
 
-        //-----> Asigna los valores del resultado
+        //-----> Guarda las propiedades de la compilación
         public ResultadoCompilacion(boolean exitoso, String carpetaClases, String mensaje, String classpathCompleto) {
             this.exitoso = exitoso;
             this.carpetaClases = carpetaClases;
@@ -36,47 +36,36 @@ public class CompiladorProyecto {
         }
     }
 
-    //-----> Sobrecarga del metodo compilar
+    //-----> Ejecuta compilación con classpath simple
     public static ResultadoCompilacion compilar(String rutaProyecto) throws Exception {
         return compilar(rutaProyecto, false);
     }
 
-    //-----> Detecta la herramienta y compila el proyecto
+    //-----> Procesa la compilación según la herramienta del proyecto
     public static ResultadoCompilacion compilar(String rutaProyecto, boolean calcularClasspathCompleto) {
         try {
             File raiz = new File(rutaProyecto);
 
-            //-----> Valida que la carpeta exista
+            //-----> Confirma la existencia de la carpeta
             if (!raiz.exists() || !raiz.isDirectory()) {
                 return new ResultadoCompilacion(false, null, "La carpeta del proyecto no existe: " + rutaProyecto, null);
             }
 
-            //-----> Busca archivos de configuracion
+            //-----> Archivos de construcción
             File pomFile = new File(raiz, "pom.xml");
             File gradleFile = new File(raiz, "build.gradle");
             File gradleKtsFile = new File(raiz, "build.gradle.kts");
 
             String[] comando;
 
-            //-----> Arma comando para Maven o Gradle
+            //-----> Selecciona comandos para Maven o Gradle
             if (pomFile.exists()) {
                 comando = new String[]{"mvn", "compile", "-q", "-DskipTests"};
             } else if (gradleFile.exists() || gradleKtsFile.exists()) {
                 File gradlew = new File(raiz, "gradlew");
                 String ejecutable = gradlew.exists() ? "./gradlew" : "gradle";
 
-                //-----> 🔌 MODIFICADO: se agrega "--max-workers=1". Aunque ya se
-                //-----> usaba "--no-daemon" (evita el Build Daemon persistente),
-                //-----> Gradle sigue pudiendo forkear procesos "worker" separados
-                //-----> para compilar en paralelo (workers de compilacion, que
-                //-----> usan la MISMA infraestructura interna de sockets que el
-                //-----> Build Daemon -de ahi los mensajes "DefaultDaemonConnection"
-                //-----> en el log aunque tecnicamente no sea el Build Daemon-). En
-                //-----> un contenedor de 512MB, cada worker forkeado es una JVM
-                //-----> adicional compitiendo por memoria junto con la app Spring
-                //-----> Boot y el propio proceso "gradlew --no-daemon". Forzar a 1
-                //-----> solo worker evita esa multiplicacion y es la causa mas
-                //-----> probable del OOM que tumbaba la compilacion a medias.
+                //-----> Configura ejecución liviana de Gradle con 1 worker
                 comando = new String[]{
                         ejecutable, "compileJava",
                         "--dependency-verification=off",
@@ -90,42 +79,36 @@ public class CompiladorProyecto {
 
             System.out.println("-----> Compilando con: " + String.join(" ", comando) + " (en " + raiz.getAbsolutePath() + ")");
 
-            //-----> Configura el proceso de compilacion
+            //-----> Inicia el proceso externo
             ProcessBuilder pb = new ProcessBuilder(comando);
             pb.directory(raiz);
             pb.redirectErrorStream(true);
 
-            //-----> 🔌 NUEVO: acota la memoria del proceso hijo (y de cualquier
-            //-----> JVM que el propio Gradle llegue a forkear adentro, ej. si
-            //-----> algo ignora --no-daemon). Sin esto, cada JVM hija puede
-            //-----> reclamar hasta 1/4 de la RAM del contenedor por defecto,
-            //-----> lo cual en un contenedor de 512MB es demasiado si hay mas
-            //-----> de una JVM viva a la vez (la app Spring Boot + el proceso
-            //-----> de compilacion). Ver limitarMemoriaProcesoHijo() mas abajo.
+            //-----> Aplica límites de memoria a Gradle
             if (gradleFile.exists() || gradleKtsFile.exists()) {
                 limitarMemoriaProcesoHijo(pb);
             }
 
-            //-----> Ejecuta el proceso con limite de tiempo
-            ResultadoProceso resultadoProceso = ejecutarProceso(pb, "   [compilacion] ", 30, TimeUnit.MINUTES);
+            //-----> Corre la compilación con tiempo máximo
+            ResultadoProceso resultadoProceso = ejecutarProceso(pb, "   [compilacion] ", 60, TimeUnit.MINUTES);
 
             if (!resultadoProceso.termino) {
-                return new ResultadoCompilacion(false, null, "La compilacion tardo mas de 15 minutos, se cancelo.", null);
+                return new ResultadoCompilacion(false, null, "La compilacion tardo mas de 60 minutos, se cancelo.", null);
             }
 
-            //-----> Revisa si hubo error en el proceso
+            //-----> Valida el estado final de la ejecución
             int codigoSalida = resultadoProceso.codigoSalida;
             if (codigoSalida != 0) {
                 return new ResultadoCompilacion(false, null, "La compilacion fallo, codigo de salida: " + codigoSalida, null);
             }
 
-            //-----> Localiza la carpeta con archivos .class
+            //-----> Ubica los compilados generados
             String carpetaClases = resolverCarpetaClases(raiz, pomFile.exists());
             if (carpetaClases == null || carpetaClases.isBlank()) {
                 return new ResultadoCompilacion(false, null, "La compilacion salio bien, pero no se encontraron archivos .class compilados en " + rutaProyecto, null);
             }
 
-            //-----> Calcula el classpath con librerias si se pide
+            //-----> Resuelve las dependencias adicionales
             String classpathCompleto = carpetaClases;
             if (calcularClasspathCompleto && pomFile.exists()) {
                 System.out.println("-----> Calculando el classpath completo de dependencias (Maven)...");
@@ -142,7 +125,7 @@ public class CompiladorProyecto {
         }
     }
 
-    //-----> Estado final de la ejecucion del proceso
+    //-----> Estado de salida del comando
     private static class ResultadoProceso {
         final boolean termino;
         final int codigoSalida;
@@ -153,13 +136,7 @@ public class CompiladorProyecto {
         }
     }
 
-    //-----> 🔌 NUEVO: acota la memoria de cualquier JVM que el proceso Gradle
-    //-----> hijo llegue a levantar (el propio cliente "gradlew --no-daemon", y
-    //-----> por seguridad tambien GRADLE_OPTS/JAVA_OPTS por si algun sub-paso
-    //-----> del build ignora --no-daemon y termina levantando una JVM extra).
-    //-----> Los valores son conservadores pensando en un contenedor de 512MB
-    //-----> total (compartido con la app Spring Boot) -- si el plan del
-    //-----> contenedor cambia, hay que ajustar estos numeros.
+    //-----> Ajusta variables de entorno de memoria para JVM
     private static void limitarMemoriaProcesoHijo(ProcessBuilder pb) {
         String opcionesMemoria = "-Xmx256m -XX:MaxMetaspaceSize=128m";
         Map<String, String> entorno = pb.environment();
@@ -167,7 +144,7 @@ public class CompiladorProyecto {
         entorno.put("JAVA_OPTS", opcionesMemoria);
     }
 
-    //-----> Corre procesos externos con hilo lector y timeout
+    //-----> Maneja subprocesos y captura su salida
     private static ResultadoProceso ejecutarProceso(ProcessBuilder pb, String prefijoLog, long tiempoLimite, TimeUnit unidad) throws Exception {
         Process proceso = pb.start();
         proceso.getOutputStream().close();
@@ -179,7 +156,7 @@ public class CompiladorProyecto {
                     System.out.println(prefijoLog + linea);
                 }
             } catch (Exception ignorado) {
-                //-----> Proceso terminado a la fuerza
+                //-----> Finalización del lector
             }
         });
         hiloLector.setDaemon(true);
@@ -194,25 +171,25 @@ public class CompiladorProyecto {
         return new ResultadoProceso(termino, termino ? proceso.exitValue() : -1);
     }
 //_________________________________________________________________________________________
-    //-----> Busca rutas de archivos .class compilados
+    //-----> Encuentra directorios de binarios compilados
     private static String resolverCarpetaClases(File raiz, boolean esMaven) {
-        //-----> Ruta por defecto de Maven
+        //-----> Ruta estándar en Maven
         if (esMaven) {
             File targetClasses = new File(raiz, "target/classes");
             if (targetClasses.exists()) return targetClasses.getAbsolutePath();
         }
 
-        //-----> Busca carpetas en submodulos o Gradle
+        //-----> Búsqueda modular o Gradle
         List<String> raices = buscarRaicesDeModulos(raiz);
         if (!raices.isEmpty()) {
             return String.join(File.pathSeparator, raices);
         }
 
-        //-----> Busqueda alternativa de clases
+        //-----> Estrategia alternativa de búsqueda
         return resolverCarpetaClasesFallback(raiz);
     }
 
-    //-----> Lista carpetas llamadas classes
+    //-----> Rastrea carpetas de clases
     private static List<String> buscarRaicesDeModulos(File raiz) {
         List<String> resultado = new ArrayList<>();
         try (var stream = Files.walk(raiz.toPath())) {
@@ -230,7 +207,7 @@ public class CompiladorProyecto {
         return resultado.stream().distinct().collect(Collectors.toList());
     }
 //________________________________________________________________________________________
-    //-----> Procesa estructura interna de carpetas classes
+    //-----> Extrae las rutas de paquetes válidas
     private static List<String> resolverRaicesDentroDeClasses(Path carpetaClasses) {
         List<String> resultado = new ArrayList<>();
         try {
@@ -260,14 +237,14 @@ public class CompiladorProyecto {
         return resultado;
     }
 //__________________________________________________________________________________
-    //-----> Revisa si la carpeta contiene archivos .class
+    //-----> Verifica presencia de binarios
     private static boolean contieneClases(Path carpeta) throws Exception {
         try (var stream = Files.walk(carpeta)) {
             return stream.anyMatch(p -> p.toString().endsWith(".class"));
         }
     }
 
-    //-----> Recorre el proyecto buscando archivos .class
+    //-----> Escanea el proyecto entero buscando clases
     private static String resolverCarpetaClasesFallback(File raiz) {
         List<String> carpetasConClases = new ArrayList<>();
         try (var stream = Files.walk(raiz.toPath())) {
@@ -289,7 +266,7 @@ public class CompiladorProyecto {
         return String.join(File.pathSeparator, carpetasConClases);
     }
 
-    //-----> Obtiene el classpath de dependencias con Maven
+    //-----> Genera la lista de dependencias con Maven
     private static String obtenerClasspathMaven(File raiz, String carpetaClases) {
         try {
             File archivoTemporal = File.createTempFile("classpath-", ".txt");
@@ -317,7 +294,7 @@ public class CompiladorProyecto {
         }
     }
 
-    //-----> Obtiene el classpath de dependencias con Gradle
+    //-----> Genera la lista de dependencias con Gradle
     private static String obtenerClasspathGradle(File raiz, String carpetaClases) {
         File initScript = null;
         File archivoSalida = null;
@@ -352,15 +329,7 @@ public class CompiladorProyecto {
             File gradlew = new File(raiz, "gradlew");
             String ejecutable = gradlew.exists() ? "./gradlew" : "gradle";
 
-            //-----> 🔌 MODIFICADO: antes este comando NO tenia "--no-daemon", a
-            //-----> diferencia del comando principal de compilacion. Eso podia
-            //-----> levantar un Build Daemon REAL y persistente -Gradle reutiliza
-            //-----> daemons compatibles entre invocaciones por diseno-, que se
-            //-----> queda vivo de fondo y puede acumular memoria repo tras repo
-            //-----> a lo largo del lote completo que corre OrquestadorRepos, sin
-            //-----> que nada lo libere entre un repo y el siguiente. Se agrega
-            //-----> tambien "--max-workers=1" por la misma razon que en el
-            //-----> comando de compilacion (ver comentario en compilar()).
+            //-----> Ejecuta tarea temporal para exportar dependencias
             String[] comando = {
                     ejecutable, "--init-script", initScript.getAbsolutePath(),
                     "-q", "--no-daemon", "--max-workers=1", "help"
@@ -371,7 +340,7 @@ public class CompiladorProyecto {
             ProcessBuilder pb = new ProcessBuilder(comando);
             pb.directory(raiz);
             pb.redirectErrorStream(true);
-            limitarMemoriaProcesoHijo(pb); //-----> 🔌 NUEVO: mismo limite de memoria que el comando principal
+            limitarMemoriaProcesoHijo(pb);
 
             ResultadoProceso resultadoProceso = ejecutarProceso(pb, "   [classpath-gradle] ", 5, TimeUnit.MINUTES);
 

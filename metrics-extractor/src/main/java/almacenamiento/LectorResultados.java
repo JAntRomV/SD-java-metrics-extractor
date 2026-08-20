@@ -13,45 +13,34 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-//-----> Lee e interpreta archivos JSON/CSV generados en la salida de análisis.
+//-----> Convierte archivos JSON/CSV a Documentos
 public class LectorResultados {
 
     private static final Pattern SUFIJO_METRICAS_JSON = Pattern.compile("Metricas\\.json$");
     private static final Pattern SUFIJO_CAMINOS = Pattern.compile("_caminos\\.json$");
 
-    //-----> Límite máximo de filas guardadas por subdocumento de métricas dinámicas.
     private static final int MAX_FILAS_POR_PARTE = 15;
-
-    //-----> 🔌 NUEVO: límite máximo de caminos (aplanados across todos los métodos
-    //-----> de la clase) guardados por subdocumento estático. Antes el array
-    //-----> completo de caminos de una clase se guardaba embebido en un solo
-    //-----> Document -para clases con muchos métodos/ramas eso podía pesar
-    //-----> cientos de KB por documento en repo_metrics_static-.
     private static final int MAX_CAMINOS_POR_PARTE = 300;
 
-    //-----> Interfaz funcional para transmitir documentos estáticos procesados.
+    //-----> Interfaz para procesar clases
     @FunctionalInterface
     public interface ConsumidorClase {
         void aceptar(Document claseDoc) throws Exception;
     }
 
-    //-----> 🔌 NUEVO: interfaz funcional para transmitir fragmentos de caminos
-    //-----> de una clase, ya separados del documento base de metricasJson.
+    //-----> Interfaz para procesar caminos
     @FunctionalInterface
     public interface ConsumidorCaminoParte {
         void aceptar(Document caminoParteDoc) throws Exception;
     }
 
-    //-----> Interfaz funcional para transmitir documentos dinámicos fragmentados.
+    //-----> Interfaz para procesar dinamicos
     @FunctionalInterface
     public interface ConsumidorMetodoDinamico {
         void aceptar(Document dinamicoDoc) throws Exception;
     }
 
-    //-----> Procesa secuencialmente los JSON estáticos generados por cada clase.
-    //-----> 🔌 MODIFICADO: ahora recibe un segundo consumidor para los caminos,
-    //-----> que ya NO van embebidos dentro del Document de la clase -se fragmentan
-    //-----> y se entregan por separado, ver aplanarCaminos()-.
+    //-----> Lee los archivos JSON estaticos
     public int procesarClasesUnaAUna(File carpetaEstaticos, ConsumidorClase consumidor, ConsumidorCaminoParte consumidorCaminos) throws Exception {
         if (carpetaEstaticos == null || !carpetaEstaticos.exists()) return 0;
 
@@ -85,9 +74,6 @@ public class LectorResultados {
             consumidor.aceptar(claseDoc);
             total++;
 
-            //-----> 🔌 NUEVO: los caminos se leen, se aplanan (metodo + camino) y
-            //-----> se fragmentan en partes de MAX_CAMINOS_POR_PARTE, en vez de
-            //-----> ir embebidos completos dentro de claseDoc.
             if (archivosDeClase.containsKey("caminos")) {
                 Object caminosParseados = leerJson(archivosDeClase.get("caminos"));
                 List<Document> aplanado = aplanarCaminos(caminosParseados);
@@ -112,12 +98,10 @@ public class LectorResultados {
         return total;
     }
 
-    //-----> 🔌 NUEVO: aplana el JSON de caminos (agrupado por metodo) en una sola
-    //-----> lista donde cada entrada trae su propio "metodo", para poder repartirla
-    //-----> en partes de tamaño parejo sin importar cuantos metodos tenia la clase.
+    //-----> Ordena los caminos en lista plana
     private List<Document> aplanarCaminos(Object caminosJson) {
         List<Document> aplanado = new ArrayList<>();
-        if (!(caminosJson instanceof Document)) return aplanado; //-----> JSON crudo sin parsear, no se puede fragmentar
+        if (!(caminosJson instanceof Document)) return aplanado;
 
         Document doc = (Document) caminosJson;
         List<Document> metodos = doc.getList("metodos", Document.class, new ArrayList<>());
@@ -126,19 +110,19 @@ public class LectorResultados {
             List<Document> caminos = metodoDoc.getList("caminos", Document.class, new ArrayList<>());
             for (Document camino : caminos) {
                 Document entradaAplanada = new Document("metodo", nombreMetodo);
-                entradaAplanada.putAll(camino); //-----> camino_id, texto, serie_numerica
+                entradaAplanada.putAll(camino);
                 aplanado.add(entradaAplanada);
             }
         }
         return aplanado;
     }
 
-    //-----> Agrupa archivos escaneados por nombre de clase asociada.
+    //-----> Agrupa archivos escaneados por clase
     private void registrar(Map<String, Map<String, File>> mapa, String claseBase, String tipo, File archivo) {
         mapa.computeIfAbsent(claseBase, k -> new LinkedHashMap<>()).put(tipo, archivo);
     }
 
-    //-----> Fragmenta y procesa filas de CSVs dinámicos por clase en partes pequeñas.
+    //-----> Lee los CSVs dinamicos por partes
     public int procesarDinamicosPorClaseUnaAUna(File carpetaDinamicos, ConsumidorMetodoDinamico consumidor) throws Exception {
         if (carpetaDinamicos == null || !carpetaDinamicos.exists()) return 0;
 
@@ -186,7 +170,7 @@ public class LectorResultados {
         return totalDocumentosSubidos;
     }
 
-    //-----> Agrupa filas en un mapa cuya clave es la clase extraída de un campo.
+    //-----> Clasifica filas segun la columna clase
     private Map<String, List<Document>> agruparPorClase(List<Document> filas, String nombreColumnaLlave) {
         Map<String, List<Document>> agrupado = new LinkedHashMap<>();
         String llaveSanitizada = sanitizarLlave(nombreColumnaLlave);
@@ -201,7 +185,7 @@ public class LectorResultados {
         return agrupado;
     }
 
-    //-----> Divide de forma equitativa una lista de documentos en N sublistas.
+    //-----> Divide una lista en partes iguales
     private List<List<Document>> partir(List<Document> lista, int enPartes) {
         List<List<Document>> resultado = new ArrayList<>();
         int total = lista.size();
@@ -218,7 +202,7 @@ public class LectorResultados {
         return resultado;
     }
 
-    //-----> Lee archivos descriptivos de texto de resúmenes de escaneo y rutas.
+    //-----> Lee archivos de texto del resumen
     public Document leerResumenesDeProyecto(File carpetaDinamicos) throws Exception {
         Document resultado = new Document();
         if (carpetaDinamicos == null || !carpetaDinamicos.exists()) {
@@ -238,7 +222,7 @@ public class LectorResultados {
         return resultado;
     }
 
-    //-----> Lee y convierte un archivo JSON a BSON Document.
+    //-----> Parsea un JSON a BSON Document
     private Object leerJson(File archivo) throws Exception {
         String contenido = Files.readString(archivo.toPath(), StandardCharsets.UTF_8);
         try {
@@ -248,7 +232,7 @@ public class LectorResultados {
         }
     }
 
-    //-----> Convierte las filas de un CSV en una lista de documentos BSON.
+    //-----> Parsea un CSV a lista de Documentos
     private List<Document> leerCsvComoFilas(File archivo) throws Exception {
         List<String> lineas = Files.readAllLines(archivo.toPath(), StandardCharsets.UTF_8);
         List<Document> filas = new ArrayList<>();
@@ -268,7 +252,7 @@ public class LectorResultados {
         return filas;
     }
 
-    //-----> Parsea líneas en formato 'clave=valor' a un Document BSON.
+    //-----> Lee un TXT con formato clave=valor
     private Document leerResumenComoDocumento(File archivo) throws Exception {
         Document resultado = new Document();
         for (String linea : Files.readAllLines(archivo.toPath(), StandardCharsets.UTF_8)) {
@@ -280,7 +264,7 @@ public class LectorResultados {
         return resultado;
     }
 
-    //-----> Parsea una línea de texto CSV respetando comillas y delimitadores.
+    //-----> Corta la linea CSV por comas
     private String[] parsearLineaCsv(String linea) {
         List<String> campos = new ArrayList<>();
         for (String parte : linea.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)")) {
@@ -293,7 +277,7 @@ public class LectorResultados {
         return campos.toArray(new String[0]);
     }
 
-    //-----> Reemplaza caracteres no permitidos en nombres de claves de MongoDB.
+    //-----> Cambia puntos por guiones bajos
     private String sanitizarLlave(String texto) {
         return texto.replace('.', '_');
     }

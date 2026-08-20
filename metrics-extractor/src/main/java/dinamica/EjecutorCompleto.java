@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-//-----> Orquestador general que coordina y ejecuta la Fase 1 y la Fase 2 de manera secuencial
+//-----> Coordine y ejecuta Fase 1 y Fase 2 secuencialmente
 public class EjecutorCompleto {
 
     public static void main(String[] args) throws Exception {
-        //-----> Parsea los argumentos de linea de comandos (--clave:valor)
+        //-----> Lee los argumentos recibidos
         Map<String, String> params = parseArgs(args);
 
         String rutaProyecto = params.get("proyecto");
@@ -22,17 +22,17 @@ public class EjecutorCompleto {
         String carpetaSalida = params.getOrDefault("salida", "resultados_dinamicos");
         String classpathCompleto = null;
 
-        //-----> Determina el modo de ejecucion (completo, fase1 o fase2)
+        //-----> Mapea el modo de trabajo indicado
         ModeMapper.ModoEjecucion modo = ModeMapper.obtenerModo(params.get("modo"));
 
         System.out.println("==========================================================");
         System.out.println(" INICIANDO METRICAS DINAMICAS ");
         System.out.println("==========================================================");
 
-        //-----> Crea la carpeta principal donde se guardaran todos los resultados
+        //-----> Prepara directorio de salidas
         DirFileTools.crearDirectorio(carpetaSalida);
 
-        //-----> Compila el proyecto externo si se especifico la ruta
+        //-----> Compila código del proyecto si es requerido
         if (rutaProyecto != null) {
             System.out.println("-----> Paso 1: Compilando proyecto externo...");
             CompiladorProyecto.ResultadoCompilacion res = CompiladorProyecto.compilar(rutaProyecto, true);
@@ -49,10 +49,10 @@ public class EjecutorCompleto {
             return;
         }
 
-        //-----> Define la ruta unica del catalogo dentro de la carpeta de salida para evitar solapamientos entre repositorios
+        //-----> Establece ruta fija para el catálogo de métodos
         String rutaCatalogo = params.getOrDefault("catalogo", carpetaSalida + "/catalogo_metodos.txt");
 
-        //-----> Prepara los argumentos comunes para ser reutilizados en las Fases 1 y 2
+        //-----> Genera la lista de argumentos base
         List<String> argsComunes = new ArrayList<>();
         argsComunes.add("--clases:" + rutaClases);
         argsComunes.add("--salida:" + carpetaSalida);
@@ -68,7 +68,7 @@ public class EjecutorCompleto {
         boolean corrioFase1 = false;
         boolean corrioFase2 = false;
 
-        //-----> Ejecuta la FASE 1: Obtencion de benchmarks generales si el modo lo permite
+        //-----> Arranca la prueba de Benchmarks generales (Fase 1)
         if (modo != ModeMapper.ModoEjecucion.CAMINOS_INSTRUMENTADOS) {
             System.out.println("\n----------------------------------------------------------");
             System.out.println("-----> FASE 1: BENCHMARKS");
@@ -83,7 +83,7 @@ public class EjecutorCompleto {
             }
         }
 
-        //-----> Ejecuta la FASE 2: Medicion por caminos instrumentados
+        //-----> Arranca la prueba de medición por caminos (Fase 2)
         if (modo != ModeMapper.ModoEjecucion.BENCHMARK_GENERAL) {
             if (!DirFileTools.existeArchivo(rutaBenchmarksCsv)) {
                 System.err.println("-----> No se puede correr la Fase 2: no existe " + rutaBenchmarksCsv
@@ -99,7 +99,7 @@ public class EjecutorCompleto {
             corrioFase2 = true;
         }
 
-        //-----> Imprime resumen de ejecucion de la Fase 1
+        //-----> Muestra las métricas consolidadas de la Fase 1
         if (corrioFase1) {
             int metodosProcesados = contarMetodosUnicos(rutaBenchmarksCsv);
             Map<String, String> resumenEscaneo = leerResumen(carpetaSalida + "/_escaneo_resumen.txt");
@@ -118,7 +118,7 @@ public class EjecutorCompleto {
             System.out.println("  Metodos transferidos a Fase 2 : " + metodosProcesados);
         }
 
-        //-----> Imprime resumen de ejecucion de la Fase 2
+        //-----> Muestra las métricas consolidadas de la Fase 2
         if (corrioFase2) {
             int caminosGenerados = contarCaminosGenerados(rutaCaminosCsv);
             Map<String, String> resumenCaminos = leerResumen(carpetaSalida + "/_caminos_resumen.txt");
@@ -143,7 +143,7 @@ public class EjecutorCompleto {
         System.out.println("==========================================================");
     }
 
-    //-----> Lee archivos de resumen clave=valor a un mapa
+    //-----> Lee reporte de valores de resumen
     private static Map<String, String> leerResumen(String rutaArchivo) {
         Map<String, String> datos = new HashMap<>();
         File archivo = new File(rutaArchivo);
@@ -162,7 +162,7 @@ public class EjecutorCompleto {
         return datos;
     }
 
-    //-----> Cuenta metodos unicos analizados dentro de un CSV ignorando vacios y encabezados
+    //-----> Calcula total de métodos leídos de archivo
     private static int contarMetodosUnicos(String rutaCsv) {
         try {
             List<String> lineas = Files.readAllLines(Paths.get(rutaCsv));
@@ -189,7 +189,7 @@ public class EjecutorCompleto {
         }
     }
 
-    //-----> Cuenta lineas con registros de caminos generados en el CSV
+    //-----> Totaliza los caminos registrados en archivo
     private static int contarCaminosGenerados(String rutaCsv) {
         try {
             List<String> lineas = Files.readAllLines(Paths.get(rutaCsv));
@@ -206,7 +206,7 @@ public class EjecutorCompleto {
         }
     }
 
-    //-----> Convierte el arreglo de parametros con prefijo '--' en un Map clave-valor
+    //-----> Transforma arreglos de entrada a mapa
     private static Map<String, String> parseArgs(String[] args) {
         Map<String, String> map = new HashMap<>();
         for (String arg : args) {

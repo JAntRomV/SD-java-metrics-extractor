@@ -17,7 +17,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-//-----> Gestor de colecciones y metricas en MongoDB
+//-----> Clase principal para gestionar datos en MongoDB
 public class AlmacenMetricasMongo implements AutoCloseable {
 
     private final MongoClient cliente;
@@ -26,7 +26,7 @@ public class AlmacenMetricasMongo implements AutoCloseable {
     private final MongoCollection<Document> coleccionClases;
     private final MongoCollection<Document> coleccionDinamicas;
 
-    //-----> Constructor con configuracion
+    //-----> Conecta a Mongo y asigna las colecciones
     public AlmacenMetricasMongo(ConfiguracionMongo config) {
         this.cliente = MongoClients.create(config.construirUri());
         this.baseDatos = cliente.getDatabase(config.baseDatos);
@@ -35,16 +35,16 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         this.coleccionDinamicas = baseDatos.getCollection(config.coleccionDinamicas);
     }
 
-    //-----> Cuenta total de repos en catalogo
+    //-----> Cuenta el total de repos
     public long contarDocumentos() {
         return coleccion.countDocuments();
     }
 
-    //-----> Obtiene repos pendientes de procesar
+    //-----> Trae los repos con estado pendiente
     public List<Document> obtenerRepositoriosPendientes() {
         List<Document> resultado = new ArrayList<>();
 
-        //-----> Filtro para repos sin status o pendientes
+        //-----> Filtra repos sin status o en proceso
         Bson filtro = Filters.or(
                 Filters.exists("status", false),
                 Filters.in("status", "pending", "metrics_in_progress")
@@ -58,10 +58,7 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         return resultado;
     }
 
-    //-----> 🔌 NUEVO: obtiene TODOS los repos del catalogo, sin filtrar por
-    //-----> status. Se usa para listar el catalogo completo (ej. ver en que
-    //-----> fase van los repos "en progreso"), y como base para que otros
-    //-----> frameworks (ej. el de mineria) repliquen el mismo patron.
+    //-----> Trae todos los repos sin filtrar
     public List<Document> obtenerTodosLosRepositorios() {
         List<Document> resultado = new ArrayList<>();
         Bson orden = Sorts.orderBy(Sorts.ascending("mining.score.rank"), Sorts.ascending("_id"));
@@ -73,17 +70,17 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         return resultado;
     }
 
-    //-----> Busca un repo por su ID
+    //-----> Busca repo por su ID
     public Document obtenerRepositorioPorId(String idRepo) {
         return coleccion.find(Filters.eq("_id", idRepo)).first();
     }
 
-    //-----> Elimina solo metricas dinamicas
+    //-----> Borra metricas dinamicas de un repo
     public void borrarSoloDinamicas(String idRepo) {
         coleccionDinamicas.deleteMany(Filters.eq("repoId", idRepo));
     }
 
-    //-----> Prepara la estructura vacia del repo
+    //-----> Limpia y crea la estructura inicial
     public void inicializarMetricasVacias(String idRepo) {
         coleccionClases.deleteMany(Filters.eq("repoId", idRepo));
         coleccionDinamicas.deleteMany(Filters.eq("repoId", idRepo));
@@ -101,11 +98,7 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         coleccion.updateOne(filtro, actualizacion);
     }
 
-    //-----> Guarda o actualiza una clase estatica, con _id determinístico "repoId_clase"
-    //-----> 🔌 MODIFICADO: antes se dejaba que Mongo generara un ObjectId random y se
-    //-----> distinguia el documento via filtro (repoId + clase). Ahora el _id es
-    //-----> compuesto y determinístico para poder enlazar directo con repo_catalog._id
-    //-----> y para que el upsert sea mas barato (busca por _id, que ya esta indexado).
+    //-----> Guarda o actualiza una clase estatica
     public void agregarClaseAMetricas(String idRepo, Document claseDoc) {
         String clase = claseDoc.getString("clase");
         String id = idRepo + "_" + clase;
@@ -114,16 +107,13 @@ public class AlmacenMetricasMongo implements AutoCloseable {
                 .append("repoId", idRepo)
                 .append("clase", clase);
         documentoClase.putAll(claseDoc);
-        documentoClase.put("_id", id); //-----> asegura que el _id compuesto no se pise con lo que traiga claseDoc
+        documentoClase.put("_id", id);
 
         Bson filtro = Filters.eq("_id", id);
         coleccionClases.replaceOne(filtro, documentoClase, new ReplaceOptions().upsert(true));
     }
 
-    //-----> Guarda o actualiza una parte dinamica, con _id determinístico "repoId_clase_parte"
-    //-----> 🔌 MODIFICADO: mismo cambio que en agregarClaseAMetricas, pero agregando
-    //-----> "parte" al _id compuesto porque una misma clase puede tener varios
-    //-----> documentos dinamicos (uno por parte/fragmento).
+    //-----> Guarda o actualiza metricas dinamicas
     public void agregarDinamicoAMetricas(String idRepo, Document dinamicoDoc) {
         String clase = dinamicoDoc.getString("clase");
         int parte = dinamicoDoc.getInteger("parte", 1);
@@ -134,20 +124,13 @@ public class AlmacenMetricasMongo implements AutoCloseable {
                 .append("clase", clase)
                 .append("parte", parte);
         documento.putAll(dinamicoDoc);
-        documento.put("_id", id); //-----> asegura que el _id compuesto no se pise con lo que traiga dinamicoDoc
+        documento.put("_id", id);
 
         Bson filtro = Filters.eq("_id", id);
         coleccionDinamicas.replaceOne(filtro, documento, new ReplaceOptions().upsert(true));
     }
 
-    //-----> 🔌 NUEVO: guarda un fragmento de caminos estaticos de una clase, con
-    //-----> _id determinístico "repoId_clase_caminos_parte". Antes el array
-    //-----> completo de caminos (raiz-a-hoja de cada metodo) se guardaba embebido
-    //-----> dentro del documento base de la clase (repoId_clase), lo que hacia que
-    //-----> ese documento pesara cientos de KB para clases con muchos metodos o
-    //-----> ramas. Va en la MISMA coleccion que la clase base (repo_metrics_static)
-    //-----> pero como documentos separados, igual que el patron ya usado para las
-    //-----> metricas dinamicas.
+    //-----> Guarda los caminos de ejecucion en partes
     public void agregarCaminosAMetricas(String idRepo, Document caminoParteDoc) {
         String clase = caminoParteDoc.getString("clase");
         int parte = caminoParteDoc.getInteger("parte", 1);
@@ -164,19 +147,14 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         coleccionClases.replaceOne(filtro, documento, new ReplaceOptions().upsert(true));
     }
 
-    //-----> Actualiza el estado estatico o dinamico
+    //-----> Cambia el estado estatico o dinamico
     public void actualizarEstadoParcial(String idRepo, String tipo, String valor) {
         Bson filtro = Filters.eq("_id", idRepo);
         Bson actualizacion = Updates.set("metricsStatus." + tipo, valor);
         coleccion.updateOne(filtro, actualizacion);
     }
 
-    //-----> 🔌 NUEVO: marca el repo como "solo estatico completo": la fase
-    //-----> estatica termino bien pero la dinamica no genero datos (catalogo
-    //-----> vacio / sin metodos aprobados / Benchmarks.csv sin filas).
-    //-----> A diferencia de guardarMetricas(), esto NO pisa "metrics" completo
-    //-----> -por lo tanto no borra metrics.estaticas.totalClases que ya se
-    //-----> habia guardado bien-, solo actualiza el status y anota la razon.
+    //-----> Marca repo solo con fase estatica
     public void marcarSoloEstaticoCompleto(String idRepo, String razonSinDatosDinamicos) {
         Bson filtro = Filters.eq("_id", idRepo);
         Bson actualizacion = Updates.combine(
@@ -186,7 +164,7 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         coleccion.updateOne(filtro, actualizacion);
     }
 
-    //-----> Finaliza el proceso y guarda totales
+    //-----> Actualiza el total de clases y el estado
     public void finalizarMetricas(String idRepo, int totalClases, String nuevoStatus) {
         Bson filtro = Filters.eq("_id", idRepo);
         Bson actualizacion = Updates.combine(
@@ -196,7 +174,7 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         coleccion.updateOne(filtro, actualizacion);
     }
 
-    //-----> Guarda metricas y actualiza status
+    //-----> Guarda todo el documento de metricas
     public void guardarMetricas(String idRepo, Document metrics, String nuevoStatus) {
         Bson filtro = Filters.eq("_id", idRepo);
         Bson actualizacion = Updates.combine(
@@ -206,7 +184,7 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         coleccion.updateOne(filtro, actualizacion);
     }
 
-    //-----> Agrupa y cuenta repos por tipo de status
+    //-----> Cuenta repos agrupados por estado
     public Map<Object, Long> contarPorValorDeStatus() {
         Map<Object, Long> conteo = new LinkedHashMap<>();
         for (Document doc : coleccion.find()) {
@@ -216,14 +194,14 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         return conteo;
     }
 
-    //-----> Mide tamano del catalogo en MB
+    //-----> Calcula el tamano en MB de la coleccion
     public double obtenerTamanoColeccionEnMB() {
         Document stats = baseDatos.runCommand(new Document("collStats", coleccion.getNamespace().getCollectionName()));
         Number tamanoBytes = stats.get("size", Number.class);
         return tamanoBytes == null ? 0.0 : tamanoBytes.doubleValue() / (1024.0 * 1024.0);
     }
 
-    //-----> Cierra conexion a Mongo
+    //-----> Cierra la conexion a la base de datos
     @Override
     public void close() {
         cliente.close();

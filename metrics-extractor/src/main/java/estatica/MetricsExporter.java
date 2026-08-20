@@ -5,14 +5,10 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-// ----> Esta clase toma todas las métricas procesadas y las escribe en archivos de texto en formato JSON dentro de tu disco duro
+//-----> Generador de archivos de salida JSON
 public class MetricsExporter {
 
-    // ----> Método principal que recorre los proyectos y manda a guardar los archivos
-    // ----> 🔌 MODIFICADO: ahora delega en exportarProyecto() por cada proyecto de
-    // ----> la lista. Se conserva este metodo para no romper a quien ya lo llamaba
-    // ----> con una lista completa, pero ProcesadorMetricas ya NO lo usa asi -ver
-    // ----> exportarProyecto() abajo, que se llama una vez POR ARCHIVO.
+    //-----> Exporta lote completo de proyectos
     public static void export(List<ProjectMetrics> reports, String outputFolder) {
         int totalArchivos = 0;
         for (ProjectMetrics project : reports) {
@@ -23,12 +19,7 @@ public class MetricsExporter {
                 + " archivo(s) con exito en: " + new File(outputFolder).getAbsolutePath());
     }
 
-    // ----> 🔌 NUEVO: exporta UN SOLO ProjectMetrics (ej. el de una sola clase, o
-    // ----> el de un solo archivo) y devuelve cuantos JSON genero. Es la pieza
-    // ----> clave del fix de memoria: en vez de esperar a tener todo el proyecto
-    // ----> acumulado para exportar todo junto al final (export() de arriba),
-    // ----> ProcesadorMetricas llama a este metodo justo despues de analizar CADA
-    // ----> archivo, con un ProjectMetrics chiquito que solo trae esa clase.
+    //-----> Exporta metricas de una sola clase
     public static int exportarProyecto(ProjectMetrics project, String outputFolder) {
         File baseFolder = new File(outputFolder);
         if (!baseFolder.exists()) baseFolder.mkdirs();
@@ -44,7 +35,6 @@ public class MetricsExporter {
 
             if (methods.isEmpty()) continue;
 
-            // ----> Genera el JSON de métricas para la clase
             writeJson(className, fileName, methods, projectFolder);
             archivosGenerados++;
         }
@@ -52,7 +42,7 @@ public class MetricsExporter {
         return archivosGenerados;
     }
 
-    // ----> Construye físicamente el archivo JSON de métricas escribiendo línea por línea
+    //-----> Escribe estructura JSON en disco
     private static void writeJson(String className, String fileName, List<MethodMetrics> methods, File folder) {
         File out = new File(folder, sanitize(className) + "Metricas.json");
         try (PrintWriter w = new PrintWriter(out, StandardCharsets.UTF_8)) {
@@ -62,7 +52,6 @@ public class MetricsExporter {
             w.println("  \"clase\": \""               + esc(className) + "\",");
             w.println("  \"metodos\": [");
 
-            // ----> Escribe el detalle de Halstead y el Grafo de Flujo para cada método de la clase
             for (int i = 0; i < methods.size(); i++) {
                 MethodMetrics m   = methods.get(i);
                 boolean       last = (i == methods.size() - 1);
@@ -98,23 +87,24 @@ public class MetricsExporter {
         }
     }
 
-    // ----> Limpia nombres de archivos para quitar caracteres raros que den problemas en Windows o Linux
+    //-----> Limpia nombre de archivo para SO
     private static String sanitize(String s) {
         return (s == null || s.isEmpty()) ? "sin_nombre"
                 : s.replaceAll("[^a-zA-Z0-9_\\-]", "_");
     }
 
-    // ----> Escapa comillas y barras en los textos para que el JSON sea válido
+    //-----> Escapa caracteres especiales en cadenas
     private static String esc(String s) {
         if (s == null) return "";
         return s.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
-    // ----> Redondea números decimales a 2 y 4 posiciones para que no salgan números tan largos
+    //-----> Redondeo a 2 decimales
     private static double r2(double v) { return Math.round(v * 100.0)   / 100.0; }
+    //-----> Redondeo a 4 decimales
     private static double r4(double v) { return Math.round(v * 10000.0) / 10000.0; }
 
-    // ----> Guarda en un archivo separado los caminos extraídos del árbol de ejecución del código
+    //-----> Escribe JSON con caminos del AST
     public static void writeArbolCaminosJson(String nombreClase, String nombreProyecto, String outputFolder, ArbolCaminoExtractor.ResultadoClase resultadoArbol) {
         File baseFolder = new File(outputFolder);
         File projectFolder = new File(baseFolder, sanitize(nombreProyecto));
@@ -134,14 +124,9 @@ public class MetricsExporter {
 
                 writer.println("    {");
                 writer.println("      \"metodo\": \"" + esc(resultadoMetodo.nombreMetodo) + "\",");
-                //-----> 🔌 NUEVO: si ArbolCaminoExtractor corto la generacion de este
-                //-----> metodo por alcanzar el tope de caminos, se deja constancia
-                //-----> explicita aqui en vez de que parezca que el metodo solo tenia
-                //-----> pocos caminos.
                 writer.println("      \"truncado\": " + resultadoMetodo.truncado + ",");
                 writer.println("      \"caminos\": [");
 
-                // ----> Escribe cada camino del AST con su texto y su serie numérica
                 for (int j = 0; j < resultadoMetodo.vectorTexto.size(); j++) {
                     boolean esUltimoCamino = (j == resultadoMetodo.vectorTexto.size() - 1);
                     writer.println("        {");

@@ -12,10 +12,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-//-----> Herramienta puntual para dinamica
+//-----> Reejecuta el analisis dinamico de un repo
 public class ReprocesarDinamico {
 
-    //-----> Ejecuta reproceso dinamico
+    //-----> Inicia el reproceso dinamico
     public static void main(String[] args) throws Exception {
         Map<String, String> params = parseArgs(args);
 
@@ -54,7 +54,6 @@ public class ReprocesarDinamico {
                 String carpetaSalida = carpetaResultadosBase + "/" + sanitizar(idRepo);
                 String carpetaDinamicos = carpetaSalida + "/resultados_dinamicos";
 
-                //-----> Ejecuta solo analisis dinamico
                 System.out.println("\n----------------------------------------------------------");
                 System.out.println("-----> Corriendo de nuevo el analisis dinamico (Fase 1 + Fase 2)...");
                 System.out.println("----------------------------------------------------------");
@@ -67,7 +66,6 @@ public class ReprocesarDinamico {
                         + " (para no mezclar la numeracion de 'parte' vieja con la nueva)");
                 almacen.borrarSoloDinamicas(idRepo);
 
-                //-----> Resube metricas dinamicas
                 int documentosDinamicosSubidos = lector.procesarDinamicosPorClaseUnaAUna(
                         new File(carpetaDinamicos),
                         dinamicoDoc -> almacen.agregarDinamicoAMetricas(idRepo, dinamicoDoc)
@@ -94,7 +92,7 @@ public class ReprocesarDinamico {
         }
     }
 
-    //-----> Clona repositorio si falta
+    //-----> Clona repositorio si no existe localmente
     private static File clonarSiNoExiste(String htmlUrl, String rama, String carpetaClones, String idRepo) throws Exception {
         File destino = new File(carpetaClones, sanitizar(idRepo));
         File marcadorGit = new File(destino, ".git");
@@ -121,10 +119,8 @@ public class ReprocesarDinamico {
         pb.redirectErrorStream(true);
         Process proceso = pb.start();
 
-        //-----> Cierra entrada estandar git
         proceso.getOutputStream().close();
 
-        //-----> Hilo para leer log git
         Thread hiloLector = new Thread(() -> {
             try (BufferedReader lector = new BufferedReader(new InputStreamReader(proceso.getInputStream()))) {
                 String linea;
@@ -132,7 +128,6 @@ public class ReprocesarDinamico {
                     System.out.println("   [git] " + linea);
                 }
             } catch (Exception ignorado) {
-                //-----> Proceso interrumpido por timeout
             }
         });
         hiloLector.setDaemon(true);
@@ -155,7 +150,7 @@ public class ReprocesarDinamico {
         return destino;
     }
 
-    //-----> Elimina carpetas recursivamente
+    //-----> Borra archivos y carpetas recursivamente
     private static void borrarRecursivo(File carpeta) {
         if (!carpeta.exists()) return;
         try (Stream<java.nio.file.Path> flujo = Files.walk(carpeta.toPath())) {
@@ -171,12 +166,12 @@ public class ReprocesarDinamico {
         }
     }
 
-    //-----> Sanitiza nombres de carpetas
+    //-----> Limpia nombres para usarlos de carpeta
     private static String sanitizar(String s) {
         return (s == null || s.isEmpty()) ? "sin_nombre" : s.replaceAll("[^a-zA-Z0-9_\\-]", "_");
     }
 
-    //-----> Parsea parametros de entrada
+    //-----> Lee parametros con formato --clave:valor
     private static Map<String, String> parseArgs(String[] args) {
         Map<String, String> map = new HashMap<>();
         for (String arg : args) {
