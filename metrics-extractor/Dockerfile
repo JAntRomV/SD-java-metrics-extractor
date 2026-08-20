@@ -12,13 +12,27 @@ COPY src ./src
 RUN mvn -B -DskipTests package
 
 # ---- Etapa 2: imagen final liviana ----
-FROM eclipse-temurin:17-jre
+# 🔌 MODIFICADO: de "-jre" a "-jdk". La fase dinamica (CompiladorProyecto)
+# corre "mvn compile" sobre CADA repo que se clona, para generar los .class
+# que luego carga por reflexion. "mvn compile" necesita javac -que una
+# imagen JRE (Java Runtime, sin compilador) NO trae-, asi que aunque se
+# instale Maven iba a seguir fallando por falta de compilador. Ademas, el
+# paquete "maven" de apt de por si depende de tener un JDK instalado -sin
+# esto tambien terminaria bajando su propio JDK por separado-, asi que usar
+# el JDK de Temurin (el mismo vendor/version que la Etapa 1) es mas
+# consistente que dejar que apt resuelva "cualquier JDK por defecto".
+FROM eclipse-temurin:17-jdk
 WORKDIR /app
 
 # git es obligatorio: OrquestadorRepos hace "git clone" de cada repo del
-# catalogo. La imagen base de JRE no lo trae instalado.
+# catalogo.
+# 🔌 NUEVO: maven es obligatorio: CompiladorProyecto corre "mvn compile"
+# sobre cada repo clonado para poder analizarlo dinamicamente (JMH +
+# reflexion). Sin esto, CompiladorProyecto tronaba con "Cannot run program
+# 'mvn': No such file or directory" y la fase dinamica nunca generaba nada,
+# aunque la estatica si funcionara bien.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git \
+    && apt-get install -y --no-install-recommends git maven \
     && rm -rf /var/lib/apt/lists/*
 
 # Copia SOLO el jar de la API (generado por la segunda ejecucion del
