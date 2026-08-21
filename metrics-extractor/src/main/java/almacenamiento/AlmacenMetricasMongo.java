@@ -154,6 +154,20 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         coleccion.updateOne(filtro, actualizacion);
     }
 
+    //-----> Actualiza SOLO el status general del repo, sin tocar "metrics" ni
+    //-----> "metricsStatus". Se usa desde ReprocesarDinamico: como ese flujo
+    //-----> reprocesa unicamente la parte dinamica y no vuelve a calcular el
+    //-----> total de clases estaticas, no puede usar finalizarMetricas() ni
+    //-----> guardarMetricas() -ambos pisarian "metrics" con datos incompletos-.
+    //-----> Sin este metodo, un reproceso dinamico exitoso dejaba el repo
+    //-----> marcado como "metrics_static_only" en el resumen general, aunque
+    //-----> ya tuviera estatica Y dinamica completas.
+    public void actualizarStatusGeneral(String idRepo, String nuevoStatus) {
+        Bson filtro = Filters.eq("_id", idRepo);
+        Bson actualizacion = Updates.set("status", nuevoStatus);
+        coleccion.updateOne(filtro, actualizacion);
+    }
+
     //-----> Marca repo solo con fase estatica
     public void marcarSoloEstaticoCompleto(String idRepo, String razonSinDatosDinamicos) {
         Bson filtro = Filters.eq("_id", idRepo);

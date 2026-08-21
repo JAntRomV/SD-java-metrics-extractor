@@ -78,9 +78,19 @@ public class ReprocesarDinamico {
 
                 almacen.actualizarEstadoParcial(idRepo, "dynamic", "complete");
 
+                //-----> Marca el repo como completo en el status general. Se asume
+                //-----> que si este reproceso llego hasta aqui, la estatica ya
+                //-----> estaba completa de antes (por eso el repo tenia _id valido
+                //-----> y se pudo reprocesar solo la dinamica). Sin esta linea, el
+                //-----> campo "status" se queda como estaba antes (tipicamente
+                //-----> "metrics_static_only"), y el repo sigue contando mal en
+                //-----> DiagnosticoAlmacenamiento.resumenGeneral().
+                almacen.actualizarStatusGeneral(idRepo, "metrics_complete");
+
                 System.out.println("\n==========================================================");
                 System.out.println(" REPROCESO DINAMICO FINALIZADO CON EXITO");
                 System.out.println(" Documentos dinamicos subidos (por clase/parte): " + documentosDinamicosSubidos);
+                System.out.println(" Status general del repo actualizado a: metrics_complete");
                 System.out.println("==========================================================");
 
             } finally {
