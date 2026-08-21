@@ -100,6 +100,23 @@ public class CompiladorProyecto {
                 return new ResultadoCompilacion(false, null, "La compilacion tardo mas de 60 minutos, se cancelo.", null);
             }
 
+            //-----> 🔌 NUEVO: si fallo especificamente por falta de memoria (no por
+            //-----> cualquier otra razon, ej. error de sintaxis o dependencia
+            //-----> faltante -eso reintentar no lo arregla-), se reintenta UNA sola
+            //-----> vez con mas memoria en vez de rendirse de inmediato. Asi la
+            //-----> gran mayoria de los repos (chicos) siguen usando el limite base
+            //-----> y seguro, y solo los pocos que de verdad necesitan mas RAM para
+            //-----> compilar pagan el costo del segundo intento -y solo ellos-.
+            if (resultadoProceso.codigoSalida != 0 && resultadoProceso.pareceFalloDeMemoria) {
+                System.out.println("-----> La compilacion fallo por falta de memoria, reintentando una vez con mas memoria (" + MEMORIA_AMPLIADA + ")...");
+                limitarMemoriaProcesoHijo(pb, MEMORIA_AMPLIADA);
+                resultadoProceso = ejecutarProceso(pb, "   [compilacion-reintento] ", 60, TimeUnit.MINUTES);
+
+                if (!resultadoProceso.termino) {
+                    return new ResultadoCompilacion(false, null, "La compilacion (reintento con mas memoria) tardo mas de 60 minutos, se cancelo.", null);
+                }
+            }
+
             //-----> Valida el estado final de la ejecución
             int codigoSalida = resultadoProceso.codigoSalida;
             if (codigoSalida != 0) {
@@ -133,38 +150,67 @@ public class CompiladorProyecto {
     private static class ResultadoProceso {
         final boolean termino;
         final int codigoSalida;
+        //-----> 🔌 NUEVO: true si en la salida del proceso aparecio algun rastro
+        //-----> de que fallo por falta de memoria (y no por otra razon, ej. error
+        //-----> de sintaxis o dependencia faltante). Sirve para decidir si vale la
+        //-----> pena reintentar con mas memoria, en vez de reintentar a ciegas
+        //-----> cada vez que algo falla.
+        final boolean pareceFalloDeMemoria;
 
-        ResultadoProceso(boolean termino, int codigoSalida) {
+        ResultadoProceso(boolean termino, int codigoSalida, boolean pareceFalloDeMemoria) {
             this.termino = termino;
             this.codigoSalida = codigoSalida;
+            this.pareceFalloDeMemoria = pareceFalloDeMemoria;
         }
     }
 
+    //-----> 🔌 MODIFICADO: valores base (primer intento, seguro para el
+    //-----> contenedor) y ampliado (solo para el reintento cuando el primer
+    //-----> intento fallo especificamente por falta de memoria). La mayoria de
+    //-----> los repos del catalogo nunca tocan el valor ampliado -solo los que
+    //-----> de verdad lo necesitan pagan ese costo extra, y solo una vez-.
+    private static final String MEMORIA_BASE = "-Xmx160m -XX:MaxMetaspaceSize=96m";
+    private static final String MEMORIA_AMPLIADA = "-Xmx320m -XX:MaxMetaspaceSize=160m";
+
     //-----> Ajusta variables de entorno de memoria para JVM
-    //-----> 🔌 MODIFICADO: se agrega MAVEN_OPTS y se baja el heap de 256m a
-    //-----> 160m. La app principal usa hasta 50% del contenedor (ver
-    //-----> Dockerfile); antes con 70% + 256m aqui, la SUMA de los dos techos
-    //-----> de heap ya superaba los 512MB totales del contenedor -esa suma,
-    //-----> no un limite faltante, era la causa real del OOM silencioso
-    //-----> durante la compilacion-. Con 50%+160m queda margen real.
     private static void limitarMemoriaProcesoHijo(ProcessBuilder pb) {
-        String opcionesMemoria = "-Xmx160m -XX:MaxMetaspaceSize=96m";
+        limitarMemoriaProcesoHijo(pb, MEMORIA_BASE);
+    }
+
+    private static void limitarMemoriaProcesoHijo(ProcessBuilder pb, String opcionesMemoria) {
         Map<String, String> entorno = pb.environment();
         entorno.put("GRADLE_OPTS", opcionesMemoria);
         entorno.put("MAVEN_OPTS", opcionesMemoria);
         entorno.put("JAVA_OPTS", opcionesMemoria);
     }
 
+    //-----> 🔌 NUEVO: fragmentos de texto que delatan un fallo por falta de
+    //-----> memoria en la salida de Maven/Gradle/la JVM en general.
+    private static final String[] SENALES_FALLO_MEMORIA = {
+            "OutOfMemoryError", "Java heap space", "GC overhead limit exceeded"
+    };
+
     //-----> Maneja subprocesos y captura su salida
     private static ResultadoProceso ejecutarProceso(ProcessBuilder pb, String prefijoLog, long tiempoLimite, TimeUnit unidad) throws Exception {
         Process proceso = pb.start();
         proceso.getOutputStream().close();
+
+        //-----> 🔌 NUEVO: bandera compartida con el hilo lector para detectar,
+        //-----> linea por linea segun se va imprimiendo, si el proceso hijo dejo
+        //-----> rastro de haberse quedado sin memoria.
+        java.util.concurrent.atomic.AtomicBoolean falloDeMemoria = new java.util.concurrent.atomic.AtomicBoolean(false);
 
         Thread hiloLector = new Thread(() -> {
             try (BufferedReader lector = new BufferedReader(new InputStreamReader(proceso.getInputStream()))) {
                 String linea;
                 while ((linea = lector.readLine()) != null) {
                     System.out.println(prefijoLog + linea);
+                    for (String senal : SENALES_FALLO_MEMORIA) {
+                        if (linea.contains(senal)) {
+                            falloDeMemoria.set(true);
+                            break;
+                        }
+                    }
                 }
             } catch (Exception ignorado) {
                 //-----> Finalización del lector
@@ -179,7 +225,7 @@ public class CompiladorProyecto {
         }
         hiloLector.join(3000);
 
-        return new ResultadoProceso(termino, termino ? proceso.exitValue() : -1);
+        return new ResultadoProceso(termino, termino ? proceso.exitValue() : -1, falloDeMemoria.get());
     }
 //_________________________________________________________________________________________
     //-----> Encuentra directorios de binarios compilados
