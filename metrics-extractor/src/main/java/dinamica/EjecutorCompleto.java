@@ -1,5 +1,7 @@
 package dinamica;
 
+import almacenamiento.EstadoAnalisis;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -74,13 +76,22 @@ public class EjecutorCompleto {
             System.out.println("-----> FASE 1: BENCHMARKS");
             System.out.println("----------------------------------------------------------");
 
+            //-----> Marca el inicio visible de la fase de benchmarks
+            EstadoAnalisis.marcarFase("benchmarks", EstadoAnalisis.EstadoFase.EN_PROGRESO);
+
             EjecutorDinamico.main(argsFaseComun);
             corrioFase1 = true;
 
             if (!DirFileTools.existeArchivo(rutaBenchmarksCsv)) {
                 System.err.println("-----> Error: La Fase 1 finalizo pero no genero el archivo: " + rutaBenchmarksCsv);
+                //-----> Benchmarks fallo: caminos queda marcada como omitida
+                EstadoAnalisis.marcarFase("benchmarks", EstadoAnalisis.EstadoFase.FALLIDA);
+                EstadoAnalisis.omitirRestantesDesdeDe("benchmarks");
                 return;
             }
+
+            //-----> Benchmarks completados con exito
+            EstadoAnalisis.marcarFase("benchmarks", EstadoAnalisis.EstadoFase.COMPLETADA);
         }
 
         //-----> Arranca la prueba de medición por caminos (Fase 2)
@@ -88,6 +99,8 @@ public class EjecutorCompleto {
             if (!DirFileTools.existeArchivo(rutaBenchmarksCsv)) {
                 System.err.println("-----> No se puede correr la Fase 2: no existe " + rutaBenchmarksCsv
                         + ". Corre primero la Fase 1 (--modo:fase1 o --modo:completo).");
+                //-----> No hay benchmarks previos: caminos no puede correr
+                EstadoAnalisis.marcarFase("caminos", EstadoAnalisis.EstadoFase.FALLIDA);
                 return;
             }
 
@@ -95,8 +108,14 @@ public class EjecutorCompleto {
             System.out.println("-----> FASE 2: CRONÓMETRO DE CAMINOS");
             System.out.println("----------------------------------------------------------");
 
+            //-----> Marca el inicio visible de la fase de caminos
+            EstadoAnalisis.marcarFase("caminos", EstadoAnalisis.EstadoFase.EN_PROGRESO);
+
             MainLauncher.main(argsFaseComun);
             corrioFase2 = true;
+
+            //-----> Caminos completados con exito
+            EstadoAnalisis.marcarFase("caminos", EstadoAnalisis.EstadoFase.COMPLETADA);
         }
 
         //-----> Muestra las métricas consolidadas de la Fase 1

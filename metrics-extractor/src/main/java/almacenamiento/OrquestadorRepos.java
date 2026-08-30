@@ -73,6 +73,9 @@ public class OrquestadorRepos {
                 String rama = repo.getString("defaultBranch");
                 File carpetaRepo = null;
 
+                //-----> Reinicia el progreso visible para este repo
+                EstadoAnalisis.iniciarRepo(idRepo);
+
                 System.out.println("\n----------------------------------------------------------");
                 System.out.println("-----> Procesando: " + idRepo);
                 System.out.println("----------------------------------------------------------");
@@ -83,6 +86,9 @@ public class OrquestadorRepos {
                     String carpetaSalida = carpetaResultadosBase + "/" + sanitizar(idRepo);
                     String carpetaEstaticos = carpetaSalida + "/resultados_estaticos/" + sanitizar(carpetaRepo.getName());
                     String carpetaDinamicos = carpetaSalida + "/resultados_dinamicos";
+
+                    //-----> Marca el inicio de la fase estatica
+                    EstadoAnalisis.marcarFase("estatica", EstadoAnalisis.EstadoFase.EN_PROGRESO);
 
                     AnalizadorUnificado.main(new String[]{
                             "--proyecto:" + carpetaRepo.getAbsolutePath(),
@@ -101,6 +107,9 @@ public class OrquestadorRepos {
                         String detalle = "Se leyeron 0 clases desde: " + carpetaEstaticos
                                 + " (revisar si la ruta coincide con la carpeta real generada)";
                         System.err.println("-----> " + idRepo + ": " + detalle);
+                        //-----> Estatica fallo: benchmarks y caminos quedan como omitidas
+                        EstadoAnalisis.marcarFase("estatica", EstadoAnalisis.EstadoFase.FALLIDA);
+                        EstadoAnalisis.omitirRestantesDesdeDe("estatica");
                         almacen.guardarMetricas(idRepo, new Document("error", detalle), "metrics_failed");
                         fallidos++;
                         continue;
@@ -108,6 +117,9 @@ public class OrquestadorRepos {
 
                     System.out.println("-----> " + idRepo + ": " + clasesSubidas + " clase(s) subidas.");
                     almacen.actualizarEstadoParcial(idRepo, "static", "complete");
+                    //-----> Estatica completada (benchmarks/caminos ya se marcaron
+                    //-----> dentro de EjecutorCompleto, llamado arriba via AnalizadorUnificado)
+                    EstadoAnalisis.marcarFase("estatica", EstadoAnalisis.EstadoFase.COMPLETADA);
 
                     int documentosDinamicosSubidos = lector.procesarDinamicosPorClaseUnaAUna(
                             new File(carpetaDinamicos),
@@ -138,6 +150,9 @@ public class OrquestadorRepos {
 
                 } catch (Throwable e) {
                     System.err.println("-----> " + idRepo + ": fallo al procesar -> " + e.getMessage());
+                    //-----> Un fallo inesperado marca la fase en progreso como fallida
+                    //-----> y omite las que faltaban
+                    EstadoAnalisis.marcarFallaGeneral();
                     try {
                         almacen.guardarMetricas(idRepo, new Document("error", String.valueOf(e.getMessage())), "metrics_failed");
                     } catch (Throwable errorSecundario) {

@@ -3,6 +3,7 @@ package integracion.api;
 import almacenamiento.AlmacenMetricasMongo;
 import almacenamiento.ConfiguracionMongo;
 import almacenamiento.DiagnosticoAlmacenamiento;
+import almacenamiento.EstadoAnalisis;
 import almacenamiento.OrquestadorRepos;
 import org.bson.Document;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,6 +79,18 @@ public class MetricsController {
         cuerpo.put("corriendo", corriendo.get());
         cuerpo.put("ultimoInicio", ultimoInicio);
         cuerpo.put("ultimoResultado", ultimoResultado);
+        cuerpo.put("repoActual", EstadoAnalisis.getRepoActual());
+
+        //-----> Arma la lista de fases (nombre + estado) para el frontend
+        List<Map<String, String>> fases = new ArrayList<>();
+        for (Map.Entry<String, EstadoAnalisis.EstadoFase> entrada : EstadoAnalisis.getFases().entrySet()) {
+            Map<String, String> fase = new HashMap<>();
+            fase.put("nombre", entrada.getKey());
+            fase.put("estado", entrada.getValue().name().toLowerCase());
+            fases.add(fase);
+        }
+        cuerpo.put("fases", fases);
+
         return cuerpo;
     }
 
