@@ -18,13 +18,11 @@ import java.util.stream.Stream;
 //-----> Procesa y analiza lotes de repositorios
 public class OrquestadorRepos {
 
-    //-----> Lee argumentos y arranca lote
     public static void main(String[] args) throws Exception {
         Map<String, String> params = parseArgs(args);
         ejecutarLote(params);
     }
 
-    //-----> Corre el flujo de mineria completo
     public static void ejecutarLote(Map<String, String> params) throws Exception {
 
         String carpetaClones = params.getOrDefault("clones", "repos_clonados");
@@ -76,6 +74,16 @@ public class OrquestadorRepos {
                 //-----> Reinicia el progreso visible para este repo
                 EstadoAnalisis.iniciarRepo(idRepo);
 
+                //-----> MOVIDO: se marca "metrics_in_progress" en Mongo desde el
+                //-----> primerisimo momento -antes de clonar, antes de compilar-
+                //-----> para que si el contenedor muere en CUALQUIER punto del
+                //-----> proceso (incluida la compilacion), quede rastro real en
+                //-----> Mongo y RecuperacionInicio lo pueda detectar al reiniciar.
+                //-----> Antes se llamaba hasta despues de correr TODO el analisis,
+                //-----> lo cual dejaba sin cubrir justo el escenario mas comun de
+                //-----> crash (durante compilacion/benchmarks).
+                almacen.inicializarMetricasVacias(idRepo);
+
                 System.out.println("\n----------------------------------------------------------");
                 System.out.println("-----> Procesando: " + idRepo);
                 System.out.println("----------------------------------------------------------");
@@ -87,15 +95,15 @@ public class OrquestadorRepos {
                     String carpetaEstaticos = carpetaSalida + "/resultados_estaticos/" + sanitizar(carpetaRepo.getName());
                     String carpetaDinamicos = carpetaSalida + "/resultados_dinamicos";
 
-                    //-----> Marca el inicio de la fase estatica
-                    EstadoAnalisis.marcarFase("estatica", EstadoAnalisis.EstadoFase.EN_PROGRESO);
-
+                    //-----> QUITADO: la marca de "estatica" EN_PROGRESO/COMPLETADA
+                    //-----> ahora vive dentro de AnalizadorUnificado.main(), justo
+                    //-----> alrededor de la llamada real a ProcesadorMetricas -asi
+                    //-----> se refleja en el instante correcto y no hasta que
+                    //-----> tambien termina lo dinamico-.
                     AnalizadorUnificado.main(new String[]{
                             "--proyecto:" + carpetaRepo.getAbsolutePath(),
                             "--salida:" + carpetaSalida
                     });
-
-                    almacen.inicializarMetricasVacias(idRepo);
 
                     int clasesSubidas = lector.procesarClasesUnaAUna(
                             new File(carpetaEstaticos),
@@ -107,7 +115,6 @@ public class OrquestadorRepos {
                         String detalle = "Se leyeron 0 clases desde: " + carpetaEstaticos
                                 + " (revisar si la ruta coincide con la carpeta real generada)";
                         System.err.println("-----> " + idRepo + ": " + detalle);
-                        //-----> Estatica fallo: benchmarks y caminos quedan como omitidas
                         EstadoAnalisis.marcarFase("estatica", EstadoAnalisis.EstadoFase.FALLIDA);
                         EstadoAnalisis.omitirRestantesDesdeDe("estatica");
                         almacen.guardarMetricas(idRepo, new Document("error", detalle), "metrics_failed");
@@ -117,9 +124,6 @@ public class OrquestadorRepos {
 
                     System.out.println("-----> " + idRepo + ": " + clasesSubidas + " clase(s) subidas.");
                     almacen.actualizarEstadoParcial(idRepo, "static", "complete");
-                    //-----> Estatica completada (benchmarks/caminos ya se marcaron
-                    //-----> dentro de EjecutorCompleto, llamado arriba via AnalizadorUnificado)
-                    EstadoAnalisis.marcarFase("estatica", EstadoAnalisis.EstadoFase.COMPLETADA);
 
                     int documentosDinamicosSubidos = lector.procesarDinamicosPorClaseUnaAUna(
                             new File(carpetaDinamicos),
@@ -150,8 +154,6 @@ public class OrquestadorRepos {
 
                 } catch (Throwable e) {
                     System.err.println("-----> " + idRepo + ": fallo al procesar -> " + e.getMessage());
-                    //-----> Un fallo inesperado marca la fase en progreso como fallida
-                    //-----> y omite las que faltaban
                     EstadoAnalisis.marcarFallaGeneral();
                     try {
                         almacen.guardarMetricas(idRepo, new Document("error", String.valueOf(e.getMessage())), "metrics_failed");
@@ -175,7 +177,6 @@ public class OrquestadorRepos {
         }
     }
 
-    //-----> Clona repositorio si falta
     private static File clonarSiNoExiste(String htmlUrl, String rama, String carpetaClones, String idRepo) throws Exception {
         File destino = new File(carpetaClones, sanitizar(idRepo));
         File marcadorGit = new File(destino, ".git");
@@ -233,7 +234,6 @@ public class OrquestadorRepos {
         return destino;
     }
 
-    //-----> Elimina carpetas recursivamente
     private static void borrarRecursivo(File carpeta) {
         if (!carpeta.exists()) return;
         try (Stream<java.nio.file.Path> flujo = Files.walk(carpeta.toPath())) {
@@ -249,12 +249,10 @@ public class OrquestadorRepos {
         }
     }
 
-    //-----> Reemplaza caracteres invalidos por guiones
     private static String sanitizar(String s) {
         return (s == null || s.isEmpty()) ? "sin_nombre" : s.replaceAll("[^a-zA-Z0-9_\\-]", "_");
     }
 
-    //-----> Convierte arreglo de argumentos en Map
     private static Map<String, String> parseArgs(String[] args) {
         Map<String, String> map = new HashMap<>();
         for (String arg : args) {

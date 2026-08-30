@@ -214,7 +214,28 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         Number tamanoBytes = stats.get("size", Number.class);
         return tamanoBytes == null ? 0.0 : tamanoBytes.doubleValue() / (1024.0 * 1024.0);
     }
+    //-----> AGREGADO: trae repos que quedaron marcados "en progreso" — si el
+    //-----> servidor se reinicia y encuentra alguno, solo puede significar que
+    //-----> el proceso murio a la mitad (nunca corren dos analisis a la vez)
+    public List<Document> obtenerRepositoriosEnProgreso() {
+        List<Document> resultado = new ArrayList<>();
+        for (Document doc : coleccion.find(Filters.eq("status", "metrics_in_progress"))) {
+            resultado.add(doc);
+        }
+        return resultado;
+    }
 
+    //-----> AGREGADO: marca un repo huerfano como fallido tras un reinicio
+    //-----> inesperado del servidor, sin tocar los datos de "metrics" que ya
+    //-----> se hayan alcanzado a guardar antes del crash
+    public void marcarComoFallidoPorReinicio(String idRepo, String mensaje) {
+        Bson filtro = Filters.eq("_id", idRepo);
+        Bson actualizacion = Updates.combine(
+                Updates.set("status", "metrics_failed"),
+                Updates.set("metrics.error", mensaje)
+        );
+        coleccion.updateOne(filtro, actualizacion);
+    }
     //-----> Cierra la conexion a la base de datos
     @Override
     public void close() {

@@ -1,5 +1,6 @@
 package integracion;
 
+import almacenamiento.EstadoAnalisis;
 import dinamica.EjecutorCompleto;
 import estatica.ProcesadorMetricas;
 
@@ -12,13 +13,11 @@ import java.util.Map;
 public class AnalizadorUnificado {
 
     public static void main(String[] args) throws Exception {
-        //-----> Obtiene parámetros de entrada
         Map<String, String> params = parseArgs(args);
 
         String rutaProyecto = params.get("proyecto");
         String carpetaSalida = params.getOrDefault("salida", "resultados");
 
-        //-----> Revisa la ruta obligatoria del proyecto
         if (rutaProyecto == null) {
             System.err.println("Uso: java -cp ... integracion.AnalizadorUnificado --proyecto:/ruta [--salida:resultados]");
             System.err.println("     (tambien acepta los parametros de dinamica: --batchSize --batchIndex --I --WI --F --classpath ...)");
@@ -30,7 +29,6 @@ public class AnalizadorUnificado {
         System.out.println(" Proyecto: " + rutaProyecto);
         System.out.println("==========================================================");
 
-        //-----> Configura rutas de salida para cada análisis
         String salidaEstatica = carpetaSalida + "/resultados_estaticos";
         String salidaDinamica = carpetaSalida + "/resultados_dinamicos";
 
@@ -38,7 +36,13 @@ public class AnalizadorUnificado {
         System.out.println("\n----------------------------------------------------------");
         System.out.println("-----> METRICAS ESTATICAS");
         System.out.println("----------------------------------------------------------");
+
+        //-----> AGREGADO: marca aqui mismo, justo antes/despues de correr el
+        //-----> analisis estatico real -no en OrquestadorRepos, que solo se
+        //-----> enteraba de "completada" hasta que TODO el pipeline terminaba-
+        EstadoAnalisis.marcarFase("estatica", EstadoAnalisis.EstadoFase.EN_PROGRESO);
         new ProcesadorMetricas().analizarUnProyecto(rutaProyecto, salidaEstatica);
+        EstadoAnalisis.marcarFase("estatica", EstadoAnalisis.EstadoFase.COMPLETADA);
 
         //-----> Corre el análisis dinámico
         System.out.println("\n----------------------------------------------------------");
@@ -55,7 +59,6 @@ public class AnalizadorUnificado {
         System.out.println("==========================================================");
     }
 
-    //-----> Modifica la carpeta de salida en los argumentos
     private static String[] conSalidaOverride(String[] argsOriginales, String nuevaSalida) {
         List<String> resultado = new ArrayList<>();
         boolean reemplazado = false;
@@ -73,7 +76,6 @@ public class AnalizadorUnificado {
         return resultado.toArray(new String[0]);
     }
 
-    //-----> Convierte arreglos de argumentos a mapa clave-valor
     private static Map<String, String> parseArgs(String[] args) {
         Map<String, String> map = new HashMap<>();
         for (String arg : args) {
