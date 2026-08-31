@@ -7,18 +7,15 @@ import java.util.Map;
 //-----> para que MetricsController lo pueda leer desde /api/metrics/status
 public class EstadoAnalisis {
 
-    //-----> Estados posibles de cada fase
     public enum EstadoFase {
         PENDIENTE, EN_PROGRESO, COMPLETADA, FALLIDA, OMITIDA
     }
 
-    //-----> Orden fijo de las fases que se muestran en pantalla
     private static final String[] ORDEN_FASES = {"estatica", "benchmarks", "caminos"};
 
     private static volatile String repoActual = null;
     private static final Map<String, EstadoFase> fases = new LinkedHashMap<>();
 
-    //-----> Reinicia el progreso al arrancar un repo nuevo
     public static synchronized void iniciarRepo(String idRepo) {
         repoActual = idRepo;
         fases.clear();
@@ -27,13 +24,10 @@ public class EstadoAnalisis {
         }
     }
 
-    //-----> Cambia el estado de una fase especifica
     public static synchronized void marcarFase(String nombreFase, EstadoFase estado) {
         fases.put(nombreFase, estado);
     }
 
-    //-----> Marca como OMITIDA cualquier fase pendiente posterior a la indicada
-    //-----> (ej. si benchmarks falla, caminos nunca llega a correr)
     public static synchronized void omitirRestantesDesdeDe(String nombreFase) {
         boolean yaPaso = false;
         for (String f : ORDEN_FASES) {
@@ -47,8 +41,6 @@ public class EstadoAnalisis {
         }
     }
 
-    //-----> Cubre el caso de un crash inesperado: la fase que estaba
-    //-----> en progreso pasa a fallida y las que faltan se omiten
     public static synchronized void marcarFallaGeneral() {
         boolean encontroEnProgreso = false;
         for (String f : ORDEN_FASES) {
@@ -62,11 +54,23 @@ public class EstadoAnalisis {
         }
     }
 
+    //-----> AGREGADO: reconstruye el progreso visible despues de un reinicio
+    //-----> inesperado del servidor. Como EstadoAnalisis se borro al reiniciar,
+    //-----> RecuperacionInicio usa esto para "recordarle" al frontend, en base
+    //-----> a lo que SI quedo guardado en Mongo, cual fase alcanzo a completarse
+    //-----> antes del crash y cuales quedaron marcadas como fallidas/omitidas.
+    public static synchronized void restaurarTrasReinicio(String idRepo, Map<String, EstadoFase> fasesConocidas) {
+        repoActual = idRepo;
+        fases.clear();
+        for (String nombreFase : ORDEN_FASES) {
+            fases.put(nombreFase, fasesConocidas.getOrDefault(nombreFase, EstadoFase.PENDIENTE));
+        }
+    }
+
     public static synchronized String getRepoActual() {
         return repoActual;
     }
 
-    //-----> Devuelve una copia en el orden fijo de fases
     public static synchronized Map<String, EstadoFase> getFases() {
         return new LinkedHashMap<>(fases);
     }
