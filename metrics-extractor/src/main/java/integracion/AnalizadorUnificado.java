@@ -37,9 +37,6 @@ public class AnalizadorUnificado {
         System.out.println("-----> METRICAS ESTATICAS");
         System.out.println("----------------------------------------------------------");
 
-        //-----> AGREGADO: marca aqui mismo, justo antes/despues de correr el
-        //-----> analisis estatico real -no en OrquestadorRepos, que solo se
-        //-----> enteraba de "completada" hasta que TODO el pipeline terminaba-
         EstadoAnalisis.marcarFase("estatica", EstadoAnalisis.EstadoFase.EN_PROGRESO);
         new ProcesadorMetricas().analizarUnProyecto(rutaProyecto, salidaEstatica);
         EstadoAnalisis.marcarFase("estatica", EstadoAnalisis.EstadoFase.COMPLETADA);

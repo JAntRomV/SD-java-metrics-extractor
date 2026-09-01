@@ -74,16 +74,6 @@ public class OrquestadorRepos {
                 //-----> Reinicia el progreso visible para este repo
                 EstadoAnalisis.iniciarRepo(idRepo);
 
-                //-----> MOVIDO: se marca "metrics_in_progress" en Mongo desde el
-                //-----> primerisimo momento -antes de clonar, antes de compilar-
-                //-----> para que si el contenedor muere en CUALQUIER punto del
-                //-----> proceso (incluida la compilacion), quede rastro real en
-                //-----> Mongo y RecuperacionInicio lo pueda detectar al reiniciar.
-                //-----> Antes se llamaba hasta despues de correr TODO el analisis,
-                //-----> lo cual dejaba sin cubrir justo el escenario mas comun de
-                //-----> crash (durante compilacion/benchmarks).
-                almacen.inicializarMetricasVacias(idRepo);
-
                 System.out.println("\n----------------------------------------------------------");
                 System.out.println("-----> Procesando: " + idRepo);
                 System.out.println("----------------------------------------------------------");
@@ -95,15 +85,12 @@ public class OrquestadorRepos {
                     String carpetaEstaticos = carpetaSalida + "/resultados_estaticos/" + sanitizar(carpetaRepo.getName());
                     String carpetaDinamicos = carpetaSalida + "/resultados_dinamicos";
 
-                    //-----> QUITADO: la marca de "estatica" EN_PROGRESO/COMPLETADA
-                    //-----> ahora vive dentro de AnalizadorUnificado.main(), justo
-                    //-----> alrededor de la llamada real a ProcesadorMetricas -asi
-                    //-----> se refleja en el instante correcto y no hasta que
-                    //-----> tambien termina lo dinamico-.
                     AnalizadorUnificado.main(new String[]{
                             "--proyecto:" + carpetaRepo.getAbsolutePath(),
                             "--salida:" + carpetaSalida
                     });
+
+                    almacen.inicializarMetricasVacias(idRepo);
 
                     int clasesSubidas = lector.procesarClasesUnaAUna(
                             new File(carpetaEstaticos),

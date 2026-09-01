@@ -20,21 +20,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-//-----> Controlador principal de endpoints REST
 @RestController
 public class MetricsController {
 
-    //-----> Estado y control del proceso activo
     private final AtomicBoolean corriendo = new AtomicBoolean(false);
     private volatile String ultimoInicio = null;
     private volatile String ultimoResultado = "sin ejecuciones todavia";
 
-    //-----> Inicia el analisis en segundo plano
     @PostMapping("/api/metrics/run")
     public ResponseEntity<Map<String, Object>> ejecutar(
             @RequestParam(name = "repo", required = false) String repo) {
 
-        //-----> Evita ejecuciones simultaneas
         if (!corriendo.compareAndSet(false, true)) {
             Map<String, Object> cuerpo = new HashMap<>();
             cuerpo.put("iniciado", false);
@@ -42,11 +38,9 @@ public class MetricsController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(cuerpo);
         }
 
-        //-----> Registra inicio de ejecucion
         ultimoInicio = Instant.now().toString();
         ultimoResultado = "en progreso";
 
-        //-----> Crea y dispara hilo de trabajo
         Thread hiloAnalisis = new Thread(() -> {
             try {
                 Map<String, String> params = new HashMap<>();
@@ -63,7 +57,6 @@ public class MetricsController {
         }, "metrics-run-thread");
         hiloAnalisis.start();
 
-        //-----> Respuesta confirmando el arranque
         Map<String, Object> cuerpo = new HashMap<>();
         cuerpo.put("iniciado", true);
         cuerpo.put("mensaje", (repo != null && !repo.isBlank())
@@ -72,7 +65,6 @@ public class MetricsController {
         return ResponseEntity.accepted().body(cuerpo);
     }
 
-    //-----> Consulta el estado actual de la ejecucion
     @GetMapping("/api/metrics/status")
     public Map<String, Object> status() {
         Map<String, Object> cuerpo = new HashMap<>();
@@ -81,7 +73,6 @@ public class MetricsController {
         cuerpo.put("ultimoResultado", ultimoResultado);
         cuerpo.put("repoActual", EstadoAnalisis.getRepoActual());
 
-        //-----> Arma la lista de fases (nombre + estado) para el frontend
         List<Map<String, String>> fases = new ArrayList<>();
         for (Map.Entry<String, EstadoAnalisis.EstadoFase> entrada : EstadoAnalisis.getFases().entrySet()) {
             Map<String, String> fase = new HashMap<>();
@@ -94,7 +85,6 @@ public class MetricsController {
         return cuerpo;
     }
 
-    //-----> Consulta el resumen general guardado en Mongo
     @GetMapping("/api/metrics/summary")
     public ResponseEntity<?> summary() {
         ConfiguracionMongo config = ConfiguracionMongo.desdeVariablesDeEntorno();
@@ -108,7 +98,6 @@ public class MetricsController {
         }
     }
 
-    //-----> Devuelve la lista completa de repositorios
     @GetMapping("/api/metrics/repos")
     public ResponseEntity<?> listarRepos() {
         ConfiguracionMongo config = ConfiguracionMongo.desdeVariablesDeEntorno();
@@ -122,7 +111,6 @@ public class MetricsController {
         }
     }
 
-    //-----> Devuelve los datos de un repositorio por su ID
     @GetMapping("/api/metrics/repo")
     public ResponseEntity<?> obtenerRepo(@RequestParam(name = "id") String id) {
         ConfiguracionMongo config = ConfiguracionMongo.desdeVariablesDeEntorno();
@@ -141,7 +129,6 @@ public class MetricsController {
         }
     }
 
-    //-----> Verifica la disponibilidad del servicio
     @GetMapping("/api/health")
     public Map<String, String> health() {
         return Map.of("status", "ok");

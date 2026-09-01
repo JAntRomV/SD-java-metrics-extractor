@@ -16,7 +16,6 @@ import java.util.Set;
 public class EjecutorCompleto {
 
     public static void main(String[] args) throws Exception {
-        //-----> Lee los argumentos recibidos
         Map<String, String> params = parseArgs(args);
 
         String rutaProyecto = params.get("proyecto");
@@ -24,17 +23,14 @@ public class EjecutorCompleto {
         String carpetaSalida = params.getOrDefault("salida", "resultados_dinamicos");
         String classpathCompleto = null;
 
-        //-----> Mapea el modo de trabajo indicado
         ModeMapper.ModoEjecucion modo = ModeMapper.obtenerModo(params.get("modo"));
 
         System.out.println("==========================================================");
         System.out.println(" INICIANDO METRICAS DINAMICAS ");
         System.out.println("==========================================================");
 
-        //-----> Prepara directorio de salidas
         DirFileTools.crearDirectorio(carpetaSalida);
 
-        //-----> Compila código del proyecto si es requerido
         if (rutaProyecto != null) {
             System.out.println("-----> Paso 1: Compilando proyecto externo...");
             CompiladorProyecto.ResultadoCompilacion res = CompiladorProyecto.compilar(rutaProyecto, true);
@@ -51,10 +47,8 @@ public class EjecutorCompleto {
             return;
         }
 
-        //-----> Establece ruta fija para el catálogo de métodos
         String rutaCatalogo = params.getOrDefault("catalogo", carpetaSalida + "/catalogo_metodos.txt");
 
-        //-----> Genera la lista de argumentos base
         List<String> argsComunes = new ArrayList<>();
         argsComunes.add("--clases:" + rutaClases);
         argsComunes.add("--salida:" + carpetaSalida);
@@ -70,13 +64,11 @@ public class EjecutorCompleto {
         boolean corrioFase1 = false;
         boolean corrioFase2 = false;
 
-        //-----> Arranca la prueba de Benchmarks generales (Fase 1)
         if (modo != ModeMapper.ModoEjecucion.CAMINOS_INSTRUMENTADOS) {
             System.out.println("\n----------------------------------------------------------");
             System.out.println("-----> FASE 1: BENCHMARKS");
             System.out.println("----------------------------------------------------------");
 
-            //-----> Marca el inicio visible de la fase de benchmarks
             EstadoAnalisis.marcarFase("benchmarks", EstadoAnalisis.EstadoFase.EN_PROGRESO);
 
             EjecutorDinamico.main(argsFaseComun);
@@ -84,22 +76,18 @@ public class EjecutorCompleto {
 
             if (!DirFileTools.existeArchivo(rutaBenchmarksCsv)) {
                 System.err.println("-----> Error: La Fase 1 finalizo pero no genero el archivo: " + rutaBenchmarksCsv);
-                //-----> Benchmarks fallo: caminos queda marcada como omitida
                 EstadoAnalisis.marcarFase("benchmarks", EstadoAnalisis.EstadoFase.FALLIDA);
                 EstadoAnalisis.omitirRestantesDesdeDe("benchmarks");
                 return;
             }
 
-            //-----> Benchmarks completados con exito
             EstadoAnalisis.marcarFase("benchmarks", EstadoAnalisis.EstadoFase.COMPLETADA);
         }
 
-        //-----> Arranca la prueba de medición por caminos (Fase 2)
         if (modo != ModeMapper.ModoEjecucion.BENCHMARK_GENERAL) {
             if (!DirFileTools.existeArchivo(rutaBenchmarksCsv)) {
                 System.err.println("-----> No se puede correr la Fase 2: no existe " + rutaBenchmarksCsv
                         + ". Corre primero la Fase 1 (--modo:fase1 o --modo:completo).");
-                //-----> No hay benchmarks previos: caminos no puede correr
                 EstadoAnalisis.marcarFase("caminos", EstadoAnalisis.EstadoFase.FALLIDA);
                 return;
             }
@@ -108,17 +96,14 @@ public class EjecutorCompleto {
             System.out.println("-----> FASE 2: CRONÓMETRO DE CAMINOS");
             System.out.println("----------------------------------------------------------");
 
-            //-----> Marca el inicio visible de la fase de caminos
             EstadoAnalisis.marcarFase("caminos", EstadoAnalisis.EstadoFase.EN_PROGRESO);
 
             MainLauncher.main(argsFaseComun);
             corrioFase2 = true;
 
-            //-----> Caminos completados con exito
             EstadoAnalisis.marcarFase("caminos", EstadoAnalisis.EstadoFase.COMPLETADA);
         }
 
-        //-----> Muestra las métricas consolidadas de la Fase 1
         if (corrioFase1) {
             int metodosProcesados = contarMetodosUnicos(rutaBenchmarksCsv);
             Map<String, String> resumenEscaneo = leerResumen(carpetaSalida + "/_escaneo_resumen.txt");
@@ -137,7 +122,6 @@ public class EjecutorCompleto {
             System.out.println("  Metodos transferidos a Fase 2 : " + metodosProcesados);
         }
 
-        //-----> Muestra las métricas consolidadas de la Fase 2
         if (corrioFase2) {
             int caminosGenerados = contarCaminosGenerados(rutaCaminosCsv);
             Map<String, String> resumenCaminos = leerResumen(carpetaSalida + "/_caminos_resumen.txt");
@@ -162,7 +146,6 @@ public class EjecutorCompleto {
         System.out.println("==========================================================");
     }
 
-    //-----> Lee reporte de valores de resumen
     private static Map<String, String> leerResumen(String rutaArchivo) {
         Map<String, String> datos = new HashMap<>();
         File archivo = new File(rutaArchivo);
@@ -181,7 +164,6 @@ public class EjecutorCompleto {
         return datos;
     }
 
-    //-----> Calcula total de métodos leídos de archivo
     private static int contarMetodosUnicos(String rutaCsv) {
         try {
             List<String> lineas = Files.readAllLines(Paths.get(rutaCsv));
@@ -208,7 +190,6 @@ public class EjecutorCompleto {
         }
     }
 
-    //-----> Totaliza los caminos registrados en archivo
     private static int contarCaminosGenerados(String rutaCsv) {
         try {
             List<String> lineas = Files.readAllLines(Paths.get(rutaCsv));
@@ -225,7 +206,6 @@ public class EjecutorCompleto {
         }
     }
 
-    //-----> Transforma arreglos de entrada a mapa
     private static Map<String, String> parseArgs(String[] args) {
         Map<String, String> map = new HashMap<>();
         for (String arg : args) {
