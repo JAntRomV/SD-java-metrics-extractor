@@ -26,7 +26,6 @@ public class AlmacenMetricasMongo implements AutoCloseable {
     private final MongoCollection<Document> coleccionClases;
     private final MongoCollection<Document> coleccionDinamicas;
 
-    //-----> Conecta a Mongo y asigna las colecciones
     public AlmacenMetricasMongo(ConfiguracionMongo config) {
         this.cliente = MongoClients.create(config.construirUri());
         this.baseDatos = cliente.getDatabase(config.baseDatos);
@@ -35,15 +34,12 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         this.coleccionDinamicas = baseDatos.getCollection(config.coleccionDinamicas);
     }
 
-    //-----> Cuenta el total de repos
     public long contarDocumentos() {
         return coleccion.countDocuments();
     }
 
-    //-----> Trae los repos con estado pendiente
     public List<Document> obtenerRepositoriosPendientes() {
         List<Document> resultado = new ArrayList<>();
-
         Bson filtro = Filters.or(
                 Filters.exists("status", false),
                 Filters.in("status", "pending", "metrics_in_progress")
@@ -57,7 +53,6 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         return resultado;
     }
 
-    //-----> Trae todos los repos sin filtrar
     public List<Document> obtenerTodosLosRepositorios() {
         List<Document> resultado = new ArrayList<>();
         Bson orden = Sorts.orderBy(Sorts.ascending("mining.score.rank"), Sorts.ascending("_id"));
@@ -69,17 +64,14 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         return resultado;
     }
 
-    //-----> Busca repo por su ID
     public Document obtenerRepositorioPorId(String idRepo) {
         return coleccion.find(Filters.eq("_id", idRepo)).first();
     }
 
-    //-----> Borra metricas dinamicas de un repo
     public void borrarSoloDinamicas(String idRepo) {
         coleccionDinamicas.deleteMany(Filters.eq("repoId", idRepo));
     }
 
-    //-----> Limpia y crea la estructura inicial
     public void inicializarMetricasVacias(String idRepo) {
         coleccionClases.deleteMany(Filters.eq("repoId", idRepo));
         coleccionDinamicas.deleteMany(Filters.eq("repoId", idRepo));
@@ -97,7 +89,6 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         coleccion.updateOne(filtro, actualizacion);
     }
 
-    //-----> Guarda o actualiza una clase estatica
     public void agregarClaseAMetricas(String idRepo, Document claseDoc) {
         String clase = claseDoc.getString("clase");
         String id = idRepo + "_" + clase;
@@ -112,7 +103,6 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         coleccionClases.replaceOne(filtro, documentoClase, new ReplaceOptions().upsert(true));
     }
 
-    //-----> Guarda o actualiza metricas dinamicas
     public void agregarDinamicoAMetricas(String idRepo, Document dinamicoDoc) {
         String clase = dinamicoDoc.getString("clase");
         int parte = dinamicoDoc.getInteger("parte", 1);
@@ -129,7 +119,6 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         coleccionDinamicas.replaceOne(filtro, documento, new ReplaceOptions().upsert(true));
     }
 
-    //-----> Guarda los caminos de ejecucion en partes
     public void agregarCaminosAMetricas(String idRepo, Document caminoParteDoc) {
         String clase = caminoParteDoc.getString("clase");
         int parte = caminoParteDoc.getInteger("parte", 1);
@@ -146,28 +135,18 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         coleccionClases.replaceOne(filtro, documento, new ReplaceOptions().upsert(true));
     }
 
-    //-----> Cambia el estado estatico o dinamico
     public void actualizarEstadoParcial(String idRepo, String tipo, String valor) {
         Bson filtro = Filters.eq("_id", idRepo);
         Bson actualizacion = Updates.set("metricsStatus." + tipo, valor);
         coleccion.updateOne(filtro, actualizacion);
     }
 
-    //-----> Actualiza SOLO el status general del repo, sin tocar "metrics" ni
-    //-----> "metricsStatus". Se usa desde ReprocesarDinamico: como ese flujo
-    //-----> reprocesa unicamente la parte dinamica y no vuelve a calcular el
-    //-----> total de clases estaticas, no puede usar finalizarMetricas() ni
-    //-----> guardarMetricas() -ambos pisarian "metrics" con datos incompletos-.
-    //-----> Sin este metodo, un reproceso dinamico exitoso dejaba el repo
-    //-----> marcado como "metrics_static_only" en el resumen general, aunque
-    //-----> ya tuviera estatica Y dinamica completas.
     public void actualizarStatusGeneral(String idRepo, String nuevoStatus) {
         Bson filtro = Filters.eq("_id", idRepo);
         Bson actualizacion = Updates.set("status", nuevoStatus);
         coleccion.updateOne(filtro, actualizacion);
     }
 
-    //-----> Marca repo solo con fase estatica
     public void marcarSoloEstaticoCompleto(String idRepo, String razonSinDatosDinamicos) {
         Bson filtro = Filters.eq("_id", idRepo);
         Bson actualizacion = Updates.combine(
@@ -177,7 +156,6 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         coleccion.updateOne(filtro, actualizacion);
     }
 
-    //-----> Actualiza el total de clases y el estado
     public void finalizarMetricas(String idRepo, int totalClases, String nuevoStatus) {
         Bson filtro = Filters.eq("_id", idRepo);
         Bson actualizacion = Updates.combine(
@@ -187,7 +165,6 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         coleccion.updateOne(filtro, actualizacion);
     }
 
-    //-----> Guarda todo el documento de metricas
     public void guardarMetricas(String idRepo, Document metrics, String nuevoStatus) {
         Bson filtro = Filters.eq("_id", idRepo);
         Bson actualizacion = Updates.combine(
@@ -197,7 +174,6 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         coleccion.updateOne(filtro, actualizacion);
     }
 
-    //-----> Cuenta repos agrupados por estado
     public Map<Object, Long> contarPorValorDeStatus() {
         Map<Object, Long> conteo = new LinkedHashMap<>();
         for (Document doc : coleccion.find()) {
@@ -207,14 +183,43 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         return conteo;
     }
 
-    //-----> Calcula el tamano en MB de la coleccion
     public double obtenerTamanoColeccionEnMB() {
         Document stats = baseDatos.runCommand(new Document("collStats", coleccion.getNamespace().getCollectionName()));
         Number tamanoBytes = stats.get("size", Number.class);
         return tamanoBytes == null ? 0.0 : tamanoBytes.doubleValue() / (1024.0 * 1024.0);
     }
 
-    //-----> Cierra la conexion a la base de datos
+    //-----> AGREGADO: cursor (no lista) de documentos de clase que tienen
+    //-----> metricas estaticas calculadas -Halstead + CFG-. Se usa "exists"
+    //-----> sobre "metricasJson" porque esta misma coleccion tambien guarda
+    //-----> los documentos de caminos, que no tienen ese campo.
+    public FindIterable<Document> obtenerCursorClasesConMetricas() {
+        return coleccionClases.find(Filters.exists("metricasJson", true));
+    }
+
+    //-----> AGREGADO: cursor de documentos de clase que tienen caminos
+    //-----> estaticos -distinguidos por tener el campo "caminos"-.
+    public FindIterable<Document> obtenerCursorClasesConCaminos() {
+        return coleccionClases.find(Filters.exists("caminos", true));
+    }
+
+    //-----> AGREGADO: cursor de todos los documentos dinamicos
+    //-----> (benchmarks + cronometro de caminos) de todos los repos.
+    public FindIterable<Document> obtenerCursorDinamicas() {
+        return coleccionDinamicas.find();
+    }
+
+    //-----> AGREGADO: repos con alguna incidencia -fallidos por completo,
+    //-----> o que solo llegaron a la parte estatica-.
+    public List<Document> obtenerRepositoriosConIncidencias() {
+        List<Document> resultado = new ArrayList<>();
+        Bson filtro = Filters.in("status", "metrics_failed", "metrics_static_only");
+        for (Document doc : coleccion.find(filtro)) {
+            resultado.add(doc);
+        }
+        return resultado;
+    }
+
     @Override
     public void close() {
         cliente.close();
