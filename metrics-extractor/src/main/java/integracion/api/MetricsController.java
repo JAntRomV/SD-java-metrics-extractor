@@ -248,12 +248,7 @@ public class MetricsController {
         zip.closeEntry();
     }
 
-    //-----> AGREGADO: repo_metrics_dynamic (array "benchmarks") -> 1 fila por metodo medido.
-    //-----> Las columnas de JMH varian segun la corrida, asi que se recolectan
-    //-----> en una primera pasada -solo los NOMBRES de columna, no las filas-
-    //-----> y luego se escribe en una segunda pasada. Esto mantiene el uso de
-    //-----> memoria bajo: lo unico que se acumula es un set de textos cortos.
-    private void escribirBenchmarksDinamicosCsv(AlmacenMetricasMongo almacen, ZipOutputStream zip) throws IOException {
+        private void escribirBenchmarksDinamicosCsv(AlmacenMetricasMongo almacen, ZipOutputStream zip) throws IOException {
         zip.putNextEntry(new ZipEntry("benchmarks_dinamicos.csv"));
 
         Set<String> columnas = new LinkedHashSet<>();
@@ -264,10 +259,13 @@ public class MetricsController {
                 columnas.addAll(fila.keySet());
             }
         }
+        //-----> AGREGADO: la columna cruda de JMH ya no se repite por separado,
+        //-----> se extrae su valor en la nueva columna "metodo"
+        columnas.remove("Param: metodoObjetivo");
 
         List<String> columnasOrdenadas = new ArrayList<>(columnas);
 
-        StringBuilder encabezado = new StringBuilder("repo,clase");
+        StringBuilder encabezado = new StringBuilder("repo,clase,metodo");
         for (String col : columnasOrdenadas) {
             encabezado.append(",").append(csvCampo(col));
         }
@@ -280,8 +278,12 @@ public class MetricsController {
             if (benchmarks == null) continue;
 
             for (Document fila : benchmarks) {
+                //-----> AGREGADO: separa "Clase#metodo" en el nombre del metodo solo
+                String claveMetodo = fila.getString("Param: metodoObjetivo");
+                String metodo = extraerMetodo(claveMetodo);
+
                 StringBuilder linea = new StringBuilder();
-                linea.append(csvCampo(repoId)).append(",").append(csvCampo(clase));
+                linea.append(csvCampo(repoId)).append(",").append(csvCampo(clase)).append(",").append(csvCampo(metodo));
                 for (String col : columnasOrdenadas) {
                     Object valor = fila.get(col);
                     linea.append(",").append(csvCampo(valor == null ? "" : valor.toString()));
@@ -293,14 +295,16 @@ public class MetricsController {
         zip.closeEntry();
     }
 
-    //-----> AGREGADO: repo_metrics_dynamic (array "cronometroCaminos") -> 1 fila por instruccion medida
     private void escribirCronometroCaminosDinamicoCsv(AlmacenMetricasMongo almacen, ZipOutputStream zip) throws IOException {
         zip.putNextEntry(new ZipEntry("cronometro_caminos_dinamico.csv"));
 
-        String[] columnasFijas = {"IDLog", "Iteracion", "Clase", "ParamN", "Etiqueta",
+        //-----> MODIFICADO: se quita "Clase" de las columnas crudas porque en
+        //-----> realidad contiene "Clase#metodo" completo -se separa abajo en
+        //-----> las columnas "clase" (ya la trae el documento padre) y "metodo"
+        String[] columnasFijas = {"IDLog", "Iteracion", "ParamN", "Etiqueta",
                 "TiempoNanos", "FechaHora", "DuracionNanos", "DuracionNanosTime"};
 
-        StringBuilder encabezado = new StringBuilder("repo,clase");
+        StringBuilder encabezado = new StringBuilder("repo,clase,metodo");
         for (String col : columnasFijas) {
             encabezado.append(",").append(col);
         }
@@ -313,8 +317,12 @@ public class MetricsController {
             if (cronometroCaminos == null) continue;
 
             for (Document fila : cronometroCaminos) {
+                //-----> AGREGADO: la columna "Clase" del CSV original trae
+                //-----> "claseCompleta#metodo" -se extrae solo el metodo
+                String metodo = extraerMetodo(fila.getString("Clase"));
+
                 StringBuilder linea = new StringBuilder();
-                linea.append(csvCampo(repoId)).append(",").append(csvCampo(clase));
+                linea.append(csvCampo(repoId)).append(",").append(csvCampo(clase)).append(",").append(csvCampo(metodo));
                 for (String col : columnasFijas) {
                     Object valor = fila.get(col);
                     linea.append(",").append(csvCampo(valor == null ? "" : valor.toString()));
@@ -324,6 +332,13 @@ public class MetricsController {
         }
 
         zip.closeEntry();
+    }
+
+    //-----> AGREGADO: extrae el nombre del metodo de un valor "Clase#metodo"
+    private String extraerMetodo(String claveCompleta) {
+        if (claveCompleta == null) return "";
+        int idx = claveCompleta.indexOf('#');
+        return idx >= 0 ? claveCompleta.substring(idx + 1) : "";
     }
 
     //-----> AGREGADO: exporta CSV directo (sin ZIP) con los repos que tuvieron
