@@ -219,6 +219,17 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         }
         return resultado;
     }
+        //-----> AGREGADO: repos que quedaron atorados en "metrics_in_progress"
+    //-----> -senal de que el contenedor murio a la mitad, probablemente por
+    //-----> falta de memoria (ver CompiladorProyecto / proyectos Gradle)-.
+    //-----> Es solo un reporte de lectura, no hace ningun cambio automatico.
+    public List<Document> obtenerRepositoriosAtorados() {
+        List<Document> resultado = new ArrayList<>();
+        for (Document doc : coleccion.find(Filters.eq("status", "metrics_in_progress"))) {
+            resultado.add(doc);
+        }
+        return resultado;
+    }
 
     @Override
     public void close() {

@@ -407,4 +407,37 @@ public class MetricsController {
         String limpio = valor.replace("\"", "\"\"");
         return "\"" + limpio + "\"";
     }
+        //-----> AGREGADO: exporta CSV con repos atorados por posible falta de
+    //-----> memoria del contenedor -para correrlos manualmente via el jar-
+    @GetMapping("/api/metrics/export/atorados")
+    public ResponseEntity<byte[]> exportarCsvAtorados() {
+        ConfiguracionMongo config = ConfiguracionMongo.desdeVariablesDeEntorno();
+        try (AlmacenMetricasMongo almacen = new AlmacenMetricasMongo(config)) {
+            List<Document> repos = almacen.obtenerRepositoriosAtorados();
+
+            StringBuilder csv = new StringBuilder();
+            csv.append("repo,link,comandoSugerido\n");
+
+            for (Document repo : repos) {
+                String repoId = repo.getString("_id");
+                String link = repo.getString("htmlUrl");
+                String comando = "java -cp app.jar almacenamiento.OrquestadorRepos --repo:" + repoId;
+
+                csv.append(csvCampo(repoId)).append(",")
+                   .append(csvCampo(link)).append(",")
+                   .append(csvCampo(comando)).append("\n");
+            }
+
+            byte[] bytes = csv.toString().getBytes(StandardCharsets.UTF_8);
+            return ResponseEntity.ok()
+                    .header("Content-Type", "text/csv; charset=UTF-8")
+                    .header("Content-Disposition", "attachment; filename=\"repos_atorados.csv\"")
+                    .body(bytes);
+
+        } catch (Exception e) {
+            String mensajeError = "No se pudo generar el CSV de repos atorados: " + e.getMessage();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(mensajeError.getBytes(StandardCharsets.UTF_8));
+        }
+    }
 }
