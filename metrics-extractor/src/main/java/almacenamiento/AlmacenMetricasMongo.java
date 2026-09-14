@@ -41,12 +41,28 @@ public class AlmacenMetricasMongo implements AutoCloseable {
     }
 
     //-----> Trae los repos con estado pendiente
+    //-----> MODIFICADO: ya NO incluye "metrics_in_progress". Antes, un repo que
+    //-----> se quedaba atorado por un crash del contenedor (tipico de falta de
+    //-----> memoria) volvia a la cola de pendientes y OrquestadorRepos lo
+    //-----> reintentaba solo en la siguiente corrida -si la causa era memoria,
+    //-----> normalmente volvia a fallar igual, desperdiciando tiempo-. Ahora,
+    //-----> en cuanto un repo llega aqui con "metrics_in_progress" significa
+    //-----> que su intento anterior murio a medias (nunca llego a marcarse
+    //-----> como completo/fallido/solo-estatico), y se deja fuera de esta lista
+    //-----> a proposito: solo queda accesible via obtenerRepositoriosAtorados()
+    //-----> -el CSV "repos por memoria"- para correrlo manual, hasta que alguien
+    //-----> decida resetearlo con AlmacenMetricasMongo/MetricsController.
+    //-----> (Es seguro asumir que "metrics_in_progress" aqui es un repo muerto,
+    //-----> no uno realmente activo: MetricsController nunca deja arrancar un
+    //-----> lote nuevo -409- mientras otro ya esta corriendo, asi que si este
+    //-----> metodo se esta ejecutando, ningun otro repo puede estar en
+    //-----> progreso de verdad al mismo tiempo.)
     public List<Document> obtenerRepositoriosPendientes() {
         List<Document> resultado = new ArrayList<>();
 
         Bson filtro = Filters.or(
                 Filters.exists("status", false),
-                Filters.in("status", "pending", "metrics_in_progress")
+                Filters.eq("status", "pending")
         );
         Bson orden = Sorts.orderBy(Sorts.ascending("mining.score.rank"), Sorts.ascending("_id"));
 
