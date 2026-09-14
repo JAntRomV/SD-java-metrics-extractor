@@ -183,14 +183,81 @@ public class AlmacenMetricasMongo implements AutoCloseable {
         coleccion.updateOne(filtro, actualizacion);
     }
 
-    //-----> Marca repo solo con fase estatica
+    //-----> Marca repo solo con fase estatica (version simple, para el caso
+    //-----> original: el analisis dinamico corrio pero no genero metodos
+    //-----> aprobados). Delega en la version con tipoRazon.
     public void marcarSoloEstaticoCompleto(String idRepo, String razonSinDatosDinamicos) {
+        marcarSoloEstaticoCompleto(idRepo, razonSinDatosDinamicos, "SIN_METODOS_APROBADOS");
+    }
+
+    //-----> AGREGADO: version que ademas guarda el TIPO de causa
+    //-----> ("SIN_METODOS_APROBADOS" vs "SIN_MEMORIA"), para poder filtrar
+    //-----> despues sin tener que parsear el texto libre de "razonSinDatos".
+    //-----> La usa reclasificarAtoradosPorMemoria() cuando detecta que un
+    //-----> repo se quedo sin memoria durante Fase 1 (benchmarks).
+    public void marcarSoloEstaticoCompleto(String idRepo, String razonSinDatosDinamicos, String tipoRazon) {
         Bson filtro = Filters.eq("_id", idRepo);
         Bson actualizacion = Updates.combine(
                 Updates.set("status", "metrics_static_only"),
-                Updates.set("metrics.dinamicas.razonSinDatos", razonSinDatosDinamicos)
+                Updates.set("metrics.dinamicas.razonSinDatos", razonSinDatosDinamicos),
+                Updates.set("metrics.dinamicas.tipoRazon", tipoRazon)
         );
         coleccion.updateOne(filtro, actualizacion);
+    }
+
+    //-----> AGREGADO: repos "metrics_static_only" cuya causa especifica fue
+    //-----> falta de memoria durante Fase 1 (benchmarks). Reemplaza a
+    //-----> obtenerRepositoriosAtorados() como fuente del CSV "repos por
+    //-----> memoria" del frontend: esa lista vieja se vacia en cuanto se
+    //-----> reclasifica el repo, mientras que esta consulta si lo sigue
+    //-----> mostrando aunque ya no este en "metrics_in_progress".
+    public List<Document> obtenerRepositoriosPorMemoria() {
+        List<Document> resultado = new ArrayList<>();
+        Bson filtro = Filters.and(
+                Filters.eq("status", "metrics_static_only"),
+                Filters.eq("metrics.dinamicas.tipoRazon", "SIN_MEMORIA")
+        );
+        for (Document doc : coleccion.find(filtro)) {
+            resultado.add(doc);
+        }
+        return resultado;
+    }
+
+    //-----> AGREGADO: revisa los repos atorados en "metrics_in_progress"
+    //-----> -senal de que el contenedor murio a la mitad- y los reclasifica.
+    //-----> Se detecto que TODOS los crashes por falta de memoria ocurren
+    //-----> durante Fase 1 (benchmarks de JMH, que compila/carga el proyecto
+    //-----> completo -tipico en Gradle pesado-), es decir DESPUES de que la
+    //-----> fase estatica ya se subio con exito. Por eso: si el repo esta
+    //-----> atorado y su metricsStatus.static ya dice "complete", se asume
+    //-----> con seguridad que ahi fue la caida y se reclasifica como
+    //-----> "metrics_static_only" / tipoRazon "SIN_MEMORIA" -en vez de
+    //-----> dejarlo invisible en pendientes para siempre-. Si ni siquiera la
+    //-----> estatica alcanzo a completarse (caso raro), se marca "fallido"
+    //-----> en vez de "solo estatico" porque no hay nada que reportar.
+    //-----> Se llama al inicio de cada corrida de OrquestadorRepos, y
+    //-----> tambien antes de exportar el CSV de memoria, para que la lista
+    //-----> nunca dependa de que alguien vuelva a correr el lote primero.
+    public int reclasificarAtoradosPorMemoria() {
+        int reclasificados = 0;
+        for (Document repo : obtenerRepositoriosAtorados()) {
+            String idRepo = repo.getString("_id");
+            Document metricsStatus = repo.get("metricsStatus", Document.class);
+            boolean estaticaCompleta = metricsStatus != null && "complete".equals(metricsStatus.getString("static"));
+
+            if (estaticaCompleta) {
+                String razon = "El proceso se quedo sin memoria durante la Fase 1 de metricas dinamicas "
+                        + "(benchmarks de JMH), muy probablemente por un proyecto Gradle pesado que descarga "
+                        + "su propia distribucion la primera vez. La fase estatica si se completo antes de la caida.";
+                marcarSoloEstaticoCompleto(idRepo, razon, "SIN_MEMORIA");
+            } else {
+                Document errorDoc = new Document("error",
+                        "El proceso se quedo sin memoria antes de completar ni siquiera la fase estatica.");
+                guardarMetricas(idRepo, errorDoc, "metrics_failed");
+            }
+            reclasificados++;
+        }
+        return reclasificados;
     }
 
     //-----> Actualiza el total de clases y el estado

@@ -35,6 +35,12 @@ public class OrquestadorRepos {
 
         try (AlmacenMetricasMongo almacen = new AlmacenMetricasMongo(config)) {
 
+            int reclasificados = almacen.reclasificarAtoradosPorMemoria();
+            if (reclasificados > 0) {
+                System.out.println("-----> Se reclasificaron " + reclasificados
+                        + " repo(s) atorados de una corrida anterior (probable falta de memoria en Fase 1).");
+            }
+
             List<Document> pendientes;
 
             if (repoUnico != null && !repoUnico.isBlank()) {

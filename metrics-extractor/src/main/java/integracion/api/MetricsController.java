@@ -395,35 +395,53 @@ public class MetricsController {
         }
     }
 
-    //-----> Exporta CSV con repos atorados por posible falta de memoria
-    //-----> -para correrlos manualmente via el jar-
+    //-----> Exporta CSV con repos que quedaron solo en estatica por falta de
+    //-----> memoria durante Fase 1 (benchmarks) -para reprocesar su parte
+    //-----> dinamica manualmente via el jar, sin gastar cuota del servidor-.
     @GetMapping("/api/metrics/export/atorados")
     public ResponseEntity<byte[]> exportarCsvAtorados() {
         ConfiguracionMongo config = ConfiguracionMongo.desdeVariablesDeEntorno();
         try (AlmacenMetricasMongo almacen = new AlmacenMetricasMongo(config)) {
-            List<Document> repos = almacen.obtenerRepositoriosAtorados();
+
+            //-----> Por si piden el CSV antes de que corra una nueva corrida de
+            //-----> OrquestadorRepos: reclasifica aqui tambien.
+            almacen.reclasificarAtoradosPorMemoria();
+
+            List<Document> repos = almacen.obtenerRepositoriosPorMemoria();
 
             StringBuilder csv = new StringBuilder();
-            csv.append("repo,link,comandoSugerido\n");
+            csv.append("repo,link,razon,comandoSugerido\n");
 
             for (Document repo : repos) {
                 String repoId = repo.getString("_id");
                 String link = repo.getString("htmlUrl");
-                String comando = "java -cp app.jar almacenamiento.OrquestadorRepos --repo:" + repoId;
+
+                String razon = "";
+                Document metrics = repo.get("metrics", Document.class);
+                if (metrics != null) {
+                    Document dinamicas = metrics.get("dinamicas", Document.class);
+                    if (dinamicas != null) razon = dinamicas.getString("razonSinDatos");
+                }
+
+                //-----> Se sugiere ReprocesarDinamico (no OrquestadorRepos): la
+                //-----> fase estatica de estos repos ya se completo con exito
+                //-----> antes de la caida, no hace falta repetirla.
+                String comando = "java -cp app.jar almacenamiento.ReprocesarDinamico --repo:" + repoId;
 
                 csv.append(csvCampo(repoId)).append(",")
                    .append(csvCampo(link)).append(",")
+                   .append(csvCampo(razon)).append(",")
                    .append(csvCampo(comando)).append("\n");
             }
 
             byte[] bytes = csv.toString().getBytes(StandardCharsets.UTF_8);
             return ResponseEntity.ok()
                     .header("Content-Type", "text/csv; charset=UTF-8")
-                    .header("Content-Disposition", "attachment; filename=\"repos_atorados.csv\"")
+                    .header("Content-Disposition", "attachment; filename=\"repos_por_memoria.csv\"")
                     .body(bytes);
 
         } catch (Exception e) {
-            String mensajeError = "No se pudo generar el CSV de repos atorados: " + e.getMessage();
+            String mensajeError = "No se pudo generar el CSV de repos por memoria: " + e.getMessage();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(mensajeError.getBytes(StandardCharsets.UTF_8));
         }
