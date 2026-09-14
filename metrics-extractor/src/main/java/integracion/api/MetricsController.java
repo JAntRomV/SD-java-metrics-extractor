@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -29,13 +28,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+//-----> Controlador principal de endpoints REST
 @RestController
 public class MetricsController {
 
+    //-----> Estado y control del proceso activo
     private final AtomicBoolean corriendo = new AtomicBoolean(false);
     private volatile String ultimoInicio = null;
     private volatile String ultimoResultado = "sin ejecuciones todavia";
 
+    //-----> Inicia el analisis en segundo plano
     @PostMapping("/api/metrics/run")
     public ResponseEntity<Map<String, Object>> ejecutar(
             @RequestParam(name = "repo", required = false) String repo) {
@@ -74,6 +76,7 @@ public class MetricsController {
         return ResponseEntity.accepted().body(cuerpo);
     }
 
+    //-----> Consulta el estado actual de la ejecucion
     @GetMapping("/api/metrics/status")
     public Map<String, Object> status() {
         Map<String, Object> cuerpo = new HashMap<>();
@@ -94,6 +97,7 @@ public class MetricsController {
         return cuerpo;
     }
 
+    //-----> Consulta el resumen general guardado en Mongo
     @GetMapping("/api/metrics/summary")
     public ResponseEntity<?> summary() {
         ConfiguracionMongo config = ConfiguracionMongo.desdeVariablesDeEntorno();
@@ -107,6 +111,7 @@ public class MetricsController {
         }
     }
 
+    //-----> Devuelve la lista completa de repositorios
     @GetMapping("/api/metrics/repos")
     public ResponseEntity<?> listarRepos() {
         ConfiguracionMongo config = ConfiguracionMongo.desdeVariablesDeEntorno();
@@ -120,6 +125,7 @@ public class MetricsController {
         }
     }
 
+    //-----> Devuelve los datos de un repositorio por su ID
     @GetMapping("/api/metrics/repo")
     public ResponseEntity<?> obtenerRepo(@RequestParam(name = "id") String id) {
         ConfiguracionMongo config = ConfiguracionMongo.desdeVariablesDeEntorno();
@@ -138,17 +144,18 @@ public class MetricsController {
         }
     }
 
+    //-----> Verifica la disponibilidad del servicio
     @GetMapping("/api/health")
     public Map<String, String> health() {
         return Map.of("status", "ok");
     }
 
-    //-----> AGREGADO: exporta un ZIP con 4 CSV -metricas estaticas, caminos
-    //-----> estaticos, benchmarks dinamicos y cronometro de caminos dinamico-
-    //-----> de TODO el catalogo. Escribe directo al stream de la respuesta
-    //-----> usando cursores de Mongo -nunca carga todos los documentos en
-    //-----> una lista en memoria-, para evitar el mismo problema de OOM que
-    //-----> ya se resolvio en otras partes del proyecto.
+    //-----> Exporta un ZIP con 4 CSV -metricas estaticas, caminos estaticos,
+    //-----> benchmarks dinamicos y cronometro de caminos dinamico- de TODO el
+    //-----> catalogo. Escribe directo al stream de la respuesta usando
+    //-----> cursores de Mongo -nunca carga todos los documentos en una lista
+    //-----> en memoria-, para evitar el mismo problema de OOM que ya se
+    //-----> resolvio en otras partes del proyecto.
     @GetMapping("/api/metrics/export/metricas")
     public void exportarMetricasZip(HttpServletResponse response) throws IOException {
         response.setContentType("application/zip");
@@ -167,7 +174,7 @@ public class MetricsController {
         }
     }
 
-    //-----> AGREGADO: repo_metrics_static (documentos con metricasJson) -> 1 fila por metodo
+    //-----> repo_metrics_static (documentos con metricasJson) -> 1 fila por metodo
     private void escribirMetricasEstaticasCsv(AlmacenMetricasMongo almacen, ZipOutputStream zip) throws IOException {
         zip.putNextEntry(new ZipEntry("metricas_estaticas.csv"));
 
@@ -214,7 +221,7 @@ public class MetricsController {
         zip.closeEntry();
     }
 
-    //-----> AGREGADO: repo_metrics_static (documentos con "caminos") -> 1 fila por camino
+    //-----> repo_metrics_static (documentos con "caminos") -> 1 fila por camino
     private void escribirCaminosEstaticosCsv(AlmacenMetricasMongo almacen, ZipOutputStream zip) throws IOException {
         zip.putNextEntry(new ZipEntry("caminos_estaticos.csv"));
 
@@ -248,7 +255,12 @@ public class MetricsController {
         zip.closeEntry();
     }
 
-        private void escribirBenchmarksDinamicosCsv(AlmacenMetricasMongo almacen, ZipOutputStream zip) throws IOException {
+    //-----> repo_metrics_dynamic (array "benchmarks") -> 1 fila por metodo medido.
+    //-----> Las columnas de JMH varian segun la corrida, asi que se recolectan
+    //-----> en una primera pasada -solo los NOMBRES de columna, no las filas-
+    //-----> y luego se escribe en una segunda pasada. Esto mantiene el uso de
+    //-----> memoria bajo: lo unico que se acumula es un set de textos cortos.
+    private void escribirBenchmarksDinamicosCsv(AlmacenMetricasMongo almacen, ZipOutputStream zip) throws IOException {
         zip.putNextEntry(new ZipEntry("benchmarks_dinamicos.csv"));
 
         Set<String> columnas = new LinkedHashSet<>();
@@ -259,8 +271,8 @@ public class MetricsController {
                 columnas.addAll(fila.keySet());
             }
         }
-        //-----> AGREGADO: la columna cruda de JMH ya no se repite por separado,
-        //-----> se extrae su valor en la nueva columna "metodo"
+        //-----> la columna cruda de JMH ya no se repite por separado, se
+        //-----> extrae su valor en la nueva columna "metodo"
         columnas.remove("Param: metodoObjetivo");
 
         List<String> columnasOrdenadas = new ArrayList<>(columnas);
@@ -278,7 +290,7 @@ public class MetricsController {
             if (benchmarks == null) continue;
 
             for (Document fila : benchmarks) {
-                //-----> AGREGADO: separa "Clase#metodo" en el nombre del metodo solo
+                //-----> separa "Clase#metodo" en el nombre del metodo solo
                 String claveMetodo = fila.getString("Param: metodoObjetivo");
                 String metodo = extraerMetodo(claveMetodo);
 
@@ -295,12 +307,13 @@ public class MetricsController {
         zip.closeEntry();
     }
 
+    //-----> repo_metrics_dynamic (array "cronometroCaminos") -> 1 fila por instruccion medida
     private void escribirCronometroCaminosDinamicoCsv(AlmacenMetricasMongo almacen, ZipOutputStream zip) throws IOException {
         zip.putNextEntry(new ZipEntry("cronometro_caminos_dinamico.csv"));
 
-        //-----> MODIFICADO: se quita "Clase" de las columnas crudas porque en
-        //-----> realidad contiene "Clase#metodo" completo -se separa abajo en
-        //-----> las columnas "clase" (ya la trae el documento padre) y "metodo"
+        //-----> se quita "Clase" de las columnas crudas porque en realidad
+        //-----> contiene "Clase#metodo" completo -se separa abajo en las
+        //-----> columnas "clase" (ya la trae el documento padre) y "metodo"
         String[] columnasFijas = {"IDLog", "Iteracion", "ParamN", "Etiqueta",
                 "TiempoNanos", "FechaHora", "DuracionNanos", "DuracionNanosTime"};
 
@@ -317,7 +330,7 @@ public class MetricsController {
             if (cronometroCaminos == null) continue;
 
             for (Document fila : cronometroCaminos) {
-                //-----> AGREGADO: la columna "Clase" del CSV original trae
+                //-----> la columna "Clase" del CSV original trae
                 //-----> "claseCompleta#metodo" -se extrae solo el metodo
                 String metodo = extraerMetodo(fila.getString("Clase"));
 
@@ -334,15 +347,8 @@ public class MetricsController {
         zip.closeEntry();
     }
 
-    //-----> AGREGADO: extrae el nombre del metodo de un valor "Clase#metodo"
-    private String extraerMetodo(String claveCompleta) {
-        if (claveCompleta == null) return "";
-        int idx = claveCompleta.indexOf('#');
-        return idx >= 0 ? claveCompleta.substring(idx + 1) : "";
-    }
-
-    //-----> AGREGADO: exporta CSV directo (sin ZIP) con los repos que tuvieron
-    //-----> alguna incidencia -fallidos por completo, o solo estaticos-
+    //-----> Exporta CSV directo (sin ZIP) con los repos que tuvieron alguna
+    //-----> incidencia -fallidos por completo, o solo estaticos-
     @GetMapping("/api/metrics/export/incidencias")
     public ResponseEntity<byte[]> exportarCsvIncidencias() {
         ConfiguracionMongo config = ConfiguracionMongo.desdeVariablesDeEntorno();
@@ -389,26 +395,8 @@ public class MetricsController {
         }
     }
 
-    //-----> AGREGADO: escribe una linea de texto + salto de linea directo al ZIP
-    private void escribirLinea(ZipOutputStream zip, String linea) throws IOException {
-        zip.write((linea + "\n").getBytes(StandardCharsets.UTF_8));
-    }
-
-    //-----> AGREGADO: saca un valor anidado de un Document, o cadena vacia
-    private String valorONulo(Document doc, String campo) {
-        if (doc == null || !doc.containsKey(campo)) return "";
-        Object valor = doc.get(campo);
-        return valor == null ? "" : valor.toString();
-    }
-
-    //-----> AGREGADO: escapa comillas/comas para que el CSV no se rompa
-    private String csvCampo(String valor) {
-        if (valor == null) return "";
-        String limpio = valor.replace("\"", "\"\"");
-        return "\"" + limpio + "\"";
-    }
-        //-----> AGREGADO: exporta CSV con repos atorados por posible falta de
-    //-----> memoria del contenedor -para correrlos manualmente via el jar-
+    //-----> Exporta CSV con repos atorados por posible falta de memoria
+    //-----> -para correrlos manualmente via el jar-
     @GetMapping("/api/metrics/export/atorados")
     public ResponseEntity<byte[]> exportarCsvAtorados() {
         ConfiguracionMongo config = ConfiguracionMongo.desdeVariablesDeEntorno();
@@ -439,5 +427,31 @@ public class MetricsController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(mensajeError.getBytes(StandardCharsets.UTF_8));
         }
+    }
+
+    //-----> Escribe una linea de texto + salto de linea directo al ZIP
+    private void escribirLinea(ZipOutputStream zip, String linea) throws IOException {
+        zip.write((linea + "\n").getBytes(StandardCharsets.UTF_8));
+    }
+
+    //-----> Saca un valor anidado de un Document, o cadena vacia
+    private String valorONulo(Document doc, String campo) {
+        if (doc == null || !doc.containsKey(campo)) return "";
+        Object valor = doc.get(campo);
+        return valor == null ? "" : valor.toString();
+    }
+
+    //-----> Escapa comillas/comas para que el CSV no se rompa
+    private String csvCampo(String valor) {
+        if (valor == null) return "";
+        String limpio = valor.replace("\"", "\"\"");
+        return "\"" + limpio + "\"";
+    }
+
+    //-----> Extrae el nombre del metodo de un valor "Clase#metodo"
+    private String extraerMetodo(String claveCompleta) {
+        if (claveCompleta == null) return "";
+        int idx = claveCompleta.indexOf('#');
+        return idx >= 0 ? claveCompleta.substring(idx + 1) : "";
     }
 }
